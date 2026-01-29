@@ -1,4 +1,4 @@
-{
+export default {
   "expo": {
     "name": "TravelEagle",
     "slug": "TravelEagle",
@@ -6,12 +6,16 @@
     "scheme": "traveleagle",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "traveleagle",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
-    },
+      "supportsTablet": true,
+
+"bundleIdentifier": "com.traveleagle.app", 
+"config": 
+{"googleMapsApiKey": process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+ } 
+},
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -46,4 +50,4 @@
       "reactCompiler": true
     }
   }
-}
+};
