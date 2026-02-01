@@ -1,6 +1,6 @@
 # TravelEagle
 
-#  Personalized, AI-assisted Travel Guidance and Navigation
+#  Personalized, AI-assisted Travel Guidance and Navigation Application
 
 ## This is a student-led Senior Project at the New York Institute of Technology
 
