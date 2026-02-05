@@ -1,13 +1,33 @@
 import { useRouter } from "expo-router";
-import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Image, Text, TextInput, TouchableOpacity, View, Alert, StyleSheet } from "react-native";
 import { BACKGROUND_COLOR, WHITE_TEXT_COLOR, ORANGE_COLOR, SECONDARY_BACKGROUND_COLOR } from "../constants/colors";
-import { Keyboard, TouchableWithoutFeedback } from "react-native"; //Allows user to press anywhere to drop the keyboard
-import React from "react";
+import { Keyboard, TouchableWithoutFeedback,  } from "react-native"; //Allows user to press anywhere to drop the keyboard
+import React, { useState }  from "react";
+
+import { supabase } from "../../../lib/supabase";
 
 
-export default function login() {
+
+export default function Login() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
+  async function signInWithEmail() {
+
+    setLoading(true)
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+
+    if (error) Alert.alert(error.message);
+    setLoading(false);
+  }
+
+  
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={{flex:1}}>
@@ -20,6 +40,7 @@ export default function login() {
         alignItems: "center",
       }}
     >
+
         {/* Temporary Navigation */}
         <TouchableOpacity onPress={ () => router.back()}>
             
@@ -89,15 +110,18 @@ export default function login() {
             Email
           </Text>
           <TextInput
+            value={email}
+            onChangeText={setEmail}
             placeholder="you@example.com"
             placeholderTextColor="#A0AEC0"
+            autoCapitalize="none"
             style={{
               backgroundColor: "#1E3A66",
-              borderRadius: 10,
-              paddingVertical: 12,
-              paddingHorizontal: 15,
+               borderRadius: 10,
+               paddingVertical: 12,
+               paddingHorizontal: 15,
               color: "white",
-            }}
+  }}
           />
         </View>
 
@@ -113,6 +137,8 @@ export default function login() {
             Password
           </Text>
           <TextInput
+            value={password}
+            onChangeText={setPassword}
             placeholder="******"
             placeholderTextColor="#A0AEC0"
             secureTextEntry
@@ -128,6 +154,8 @@ export default function login() {
 
         {/* Sign In Button */}
         <TouchableOpacity
+        onPress={signInWithEmail}
+        disabled={loading}
           style={{
             backgroundColor: "#3B5BDB",
             width: "100%",
@@ -162,7 +190,7 @@ export default function login() {
       </View>
     </View>
 
-        </View>
+    </View>
     </TouchableWithoutFeedback>
     
   );
