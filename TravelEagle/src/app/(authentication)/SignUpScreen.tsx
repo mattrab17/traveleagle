@@ -171,7 +171,7 @@ export default function Register() {
               fontWeight: "600",
             }}
           >
-            Sign In
+            Sign Up
           </Text>
         </TouchableOpacity>
 
@@ -179,9 +179,9 @@ export default function Register() {
         <Text style={{ color: "#B0C4DE", fontSize: 15 }}>
           Already have an account?{" "}
 
-          <TouchableOpacity onPress={() => router.push("/(authentication)/Register")}>
+          <TouchableOpacity onPress={() => router.push("/(authentication)/LogInScreen")}>
             <Text style={{ color: ORANGE_COLOR, fontWeight: "600", textDecorationLine: "underline"}}>
-            Sign Up
+            Sign In
           </Text>
           </TouchableOpacity>
           

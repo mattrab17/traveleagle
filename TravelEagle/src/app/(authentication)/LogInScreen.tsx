@@ -180,7 +180,7 @@ export default function Login() {
         <Text style={{ color: "#B0C4DE", fontSize: 15 }}>
           Don’t have an account?{" "}
 
-          <TouchableOpacity onPress={() => router.push("/(authentication)/Register")}>
+          <TouchableOpacity onPress={() => router.push("/(authentication)/SignUpScreen")}>
             <Text style={{ color: ORANGE_COLOR, fontWeight: "600", textDecorationLine: "underline"}}>
             Sign Up
           </Text>

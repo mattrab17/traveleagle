@@ -13,18 +13,18 @@ export default function WelcomePage() {
       <View
         style={{
           flex: 1,
-          marginTop: 100,
+          justifyContent: "center",
           alignItems: "center",
+          paddingTop: 40,
         }}
       >
         {/* Logo */}
-        <View>
-          <Image
+        <Image
           source={require("../../assets/images/traveleaglelogo.png")}
           style={{
             width: 310,
             height: 310,
-            transform: [{ translateY: -100 }],
+            marginBottom: 0, // adjust if needed
           }}
         />
 
@@ -33,17 +33,12 @@ export default function WelcomePage() {
           style={{
             fontSize: 67,
             fontWeight: "600",
-            transform: [{ translateY: -120 }],
+            marginTop: -20,
           }}
         >
           <Text style={{ color: WHITE_TEXT_COLOR }}>Travel</Text>
           <Text style={{ color: ORANGE_COLOR }}>Eagle</Text>
         </Text>
-
-      </View>
-        
-
-        
 
         {/* Subtext */}
         <Text
@@ -51,7 +46,8 @@ export default function WelcomePage() {
             fontSize: 26,
             color: WHITE_TEXT_COLOR,
             fontWeight: "200",
-            transform: [{ translateY: -115 }],
+            marginTop: 10,
+            marginBottom: 100
           }}
         >
           Your smart travel companion
@@ -60,7 +56,9 @@ export default function WelcomePage() {
 
       {/* Buttons */}
       <View style={{ alignItems: "center", paddingBottom: 40 }}>
+        
         <TouchableOpacity
+          onPress={() => router.push("/(authentication)/SignUpScreen")}
           style={{
             backgroundColor: "white",
             width: "85%",
@@ -74,7 +72,7 @@ export default function WelcomePage() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push("/(authentication)/Login")}
+          onPress={() => router.push("/(authentication)/LogInScreen")}
           style={{
             width: "85%",
             paddingVertical: 20,
@@ -88,7 +86,7 @@ export default function WelcomePage() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push("/(main_navigation)/HomeScreen")}
+          onPress={() => router.push("/(main_navigation)/(interactive_map)/HomeScreen")}
           style={{ marginTop: 10 }}
         >
           <Text
