@@ -1,12 +1,32 @@
 import { useRouter } from "expo-router";
-import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Image, Text, TextInput, TouchableOpacity, View, Alert  } from "react-native";
 import { BACKGROUND_COLOR, WHITE_TEXT_COLOR, ORANGE_COLOR, SECONDARY_BACKGROUND_COLOR } from "../constants/colors";
 import { Keyboard, TouchableWithoutFeedback } from "react-native"; //Allows user to press anywhere to drop the keyboard
-import React from "react";
+import React, { useState } from "react";
+import { supabase } from "../../../lib/supabase";
 
 
 export default function Register() {
   const router = useRouter();
+
+  const [username, setUsername] = useState(""); 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+    async function signUpWithEmail() {
+    setLoading(true)
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+    })
+    if (error) Alert.alert(error.message)
+    if (!session) Alert.alert('Please check your inbox for email verification!')
+    setLoading(false)
+  }
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -179,7 +199,7 @@ export default function Register() {
         <Text style={{ color: "#B0C4DE", fontSize: 15 }}>
           Already have an account?{" "}
 
-          <TouchableOpacity onPress={() => router.push("/(authentication)/LogInScreen")}>
+          <TouchableOpacity onPress={() => router.push("../(authentication)/SignUpScreen")}>
             <Text style={{ color: ORANGE_COLOR, fontWeight: "600", textDecorationLine: "underline"}}>
             Sign In
           </Text>
