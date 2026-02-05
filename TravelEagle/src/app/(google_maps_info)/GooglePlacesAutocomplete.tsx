@@ -5,7 +5,7 @@ import {
   Alert,
 } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-import {goToSelectedPlace,} from "../controllers/mapController";
+import {goToSelectedPlace,} from "../../../controllers/mapController";
 
 export default function GooglePlacesInput({mapRef, setSelectedPlace}) {
   return (
