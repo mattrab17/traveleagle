@@ -74,7 +74,7 @@ export default function WelcomePage() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push("/(authentication)/login")}
+          onPress={() => router.push("/(authentication)/Login")}
           style={{
             width: "85%",
             paddingVertical: 20,
