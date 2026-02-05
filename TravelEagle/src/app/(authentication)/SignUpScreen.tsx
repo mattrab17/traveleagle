@@ -113,6 +113,8 @@ export default function Register() {
             Username
           </Text>
           <TextInput
+            value={username}
+            onChangeText={setUsername}
             placeholder="johndoe02"
             placeholderTextColor="#A0AEC0"
             style={{
@@ -136,6 +138,10 @@ export default function Register() {
             Email
           </Text>
           <TextInput
+          value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
             placeholder="you@example.com"
             placeholderTextColor="#A0AEC0"
             style={{
@@ -160,6 +166,8 @@ export default function Register() {
             Password
           </Text>
           <TextInput
+            value={password}
+            onChangeText={setPassword}
             placeholder="******"
             placeholderTextColor="#A0AEC0"
             secureTextEntry
@@ -175,7 +183,9 @@ export default function Register() {
 
         {/* Sign In Button */}
         <TouchableOpacity
-          style={{
+            onPress={signUpWithEmail}
+            disabled={loading}
+            style={{
             backgroundColor: "#3B5BDB",
             width: "100%",
             paddingVertical: 14,
