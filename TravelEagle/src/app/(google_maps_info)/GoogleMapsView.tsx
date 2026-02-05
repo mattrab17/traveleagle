@@ -4,7 +4,7 @@ import { Text, View, Button, StyleSheet } from "react-native";
 import { useRef, useState } from "react";
 import {GooglePlacesAutocomplete} from "react-native-google-places-autocomplete";
 import GooglePlacesInput from "./GooglePlacesAutocomplete";
-import { animateToRegion, fitMarkerstoScreen } from "../controllers/mapController";
+import { animateToRegion, fitMarkerstoScreen } from "../../../controllers/mapController";
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
