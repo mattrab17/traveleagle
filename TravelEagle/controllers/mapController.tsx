@@ -14,8 +14,9 @@ export const goToSelectedPlace = (mapRef, details, setSelectedPlace) => {
         const name = details.name;
         const lng = details.geometry.location.lng;
         const lat = details.geometry.location.lat;
+        const description = details.editorial_summary?.overview;
     setSelectedPlace({
-        name, lng, lat
+        name, lng, lat, description
     });
 
     animateToRegion (mapRef, lat, lng)

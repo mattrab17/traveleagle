@@ -68,6 +68,7 @@ export default function GoogleMapsView() {
             longitude: selectedPlace.lng
           }}
           title={selectedPlace.name}
+          
           />
       )
     }
@@ -75,7 +76,7 @@ export default function GoogleMapsView() {
       <GooglePlacesInput
         mapRef={mapRef}
         setSelectedPlace = {setSelectedPlace}/>
-        <View style={{position: 'absolute', top:120, right: 16, backgroundColor: 'white', borderRadius:10, overflow: 'hidden'}}>
+        <View style={{position: 'absolute', top:180, right: 16, backgroundColor: 'white', borderRadius:10, overflow: 'hidden'}}>
           {/* Temp button no styling yet, just to test fitMarkers func*/}
               <Button
                 title= "📍"
@@ -89,8 +90,7 @@ export default function GoogleMapsView() {
           {selectedPlace &&(
             <View>
               <Text>{selectedPlace.name}</Text>
-              <Text>{selectedPlace.lat.toFixed(2)}</Text>
-              <Text>{selectedPlace.lng.toFixed(2)}</Text>
+              <Text>{selectedPlace.description}</Text>
             </View>
           )}
 
@@ -110,5 +110,9 @@ const styles = StyleSheet.create({
     padding: 36,
     alignItems: 'center',
   },
+  bottomSheetName: {
+    flex:1,
+    
+  }
 });
 

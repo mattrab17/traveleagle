@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     flex: 1,
     backgroundColor: "#f5f5f5",
-    top:10,
+    top:60,
     left:16,
     right:16
     
