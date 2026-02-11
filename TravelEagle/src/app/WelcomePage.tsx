@@ -86,7 +86,7 @@ export default function WelcomePage() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push("/(google_maps_info)/GoogleMapsView")}
+          onPress={() => router.push("/(main_navigation)/(interactive_map)/HomeScreen")}
           style={{ marginTop: 10 }}
         >
           <Text
