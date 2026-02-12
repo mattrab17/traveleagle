@@ -5,7 +5,7 @@ import {
   Alert,
 } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-import {goToSelectedPlace,} from "../../../controllers/mapController";
+import {goToSearchedPlace,} from "../../../controllers/mapController";
 
 export default function GooglePlacesInput({mapRef, setSelectedPlace}) {
   return (
@@ -14,7 +14,7 @@ export default function GooglePlacesInput({mapRef, setSelectedPlace}) {
           placeholder="Search for a place"
           onPress={(data, details) => {
             if (details) {
-              goToSelectedPlace(mapRef, details, setSelectedPlace);
+              goToSearchedPlace(mapRef, details, setSelectedPlace);
             }
             /*Remove logs & alert*/
             console.log("Selected place:", data);
