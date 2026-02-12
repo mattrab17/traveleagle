@@ -9,7 +9,7 @@ export const animateToRegion = (mapRef, lat, lng) =>{
               500,
             );
 }
-export const goToSelectedPlace = (mapRef, details, setSelectedPlace) => {
+export const goToSearchedPlace = (mapRef, details, setSelectedPlace) => {
 
         const name = details.name;
         const lng = details.geometry.location.lng;
@@ -29,3 +29,10 @@ export const fitMarkerstoScreen  = (mapRef, places) => {
         animated: true,
         });
     };
+
+
+    /*
+export const addPlaceToItinerary = (details) => {
+
+}
+*/

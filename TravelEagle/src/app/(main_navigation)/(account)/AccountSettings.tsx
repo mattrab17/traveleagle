@@ -1,12 +1,67 @@
-import { View, Text, TextInput, Pressable } from "react-native";
-import { router, useRouter } from "expo-router";
+import { View, Text, TextInput } from "react-native";
+import { useRouter } from "expo-router";
 import { useState } from "react"; // a hook library that allows the code to use states. (S0->S1->S2, each state is saved in the code)
 
-export default function AccountSettings() {
-  const [username, setUsername] = useState("johndoe02"); //default state for username input
-  const [email, setEmail] = useState("johndoe02@gmail.com"); //default state for email input
-  const [password, setPassword] = useState("password123"); //default state for password input 
+export default function Account({ session }: { session: Session }) {
+  const [loading, setLoading] = useState(true)
 
+  const [username, setUsername] = useState('') //default state for username input
+  const [email, setEmail] = useState(""); //default state for email input
+  const [password, setPassword] = useState("");
+  const [avatar_url, setavatar_url] = useState('')
+  //code from supabase used to update data in our 'users' table
+  useEffect(() => {
+    if (session) getUsers()
+      }, [session])
+   async function getUsers() {
+     try {
+      setLoading(true)
+      if (!session?.user) throw new Error('No user on the session!')
+      
+
+      const { data, error, status } = await supabase
+        .from('users')
+        .select(`username, avatar_url`)
+        .eq('id', session?.user.id)
+        .single()
+        if (error && status !== 406) {
+          throw error
+        }
+         if (data) {
+          setUsername(data.username)
+          setavatar_url(data.avatar_url)
+          }
+         } catch (error) {
+      if (error instanceof Error) {
+        Alert.alert(error.message)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function updateProfile() {
+  
+    try {
+
+      setLoading(true)
+      if (!session?.user) throw new Error('No user on the session!')
+       const { error } = await supabase.from('users').upsert({
+       id: session.user.id,
+       username,
+       email,
+       avatar: avatar_url
+
+      })
+      if (error) throw error
+      //these updates supabase's auth info, not the database tables
+      await supabase.auth.updateUser({ email })
+      
+       if (password) {
+      await supabase.auth.updateUser({ password })
+      setPassword('')
+    }
+  
   return (
     <View style={{
         flex: 1,

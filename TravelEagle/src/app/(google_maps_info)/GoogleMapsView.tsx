@@ -18,7 +18,7 @@ export default function GoogleMapsView() {
   const mapRef = useRef(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = ['25%', '50%'];
+  const snapPoints = ['25%', '50%', '4%'];
   
   const places = [
     {id: 1, name: 'Times Square', lat: 40.7580, lng: -73.9855, emoji:'🏙️'},
