@@ -1,5 +1,5 @@
-import { View, Text, TextInput } from "react-native";
-import { useRouter } from "expo-router";
+import { View, Text, TextInput, Pressable } from "react-native";
+import { router, useRouter } from "expo-router";
 import { useState } from "react"; // a hook library that allows the code to use states. (S0->S1->S2, each state is saved in the code)
 
 export default function AccountSettings() {
@@ -49,6 +49,15 @@ export default function AccountSettings() {
         />
       </View>
 
+      {/* Sign Out Button */}
+      <Pressable 
+        onPress={() => router.replace("/")}
+        style={{ marginTop: 40 }}
+      >
+        <Text style={{ color: "#FF4444", fontSize: 25, fontWeight: "bold" }}>
+          Sign Out
+        </Text>
+      </Pressable>
     </View>
   );
 }
