@@ -13,20 +13,33 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
+  
     async function signUpWithEmail() {
     setLoading(true)
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-    })
-    if (error) Alert.alert(error.message)
-    if (!session) Alert.alert('Please check your inbox for email verification!')
-    setLoading(false)
+
+    const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { username } },
+  });
+    if (error) {
+    Alert.alert(error.message);
   }
+
+     const user = data.user;
+     if (user) {
+  const { error: insertError } = await supabase.from("users").insert({
+  id: user.id,
+  email: user.email,
+  name: username,
+})
+    if (insertError) {
+      Alert.alert(insertError.message);
+    }
+  }
+
+  setLoading(false);
+}
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -224,4 +237,3 @@ export default function Register() {
     
   );
 }
-
