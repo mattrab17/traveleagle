@@ -5,7 +5,7 @@ import { updateCSSTransition } from "react-native-reanimated/lib/typescript/css/
 
 export const tripQueries = {
 
-    async getAll(userId: number): Promise<Trip[]>{
+    async getAll(userId: string): Promise<Trip[]>{
         let { data, error } = await supabase
         .from('trips')
         .select('*')
@@ -28,7 +28,7 @@ export const tripQueries = {
     },
 
     async create(trip: {
-        user_id: number;
+        user_id: string;
         destination: string;
         start_date: string;
         end_date:string;}):

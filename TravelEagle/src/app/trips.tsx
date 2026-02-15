@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -7,17 +7,15 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-import GooglePlacesInput from "././(google_maps_info)/GooglePlacesAutocomplete";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import TripForm from './components/TripForm'
+import { tripController } from "@/controllers/tripController";
 
 export default function TripsScreen() {
-  const mapRef = useRef(null);
-  const [selectedPlace, setSelectedPlace] = useState(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
-
-  const [trips, setTrips] = useState([
-    {
+  const [trips, setTrips] = useState<any[]>([]);
+    /* {
       trip_id: 1,
       destination: "New York City, USA",
       start_date: "2026-02-11",
@@ -35,7 +33,21 @@ export default function TripsScreen() {
       start_date: "2026-02-11",
       end_date: "2026-02-13",
     },
-  ]);
+  ]); */
+  function closeSheet(){
+    bottomSheetRef.current?.close();
+    loadTrips();
+  }
+  useEffect(() => {
+    loadTrips();}, []);
+
+    const  userID = 'bde439b9-f312-45af-81b2-f07e1ee74648';
+    async function loadTrips(){
+      const {data} = await tripController.loadAllTrips(userID);
+      setTrips(data);
+
+    }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1, padding: 20, marginVertical: 40 }}>
@@ -74,24 +86,9 @@ export default function TripsScreen() {
             index={0} 
             style={{flex:1}}
             backgroundStyle={{backgroundColor: 'white'}}>
-
+                       
         <BottomSheetView style={styles.contentContainer}>
-            <Text style={{ fontSize: 20, color: "black" }}>Add a Trip</Text>
-            <Text style={{ fontSize:16, color: "black", paddingVertical: 20 }}>Plan out your new trip by building an Itinerary</Text>
-            <View style={{flex:1, width:'100%', paddingVertical: 40}}>
-            <Text>
-            Select A Location
-            </Text>
-            {/* Need to fix googlePlacesInput / make new function of it for this screen  */}
-            <GooglePlacesInput>
-            </GooglePlacesInput>    
-            </View>
-            <View style={{flex:1, width:'100%', paddingVertical: 40}}>
-            <Text>
-            Dates
-            </Text>
-            {/* Need to add Date Picker / Date Range Picker */}
-            </View>
+            <TripForm onClose={closeSheet} />
         </BottomSheetView>
       </BottomSheet>
     </GestureHandlerRootView>

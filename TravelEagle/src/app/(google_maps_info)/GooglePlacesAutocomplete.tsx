@@ -54,18 +54,61 @@ export default function GooglePlacesInput({mapRef, setSelectedPlace}) {
       </View>
   );
 }
+export  function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you like to go?"}) {
+  return (
+      <View style={styles.container}>
+        <GooglePlacesAutocomplete
+          placeholder={placeholder}
+          onPress={(data, details) => {
+            onSelect?.(data, details)
+            console.log("Selected place:", data);
+          }}
+
+          query={{
+            key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+            language: "en",
+          }}
+          fetchDetails={true}
+          
+          styles={{
+            container: {
+              flex: 0,
+              width: '100%',
+            },
+            textInputContainer: {
+              width: '100%',
+              backgroundColor: "transparent",
+            },
+            /*Move TexInput into styles later or Remove it entirely */
+            textInput: {
+              width: '100%',
+              height: 50,
+              color: "#5d5d5d",
+              fontSize: 16,
+              borderWidth: 1,
+              borderColor: "#ddd",
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              backgroundColor: 'white'
+            },
+            predefinedPlacesDescription: {
+              color: "#1faadb",
+            },
+          }}
+          debounce={200}
+        />
+      </View>
+  );
+}
+
 
 
 /* Add styles to a diff file and import late */
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    flex: 1,
+    width:'100%',
+    flexDirection: 'row',
     backgroundColor: "#f5f5f5",
-    top:60,
-    left:16,
-    right:16
-    
   },
   keyboardAvoidingView: {
     flex: 1,

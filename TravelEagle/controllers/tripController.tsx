@@ -1,5 +1,20 @@
+import { tripQueries } from "@/models/trips"
 
-/*
--Need function for changing selectedPlace data into trip data (just the place name)
--Need function to get all the info from the Place name & date Pickers and prompts queries to insert into databse.
-*/
+
+
+
+export const tripController = {
+
+
+    async loadAllTrips(userId: string){
+        try{
+            const data = await tripQueries.getAll(userId);
+            return {data, error: null};
+        }
+        catch (error){
+            console.error('Error loading trips:', error);
+            return { data: [], error};
+        }
+    },
+
+}
