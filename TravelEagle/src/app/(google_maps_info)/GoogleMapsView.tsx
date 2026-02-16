@@ -1,118 +1,98 @@
-// import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
-// import { Marker } from "react-native-maps";
-// import { Text, View, Button, StyleSheet } from "react-native";
-// import { useRef, useState } from "react";
-// import {GooglePlacesAutocomplete} from "react-native-google-places-autocomplete";
-// import GooglePlacesInput from "./GooglePlacesAutocomplete";
-// import { animateToRegion, fitMarkerstoScreen } from "../../../controllers/mapController";
-// import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-// import { GestureHandlerRootView } from 'react-native-gesture-handler';
+/*
+RESOURCES:
+
+1. React.dev (Official Docs) - Hooks and how to use useMemo
+2. MDN Web Docs - includes .map()
+3. JavaScript.info - included a breakdown of array manipulation syntax 
+4. Expo official website - included a breakdown of Maps and how to implement it into the app
 
 
-// export default function GoogleMapsView() {
-//   /* Template for daily itinerary --> Map view with Markers
-//     Gets list of places from db, [id, lat,long, etc..]
-//     pushes them to the placaes array, then array is mapped and renedered into MapView logic
-//     */
 
-//   const mapRef = useRef(null);
-//   const [selectedPlace, setSelectedPlace] = useState(null);
-//   const bottomSheetRef = useRef<BottomSheet>(null);
-//   const snapPoints = ['25%', '50%', '4%'];
+*/
+
+
+// useMemo lets the app "cache" a computed value so it doesn’t regenerate on every render
+// useMemo is a hook that tells React to remember the result of a complex calculation
+// we use useMemo to ensure that React generates the pins exactly once
+
+//Hooks - give components memory like allowing them to save data or run actions automatically 
+import React, { useMemo } from "react";
+
+// StyleSheet = defines styles in React Native
+import { StyleSheet } from "react-native";
+
+// MapView = the map component, Marker = map pins, PROVIDER_GOOGLE = use Google Maps
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+
+// Defines where the map starts -> (Times Square)
+const INITIAL_REGION = {
+  latitude: 40.758,
+  longitude: -73.9855,
+  latitudeDelta: 0.08,
+  longitudeDelta: 0.08,
+};
+
+// This function creates a list of random fake pins
+//centerLat = latitude of pin
+//centerLng = longitude of pin
+// count = how many pins we want to create
+function buildPlaceholderPins(centerLat, centerLng, count) {
+  let pins = []; //pins are held in an array
   
-//   const places = [
-//     {id: 1, name: 'Times Square', lat: 40.7580, lng: -73.9855, emoji:'🏙️'},
-//     {id: 2, name: 'Central Park', lat: 40.7826, lng: -73.9656, emoji:'🌳'},
-//   ];
-
-//   return (
-//     <GestureHandlerRootView style={{flex: 1}}>
-//     <View style={{flex:1}}>
-//     <MapView
-//       ref={mapRef}
-//       provider={PROVIDER_GOOGLE}
-//       initialRegion={{
-//         latitude: 40.77892,
-//         longitude: -73.96836,
-//         latitudeDelta: 0.1,
-//         longitudeDelta: 0.1,
-//       }}
-//       style={{ flex: 1 }}
-//     >
-//       {places.map((place) => (
-//         <Marker
-//           coordinate={{ latitude: place.lat, longitude: place.lng }}
-//           title={place.name}
-//           key={place.id}
-//           onPress={() => animateToRegion(mapRef, place.lat, place.lng)}
-//         >
-//           <View
-//             style={{
-//               /* Need to make a fixed size when zooming and zooming out later */
-//               width: 27,
-//               height: 27,
-//               borderRadius: 15,
-//               justifyContent: "center",
-//               alignItems: "center",
-//               backgroundColor: "white",
-//             }}
-//           >
-//             <Text>{place.emoji}</Text>
-//           </View> 
-//         </Marker>
-//       ))}
-//       {selectedPlace &&(
-//         <Marker
-//           coordinate={{
-//             latitude: selectedPlace.lat,
-//             longitude: selectedPlace.lng
-//           }}
-//           title={selectedPlace.name}
-          
-//           />
-//       )
-//     }
-//       </MapView>
-//       <GooglePlacesInput
-//         mapRef={mapRef}
-//         setSelectedPlace = {setSelectedPlace}/>
-//         <View style={{position: 'absolute', top:180, right: 16, backgroundColor: 'white', borderRadius:10, overflow: 'hidden'}}>
-//           {/* Temp button no styling yet, just to test fitMarkers func*/}
-//               <Button
-//                 title= "📍"
-//                 onPress={() => fitMarkerstoScreen(mapRef, places)}/>
-//         </View>
-//         <BottomSheet
-//         ref={bottomSheetRef}
-//         snapPoints={snapPoints}
-//       >
-//         <BottomSheetView style={styles.contentContainer}>
-//           {selectedPlace &&(
-//             <View>
-//               <Text>{selectedPlace.name}</Text>
-//               <Text>{selectedPlace.description}</Text>
-//             </View>
-//           )}
-
-//         </BottomSheetView>
-//       </BottomSheet>
-//     </View>
-//     </GestureHandlerRootView>
-//   )
-// }
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: 'grey',
-//   },
-//   contentContainer: {
-//     flex: 1,
-//     padding: 36,
-//     alignItems: 'center',
-//   },
-//   bottomSheetName: {
-//     flex:1,
+    // Generate a small random latitude offset
+    // Math.random() gives a value from 0 to 1
+    // subtract 0.5 to get 0.5
+    // multiply by 0.06 keeps it close to center
+  for (let i = 0; i < count; i++) { //go through count
     
-//   }
-// });
+    const latOffset = (Math.random() - 0.5) * 0.06; //spread the pins out along the x axis
+    const lngOffset = (Math.random() - 0.5) * 0.06; //spread the pins out along the y axis
 
+    
+    pins.push({ //add a pin object to pins
+      id: "pin-" + (i + 1), //pin has id "pin-#"
+      latitude: centerLat + latOffset, //defines a pin's final latitude
+      longitude: centerLng + lngOffset, //defines a pins final longitude
+      title: "Sample Place " + (i + 1), //temporary title for a pin
+      description: "Temporary marker for testing map pin rendering.", //temporary description for a pin
+    });
+  }
+  return pins; //After adding all pins to the pins list, return them all
+}
+
+//Main GoogleMapsView component export function=================================================
+export default function GoogleMapsView() {
+  // useMemo runs this ONCE when the app starts ([ ] means run once)
+  const placeholderPins = useMemo(() => { //function to render pins using the previous buildPlaceHolderPins function
+    return buildPlaceholderPins(INITIAL_REGION.latitude, INITIAL_REGION.longitude, 6);
+  }, []);
+
+  // Return to the screen
+  return ( 
+    <MapView //Map SDK used to generate the Google Maps map 
+      provider={PROVIDER_GOOGLE}
+      style={styles.map}
+      initialRegion={INITIAL_REGION}
+    >
+      {/* Go through the list of pins and put a Marker on the map for each one */}
+      
+      {placeholderPins.map((pin) => ( //every pin receives a "marker" on the map
+        <Marker
+          key={pin.id}
+          coordinate={{
+            latitude: pin.latitude,
+            longitude: pin.longitude,
+          }}
+          title={pin.title}
+          description={pin.description}
+        />
+      ))}
+    </MapView>
+  );
+}
+
+const styles = StyleSheet.create({
+  map: {
+    flex: 1, //tells the map component to take up the entire screen
+  },
+});

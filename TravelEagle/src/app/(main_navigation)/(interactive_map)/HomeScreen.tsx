@@ -12,8 +12,8 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons'; //Vector icon fami
 import { SafeAreaView } from "react-native-safe-area-context"; //Provides a safe area so objects fall within a device's screen dimensions
 import {
   BACKGROUND_COLOR,
-  THIRD_BACKGROUND_COLOR,
 } from "../../constants/colors";
+import GoogleMapsView from "../../(google_maps_info)/GoogleMapsView";
 
 export default function HomeScreen() {
   return (
@@ -54,7 +54,9 @@ export default function HomeScreen() {
         </View>
 
         {/* MIDDLE CONTENT AREA FOR MAP */}
-        <View style={styles.contentArea} />
+        <View style={styles.contentArea}>
+          <GoogleMapsView />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -71,7 +73,7 @@ const styles = StyleSheet.create({
 
   
   topBox: {
-    backgroundColor: "BACKGROUND_COLOR",
+    backgroundColor: BACKGROUND_COLOR,
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 15,
