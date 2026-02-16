@@ -100,6 +100,7 @@ export default function WelcomePage() {
           </Text>
         </TouchableOpacity>
       </View>
+      
     </SafeAreaView>
   );
 }
