@@ -1,28 +1,37 @@
-import React from "react";
-import { View,
-  TextInput, //Input box component
-  StyleSheet, //Style component to style objects
-  Image, //Image component to render Travel Eagle image
-  Text, //Text component like <p>
-  TouchableOpacity, //creates an interactive box
-  StatusBar, //Component that controls the device's status settings like Wifi, Battery, and time
-} from "react-native";
-import { Feather } from "@expo/vector-icons"; //Vector icon family import
-import MaterialIcons from '@expo/vector-icons/MaterialIcons'; //Vector icon family import
-import { SafeAreaView } from "react-native-safe-area-context"; //Provides a safe area so objects fall within a device's screen dimensions
+import React, { useRef, useState } from "react";
 import {
-  BACKGROUND_COLOR,
-} from "../../constants/colors";
+  View,
+  StyleSheet,
+  Image,
+  Text,
+  TouchableOpacity,
+  StatusBar,
+} from "react-native";
+import { Feather } from "@expo/vector-icons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import MapView from "react-native-maps";
+import { goToSearchedPlace } from "../../../../controllers/mapController";
+import { BACKGROUND_COLOR } from "../../constants/colors";
 import GoogleMapsView from "../../(google_maps_info)/GoogleMapsView";
 
+type SelectedPlace = {
+  name: string;
+  lng: number;
+  lat: number;
+  description?: string;
+} | null;
+
 export default function HomeScreen() {
+  const mapRef = useRef<MapView | null>(null);
+  const [selectedPlace, setSelectedPlace] = useState<SelectedPlace>(null);
+
   return (
-    
     <SafeAreaView style={styles.safe} edges={["top"]}>
-                                        {/* edges property places padding at the top edge of the screen */}
-      <StatusBar barStyle="light-content" /> 
+      {/* edges property places padding at the top edge of the screen */}
+      <StatusBar barStyle="light-content" />
       {/* Device status settings are set to light mode color */}
-      
 
       <View style={styles.container}>
         {/* Hero Section */}
@@ -39,23 +48,49 @@ export default function HomeScreen() {
           {/* Search + Filter */}
           <View style={styles.searchRow}>
             <View style={styles.searchContainer}>
-              <Feather name="search" size={18} color="#8F8F8F" />
-              <TextInput
+              <View style={styles.searchIcon}>
+                <Feather name="search" size={18} color="#8F8F8F" />
+              </View>
+              <GooglePlacesAutocomplete
                 placeholder="Search..."
-                placeholderTextColor="#8F8F8F"
-                style={styles.input}
+                fetchDetails={true}
+                onPress={(data, details) => {
+                  if (details) {
+                    goToSearchedPlace(mapRef, details, setSelectedPlace);
+                  }
+                }}
+                query={{
+                  key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+                  language: "en",
+                }}
+                styles={{
+                  container: styles.autocompleteContainer,
+                  textInputContainer: styles.autocompleteTextInputContainer,
+                  textInput: styles.autocompleteTextInput,
+                  listView: styles.autocompleteList,
+                  row: styles.autocompleteRow,
+                  description: styles.autocompleteDescription,
+                }}
+                debounce={200}
+                enablePoweredByContainer={false}
               />
             </View>
 
             <TouchableOpacity style={styles.filterBtn}>
-            <MaterialIcons name="filter-list" size={24} color="#8F8F8F" />
+              <MaterialIcons name="filter-list" size={24} color="#8F8F8F" />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* MIDDLE CONTENT AREA FOR MAP */}
         <View style={styles.contentArea}>
-          <GoogleMapsView />
+          {/* Google Maps component */}
+          <GoogleMapsView
+            mapRef={mapRef}
+            selectedPlace={selectedPlace}
+            setSelectedPlace={setSelectedPlace}
+            showSearchInput={false}
+          />
         </View>
       </View>
     </SafeAreaView>
@@ -70,16 +105,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-
-  
   topBox: {
     backgroundColor: BACKGROUND_COLOR,
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 15,
-    
+    zIndex: 20,
   },
-
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -96,7 +128,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "white",
   },
-
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -108,13 +139,41 @@ const styles = StyleSheet.create({
     backgroundColor: "#1c3252",
     borderRadius: 10,
     paddingHorizontal: 12,
-    height: 44,
+    minHeight: 44,
   },
-  input: {
+  searchIcon: {
+    marginRight: 8,
+    marginTop: 1,
+  },
+  autocompleteContainer: {
     flex: 1,
+  },
+  autocompleteTextInputContainer: {
+    backgroundColor: "transparent",
+    borderTopWidth: 0,
+    borderBottomWidth: 0,
+    paddingHorizontal: 0,
+    margin: 0,
+  },
+  autocompleteTextInput: {
+    height: 44,
     color: "#FFFFFF",
-    marginLeft: 8,
     fontSize: 15,
+    margin: 0,
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    paddingLeft: 0,
+  },
+  autocompleteList: {
+    backgroundColor: "#1c3252",
+    borderRadius: 10,
+    marginTop: 8,
+  },
+  autocompleteRow: {
+    backgroundColor: "#1c3252",
+  },
+  autocompleteDescription: {
+    color: "#FFFFFF",
   },
   filterBtn: {
     marginLeft: 10,
@@ -125,12 +184,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   // MIDDLE CONTENT AREA
   contentArea: {
-    flex: 1,
-    backgroundColor: "#0A1628", 
+    flex: 0.6,
+    backgroundColor: "#0A1628",
     borderColor: "#ffffff75",
-    borderTopWidth: .17
+    borderTopWidth: 0.17,
   },
 });
