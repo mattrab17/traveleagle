@@ -1,41 +1,59 @@
+import React from "react";
 import { Tabs } from "expo-router";
-import { StatusBar, View } from "react-native";
-import React from "react"
-import { BACKGROUND_COLOR, THIRD_BACKGROUND_COLOR } from "../../app/constants/colors";
+import { StatusBar } from "react-native";
+import { BACKGROUND_COLOR } from "../../app/constants/colors";
 
-//Icons for navigation bar
-import Feather from '@expo/vector-icons/Feather';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+// Icons
+import Feather from "@expo/vector-icons/Feather";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+
+const ACTIVE_TAB_COLOR = "#FDD084";
+const INACTIVE_TAB_COLOR = "#8F8F8F";
 
 export default function RootLayout() {
   return (
-    <React.Fragment>
-      <StatusBar/>
-      <Tabs>
-        <Tabs.Screen name="(interactive_map)/HomeScreen"
+    <>
+      <StatusBar barStyle="light-content" />
+
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+
+          // Background
+          tabBarStyle: {
+            backgroundColor: BACKGROUND_COLOR,
+            borderTopWidth: 0,
+          },
+
+          // Automatic active/inactive coloring
+          tabBarActiveTintColor: ACTIVE_TAB_COLOR,
+          tabBarInactiveTintColor: INACTIVE_TAB_COLOR,
+        }}
+      >
+        <Tabs.Screen
+          name="(interactive_map)/HomeScreen"
           options={{
             title: "Explore",
-            headerShown: false,
-            tabBarIcon: () =>
-            {
-              return <Feather name="map" size={24} color="black" />;
-            }
+            tabBarIcon: ({ color, size }) => (
+              <Feather name="map" size={size} color={color} />
+            ),
+          }}
+        />
 
-          }} />
-        
-        <Tabs.Screen name="(account)/AccountSettings"
+        <Tabs.Screen
+          name="(account)/AccountSettings"
           options={{
             title: "Account",
-            headerShown: false,
-            tabBarIcon: () =>
-            {
-              return <MaterialCommunityIcons name="account-circle-outline" size={24} color="black" />
-            }
-            
-        }}
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons
+                name="account-circle-outline"
+                size={size}
+                color={color}
+              />
+            ),
+          }}
         />
-        
-      </Tabs> 
-    </React.Fragment>
+      </Tabs>
+    </>
   );
 }
