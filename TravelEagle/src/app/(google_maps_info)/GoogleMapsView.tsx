@@ -1,11 +1,13 @@
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import { Marker } from "react-native-maps";
 import { Text, View, Button, StyleSheet } from "react-native";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import GooglePlacesInput from "./GooglePlacesAutocomplete";
 import { animateToRegion, fitMarkerstoScreen } from "../../../controllers/mapController";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import useLocation from "../../../LocationServices/liveLocation";
+
 
 type SelectedPlace = {
   name: string;
@@ -44,6 +46,14 @@ export default function GoogleMapsView({
     { id: 1, name: "Times Square", lat: 40.758, lng: -73.9855, emoji: "🏙️" },
     { id: 2, name: "Central Park", lat: 40.7826, lng: -73.9656, emoji: "🌳" },
   ];
+
+  const { latitude, longitude, errorMsg } = useLocation();
+  
+  useEffect(() => {
+  if (latitude != null && longitude != null && activeMapRef.current) {
+    animateToRegion(activeMapRef, latitude, longitude);
+  }
+}, [latitude, longitude]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

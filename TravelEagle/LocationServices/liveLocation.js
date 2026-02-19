@@ -4,8 +4,8 @@ import * as Location from 'expo-location'//library provides access to geolocatio
 const useLocation = () => {
     //use state will allow values to change with human movement
     const [errorMsg, setErrorMsg] = useState('');
-    const [latitude, setLatitude] = useState<number | null>(null);
-    const [longitude, setLongitude] = useState<number | null>(null);
+    const [latitude, setLatitude] = useState('');
+    const [longitude, setLongitude] = useState('');
 
     const getUserLocation = async () => {//will ask user for permission to retrieve their location
         let { status } = await Location.requestForegroundPermissionsAsync();
@@ -27,11 +27,11 @@ const useLocation = () => {
             })
         
         }
-
+    }
         useEffect(() => {
             getUserLocation()
         }, [])
-    }
+    
     return {latitude, longitude, errorMsg}
 }
 
