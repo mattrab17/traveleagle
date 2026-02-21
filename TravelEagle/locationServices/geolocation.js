@@ -14,7 +14,7 @@ const useLocation = () => {
             return;
         }
 
-        let { coords } = await Location.getCurrentPositionAsync();//gets location of user and set
+        let { coords } = await Location.getCurrentPositionAsync();//gets coordinates of user 
         if (coords) {
             const { latitude, longitude } = coords
 
