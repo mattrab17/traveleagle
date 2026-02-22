@@ -16,5 +16,15 @@ export const tripController = {
             return { data: [], error};
         }
     },
-
 }
+    export function goToPreviousMonth(currentMonth: Date) {
+            const newMonth = new Date(currentMonth)
+            newMonth.setMonth(newMonth.getMonth() - 1);
+            return newMonth;
+    }
+
+    export function goToNextMonth(currentMonth: Date) {
+        const newMonth = new Date(currentMonth)
+            newMonth.setMonth(newMonth.getMonth() + 1);
+            return newMonth;
+    }
