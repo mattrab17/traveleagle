@@ -1,98 +1,150 @@
-/*
-RESOURCES:
-
-1. React.dev (Official Docs) - Hooks and how to use useMemo
-2. MDN Web Docs - includes .map()
-3. JavaScript.info - included a breakdown of array manipulation syntax 
-4. Expo official website - included a breakdown of Maps and how to implement it into the app
-
-
-
-*/
+import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
+import { Marker } from "react-native-maps";
+import { Text, View, Button, StyleSheet } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import GooglePlacesInput from "./GooglePlacesAutocomplete";
+import { animateToRegion, fitMarkerstoScreen } from "../../../controllers/mapController";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import useLocation from "../../../LocationServices/liveLocation";
 
 
-// useMemo lets the app "cache" a computed value so it doesn’t regenerate on every render
-// useMemo is a hook that tells React to remember the result of a complex calculation
-// we use useMemo to ensure that React generates the pins exactly once
+type SelectedPlace = {
+  name: string;
+  lng: number;
+  lat: number;
+  description?: string;
+} | null;
 
-//Hooks - give components memory like allowing them to save data or run actions automatically 
-import React, { useMemo } from "react";
-
-// StyleSheet = defines styles in React Native
-import { StyleSheet } from "react-native";
-
-// MapView = the map component, Marker = map pins, PROVIDER_GOOGLE = use Google Maps
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
-
-// Defines where the map starts -> (Times Square)
-const INITIAL_REGION = {
-  latitude: 40.758,
-  longitude: -73.9855,
-  latitudeDelta: 0.08,
-  longitudeDelta: 0.08,
+type GoogleMapsViewProps = {
+  mapRef?: React.RefObject<MapView | null>;
+  selectedPlace?: SelectedPlace;
+  setSelectedPlace?: React.Dispatch<React.SetStateAction<SelectedPlace>>;
+  showSearchInput?: boolean;
 };
 
-// This function creates a list of random fake pins
-//centerLat = latitude of pin
-//centerLng = longitude of pin
-// count = how many pins we want to create
-function buildPlaceholderPins(centerLat, centerLng, count) {
-  let pins = []; //pins are held in an array
+export default function GoogleMapsView({
+  mapRef,
+  selectedPlace,
+  setSelectedPlace,
+  showSearchInput = true,
+}: GoogleMapsViewProps) {
+  /* Template for daily itinerary --> Map view with Markers
+    Gets list of places from db, [id, lat,long, etc..]
+    pushes them to the places array, then array is mapped and rendered into MapView logic
+    */
+
+  const internalMapRef = useRef<MapView | null>(null);
+  const [internalSelectedPlace, internalSetSelectedPlace] = useState<SelectedPlace>(null);
+  const activeMapRef = mapRef ?? internalMapRef;
+  const activeSelectedPlace = selectedPlace ?? internalSelectedPlace;
+  const activeSetSelectedPlace = setSelectedPlace ?? internalSetSelectedPlace;
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const snapPoints = ["25%", "50%", "4%"];
+
+  const places = [
+    { id: 1, name: "Times Square", lat: 40.758, lng: -73.9855, emoji: "🏙️" },
+    { id: 2, name: "Central Park", lat: 40.7826, lng: -73.9656, emoji: "🌳" },
+  ];
+
+  const { latitude, longitude, errorMsg } = useLocation();
   
-    // Generate a small random latitude offset
-    // Math.random() gives a value from 0 to 1
-    // subtract 0.5 to get 0.5
-    // multiply by 0.06 keeps it close to center
-  for (let i = 0; i < count; i++) { //go through count
-    
-    const latOffset = (Math.random() - 0.5) * 0.06; //spread the pins out along the x axis
-    const lngOffset = (Math.random() - 0.5) * 0.06; //spread the pins out along the y axis
-
-    
-    pins.push({ //add a pin object to pins
-      id: "pin-" + (i + 1), //pin has id "pin-#"
-      latitude: centerLat + latOffset, //defines a pin's final latitude
-      longitude: centerLng + lngOffset, //defines a pins final longitude
-      title: "Sample Place " + (i + 1), //temporary title for a pin
-      description: "Temporary marker for testing map pin rendering.", //temporary description for a pin
-    });
+  useEffect(() => {
+  if (latitude != null && longitude != null && activeMapRef.current) {
+    animateToRegion(activeMapRef, latitude, longitude);
   }
-  return pins; //After adding all pins to the pins list, return them all
-}
+}, [latitude, longitude]);
 
-//Main GoogleMapsView component export function=================================================
-export default function GoogleMapsView() {
-  // useMemo runs this ONCE when the app starts ([ ] means run once)
-  const placeholderPins = useMemo(() => { //function to render pins using the previous buildPlaceHolderPins function
-    return buildPlaceholderPins(INITIAL_REGION.latitude, INITIAL_REGION.longitude, 6);
-  }, []);
-
-  // Return to the screen
-  return ( 
-    <MapView //Map SDK used to generate the Google Maps map 
-      provider={PROVIDER_GOOGLE}
-      style={styles.map}
-      initialRegion={INITIAL_REGION}
-    >
-      {/* Go through the list of pins and put a Marker on the map for each one */}
-      
-      {placeholderPins.map((pin) => ( //every pin receives a "marker" on the map
-        <Marker
-          key={pin.id}
-          coordinate={{
-            latitude: pin.latitude,
-            longitude: pin.longitude,
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
+        <MapView
+          ref={activeMapRef}
+          provider={PROVIDER_GOOGLE}
+          initialRegion={{
+            latitude: 40.77892,
+            longitude: -73.96836,
+            latitudeDelta: 0.1,
+            longitudeDelta: 0.1,
           }}
-          title={pin.title}
-          description={pin.description}
-        />
-      ))}
-    </MapView>
+          style={{ flex: 1 }}
+        >
+          {places.map((place) => (
+            <Marker
+              coordinate={{ latitude: place.lat, longitude: place.lng }}
+              title={place.name}
+              key={place.id}
+              onPress={() => animateToRegion(activeMapRef, place.lat, place.lng)}
+            >
+              <View
+                style={{
+                  width: 27,
+                  height: 27,
+                  borderRadius: 15,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "white",
+                }}
+              >
+                <Text>{place.emoji}</Text>
+              </View>
+            </Marker>
+          ))}
+          {activeSelectedPlace && (
+            <Marker
+              coordinate={{
+                latitude: activeSelectedPlace.lat,
+                longitude: activeSelectedPlace.lng,
+              }}
+              title={activeSelectedPlace.name}
+            />
+          )}
+        </MapView>
+        {showSearchInput && (
+          <GooglePlacesInput
+            mapRef={activeMapRef}
+            setSelectedPlace={activeSetSelectedPlace}
+          />
+        )}
+        <View
+          style={{
+            position: "absolute",
+            top: 180,
+            right: 16,
+            backgroundColor: "white",
+            borderRadius: 10,
+            overflow: "hidden",
+          }}
+        >
+          {/* Temp button no styling yet, just to test fitMarkers func*/}
+          <Button title="📍" onPress={() => fitMarkerstoScreen(activeMapRef, places)} />
+        </View>
+        <BottomSheet ref={bottomSheetRef} snapPoints={snapPoints}>
+          <BottomSheetView style={styles.contentContainer}>
+            {activeSelectedPlace && (
+              <View>
+                <Text>{activeSelectedPlace.name}</Text>
+                <Text>{activeSelectedPlace.description}</Text>
+              </View>
+            )}
+          </BottomSheetView>
+        </BottomSheet>
+      </View>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  map: {
-    flex: 1, //tells the map component to take up the entire screen
+  container: {
+    flex: 1,
+    backgroundColor: "grey",
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 36,
+    alignItems: "center",
+  },
+  bottomSheetName: {
+    flex: 1,
   },
 });
