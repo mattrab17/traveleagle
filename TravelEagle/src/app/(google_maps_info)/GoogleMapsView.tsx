@@ -6,7 +6,7 @@ import GooglePlacesInput from "./GooglePlacesAutocomplete";
 import { animateToRegion, fitMarkerstoScreen } from "../../../controllers/mapController";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import useLocation from "../../../LocationServices/liveLocation";
+import useLocation from "../../../LocationServices/liveLocation"
 
 
 type SelectedPlace = {
@@ -53,7 +53,9 @@ export default function GoogleMapsView({
   if (latitude != null && longitude != null && activeMapRef.current) {
     animateToRegion(activeMapRef, latitude, longitude);
   }
+  
 }, [latitude, longitude]);
+
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -90,6 +92,7 @@ export default function GoogleMapsView({
               </View>
             </Marker>
           ))}
+
           {activeSelectedPlace && (
             <Marker
               coordinate={{
@@ -116,8 +119,12 @@ export default function GoogleMapsView({
             overflow: "hidden",
           }}
         >
-          {/* Temp button no styling yet, just to test fitMarkers func*/}
-          <Button title="📍" onPress={() => fitMarkerstoScreen(activeMapRef, places)} />
+          {/* button centers on user location now*/}
+          <Button title="📍" onPress={() => { 
+            if (latitude != null && longitude != null && activeMapRef){
+              animateToRegion(activeMapRef, latitude, longitude)
+            }} }
+            />
         </View>
         <BottomSheet ref={bottomSheetRef} snapPoints={snapPoints}>
           <BottomSheetView style={styles.contentContainer}>
