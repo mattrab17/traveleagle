@@ -3,9 +3,10 @@ import { Tabs } from "expo-router";
 import { StatusBar } from "react-native";
 import { BACKGROUND_COLOR } from "../../app/constants/colors";
 
-// Icons
+// Icon Libraries
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 const ACTIVE_TAB_COLOR = "#FDD084";
 const INACTIVE_TAB_COLOR = "#8F8F8F";
@@ -15,7 +16,9 @@ export default function RootLayout() {
     <>
       <StatusBar barStyle="light-content" />
 
-      <Tabs
+{/* NAVIGATION BAR START */}
+
+      <Tabs //Tabs that are displayed on the navigation bar
         screenOptions={{
           headerShown: false,
 
@@ -30,6 +33,7 @@ export default function RootLayout() {
           tabBarInactiveTintColor: INACTIVE_TAB_COLOR,
         }}
       >
+        {/* HomeScreen Tab */}
         <Tabs.Screen
           name="(interactive_map)/HomeScreen"
           options={{
@@ -40,6 +44,24 @@ export default function RootLayout() {
           }}
         />
 
+        {/* MyItineraries Tap */}
+
+        <Tabs.Screen
+          name="(itinerary)/MyItineraries"
+          options={{
+            title: "Itinerary",
+            tabBarIcon: ({ color, size }) => (
+              
+              <Feather name="calendar" size={size} color={color} />
+            ),
+            
+          }}
+        
+        
+        
+        
+        />
+        {/* AccountSettings Tab */}
         <Tabs.Screen
           name="(account)/AccountSettings"
           options={{
@@ -53,7 +75,11 @@ export default function RootLayout() {
             ),
           }}
         />
+
       </Tabs>
+
+{/* NAVIGATION BAR END */}
+      
     </>
   );
 }

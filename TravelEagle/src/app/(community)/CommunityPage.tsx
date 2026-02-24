@@ -1,6 +1,6 @@
 import { View, Text } from "react-native"
 
-export default function MyItineraries()
+export default function CommunityPage()
 {
   
   return (
@@ -9,7 +9,7 @@ export default function MyItineraries()
       <Text
         style={{color:"#030303", fontSize: 30}}
       >
-        Hello, I am the MyItineraries Screen
+        Hello, I am the Community Page
       </Text>
     </View>
 

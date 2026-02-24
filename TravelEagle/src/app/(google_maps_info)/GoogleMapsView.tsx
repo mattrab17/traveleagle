@@ -1,12 +1,14 @@
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import { Marker } from "react-native-maps";
-import { Text, View, Button, StyleSheet } from "react-native";
+import { Text, View, Button, StyleSheet, TouchableOpacity } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import GooglePlacesInput from "./GooglePlacesAutocomplete";
 import { animateToRegion, fitMarkerstoScreen } from "../../../controllers/mapController";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import useLocation from "../../../LocationServices/liveLocation"
+
+import Feather from '@expo/vector-icons/Feather'; //import icon library
 
 
 type SelectedPlace = {
@@ -69,11 +71,21 @@ export default function GoogleMapsView({
         <MapView
           ref={activeMapRef}
           provider={PROVIDER_GOOGLE}
+
+          //Code to display user's location on map with an animated circle
+          showsUserLocation={true} //shows the user where they are on the map
+          followsUserLocation={true} //the map follows the dot as you move using your location
+          showsMyLocationButton={false} //hide the default "show me location" button because we have a custom one
+
+
           initialRegion={{
             latitude: 40.77892,
             longitude: -73.96836,
             latitudeDelta: 0.1,
             longitudeDelta: 0.1,
+
+           
+          
           }}
           style={{ flex: 1 }}
         >
@@ -98,9 +110,9 @@ export default function GoogleMapsView({
                 //  ? -> "Optional Chaining" indicator, 
                 //    -it checks if the bottomsheet exists. if it does, run the command, otherwise, do nothing
                 //    -Important because since refs are null until the screen fully loads, this prevents your app from breaking if a user triggers an event before the sheet is ready
-                //snapToIndex -> instructs the component to move to the height at index 1 in the snapPoints array or 25%
+                //snapToIndex -> instructs the component to move to the height at index 1 in the snapPoints array/ take up 25% of the screen
 
-                // 
+                
 
               }}
             >
@@ -135,23 +147,38 @@ export default function GoogleMapsView({
             setSelectedPlace={activeSetSelectedPlace}
           />
         )}
+
+
+
+        {/* ShowUserLocation Button */}
         <View
-          style={{
-            position: "absolute",
-            top: 180,
-            right: 16,
-            backgroundColor: "white",
-            borderRadius: 10,
-            overflow: "hidden",
-          }}
+            style={{
+              position: "absolute",
+              top: 180,
+              right: 16,
+              backgroundColor: "white",
+              borderRadius: 10,
+              overflow: "hidden",
+              // Add these for better icon centering:
+              width: 44,
+              height: 44,
+              justifyContent: "center",
+              alignItems: "center",
+              
+            }}
         >
-          {/* button centers on user location now*/}
-          <Button title="📍" onPress={() => { 
-            if (latitude != null && longitude != null && activeMapRef){
+          <TouchableOpacity 
+            onPress={() => { 
+              if (latitude != null && longitude != null && activeMapRef.current){
               animateToRegion(activeMapRef, latitude, longitude)
-            }} }
-            />
+              }
+            }}
+          >
+            <Feather name="navigation" size={24} color="#3858D6" /> 
+          </TouchableOpacity>
         </View>
+
+        
         <BottomSheet ref={bottomSheetRef} snapPoints={snapPoints}>
           <BottomSheetView style={styles.contentContainer}>
             {activeSelectedPlace && (
