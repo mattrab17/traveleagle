@@ -21,13 +21,19 @@ type GoogleMapsViewProps = {
   selectedPlace?: SelectedPlace;
   setSelectedPlace?: React.Dispatch<React.SetStateAction<SelectedPlace>>;
   showSearchInput?: boolean;
+  onMarkerPress: (place: any) => void;
+  //the place variable takes any data type: ID, title, etc
+  //void is used to indicate the function doesn't return any value, it updates a state
 };
 
 export default function GoogleMapsView({
+
+  //exported functions for usability
   mapRef,
   selectedPlace,
   setSelectedPlace,
   showSearchInput = true,
+  onMarkerPress, //function for marker/pin event
 }: GoogleMapsViewProps) {
   /* Template for daily itinerary --> Map view with Markers
     Gets list of places from db, [id, lat,long, etc..]
@@ -76,7 +82,27 @@ export default function GoogleMapsView({
               coordinate={{ latitude: place.lat, longitude: place.lng }}
               title={place.name}
               key={place.id}
-              onPress={() => animateToRegion(activeMapRef, place.lat, place.lng)}
+              
+              onPress={() => //when a place is pressed, do this...
+              {
+                animateToRegion(activeMapRef, place.lat, place.lng);
+                //renders marker/s to the map
+
+                onMarkerPress(place);
+                //handles what happens when you press a marker
+
+                bottomSheetRef.current?.snapToIndex(1); //bottomsheet -> the marker popup information 
+
+                //bottomSheetRef.current -> accesses the Bottom Sheet component
+                //  useRef/Ref -> a hook that maintains a variable's value throughout screen rendering
+                //  ? -> "Optional Chaining" indicator, 
+                //    -it checks if the bottomsheet exists. if it does, run the command, otherwise, do nothing
+                //    -Important because since refs are null until the screen fully loads, this prevents your app from breaking if a user triggers an event before the sheet is ready
+                //snapToIndex -> instructs the component to move to the height at index 1 in the snapPoints array or 25%
+
+                // 
+
+              }}
             >
               <View
                 style={{
