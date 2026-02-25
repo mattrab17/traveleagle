@@ -11,8 +11,11 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import TripForm from './components/TripForm'
 import { tripController } from "@/controllers/tripController";
+import { router } from "expo-router";
+import { useAuth } from "./(authentication)/Auth";
 
 export default function TripsScreen() {
+ // const {user} = useAuth();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [trips, setTrips] = useState<any[]>([]);
     /* {
@@ -71,6 +74,7 @@ export default function TripsScreen() {
                 borderBottomWidth: 1,
                 marginBottom: 10,
               }}
+              onPress={() => router.push(`/components/trips/${item.trip_id}`)}
             >
               <Text style={{ fontSize: 18 }}>{item.destination}</Text>
               <Text style={{ color: "gray" }}>

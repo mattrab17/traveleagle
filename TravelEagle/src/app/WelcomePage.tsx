@@ -85,6 +85,7 @@ export default function WelcomePage() {
           <Text style={{ fontSize: 20, color: "white" }}>Sign In</Text>
         </TouchableOpacity>
 
+        {/* Temporary Navigation */}
         <TouchableOpacity
           onPress={() => router.push("/(main_navigation)/(interactive_map)/HomeScreen")}
           style={{ marginTop: 10 }}
@@ -125,6 +126,7 @@ export default function WelcomePage() {
 
 
       </View>
+      
     </SafeAreaView>
   );
 }

@@ -14,10 +14,7 @@ export default function TripForm({onClose}) {
     const today = toDateId(new Date()); 
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const currentMonthTitle = currentMonth.toLocaleDateString('default', {month: 'long', year: 'numeric'});
-
-    
-    
-
+    const monthID = toDateId(currentMonth);
 
   async function handleCreate(){
   try {
@@ -77,7 +74,7 @@ export default function TripForm({onClose}) {
                 </TouchableOpacity>
             </View>
             <Calendar
-                calendarMonthId={today}
+                calendarMonthId={monthID}
                 calendarActiveDateRanges={calendarActiveDateRanges}
                 onCalendarDayPress={onCalendarDayPress}   
                 calendarMonthHeaderHeight={0}

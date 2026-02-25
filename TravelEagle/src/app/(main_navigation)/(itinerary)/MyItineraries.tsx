@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {Text, Image, View, TouchableOpacity, StyleSheet } from "react-native";
 import { BACKGROUND_COLOR, WHITE_TEXT_COLOR, ORANGE_COLOR } from "../../constants/colors";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -69,3 +70,22 @@ export default function intineraryPage() {
         </SafeAreaView>
     )
 }
+=======
+import { View, Text } from "react-native"
+
+export default function MyItineraries()
+{
+  
+  return (
+
+    <View style={{ justifyContent: "center", alignItems: "center", flex: 1}}>
+      <Text
+        style={{color:"#030303", fontSize: 30}}
+      >
+        Hello, I am the MyItineraries Screen
+      </Text>
+    </View>
+
+  );
+}
+>>>>>>> 41c63347b4542560904afa1da2a522b5f66ab714
