@@ -99,6 +99,31 @@ export default function WelcomePage() {
             To Home Page
           </Text>
         </TouchableOpacity>
+
+
+
+
+            <TouchableOpacity
+          onPress={() => router.push("/(main_navigation)/(itinerary)/MyItineraries")}
+          style={{ marginTop: 10 }}
+        >
+          <Text
+            style={{
+              textDecorationLine: "underline",
+              color: WHITE_TEXT_COLOR,
+              fontSize: 16,
+            }}
+          >
+            To Itinerary Page
+          </Text>
+        </TouchableOpacity>
+
+
+
+
+
+
+
       </View>
     </SafeAreaView>
   );
