@@ -16,6 +16,17 @@ export const tripController = {
             return { data: [], error};
         }
     },
+     async loadTrip(tripId: number){
+        try{
+            const data = await tripQueries.getById(tripId);
+            return {data, error:null}
+            
+        }
+        catch (error){
+            console.error('Error loading trips:', error);
+            return { data: [], error};
+        }
+    },
 }
     export function goToPreviousMonth(currentMonth: Date) {
             const newMonth = new Date(currentMonth)
@@ -28,3 +39,4 @@ export const tripController = {
             newMonth.setMonth(newMonth.getMonth() + 1);
             return newMonth;
     }
+    
