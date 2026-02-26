@@ -9,7 +9,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import useLocation from "../../../LocationServices/liveLocation"
 
 import Feather from '@expo/vector-icons/Feather'; //import icon library
-
+import MapViewDirections from 'react-native-maps-directions'
 
 type SelectedPlace = {
   name: string;
@@ -17,6 +17,7 @@ type SelectedPlace = {
   lat: number;
   description?: string;
 } | null;
+
 
 type GoogleMapsViewProps = {
   mapRef?: React.RefObject<MapView | null>;
@@ -64,8 +65,15 @@ export default function GoogleMapsView({
   
 }, [latitude, longitude]);
 
+const origin = latitude != null && longitude != null
+    ? { latitude, longitude } : undefined;
+const destination = activeSelectedPlace 
+    ? {latitude: activeSelectedPlace.lat, longitude:activeSelectedPlace.lng}
+    : undefined;
+const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY!;
 
-  return (
+
+return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
         <MapView
@@ -140,6 +148,13 @@ export default function GoogleMapsView({
               title={activeSelectedPlace.name}
             />
           )}
+          {origin !=null && destination != null ?
+         
+            <MapViewDirections
+              origin={origin}
+              destination={destination}
+              apikey={GOOGLE_MAPS_APIKEY}
+            /> : null}
         </MapView>
         {showSearchInput && (
           <GooglePlacesInput
@@ -152,33 +167,33 @@ export default function GoogleMapsView({
 
         {/* ShowUserLocation Button */}
         <View
-            style={{
-              position: "absolute",
-              top: 180,
-              right: 16,
-              backgroundColor: "white",
-              borderRadius: 10,
-              overflow: "hidden",
+          style={{
+            position: "absolute",
+            top: 180,
+            right: 16,
+            backgroundColor: "white",
+            borderRadius: 10,
+            overflow: "hidden",
               // Add these for better icon centering:
-              width: 44,
-              height: 44,
-              justifyContent: "center",
-              alignItems: "center",
+            width: 44,
+            height: 44,
+            justifyContent: "center",
+            alignItems: "center",
               
-            }}
+          }}
         >
-          <TouchableOpacity 
-            onPress={() => { 
+          <TouchableOpacity
+            onPress={() => {
               if (latitude != null && longitude != null && activeMapRef.current){
               animateToRegion(activeMapRef, latitude, longitude)
               }
             }}
           >
-            <Feather name="navigation" size={24} color="#3858D6" /> 
+            <Feather name="navigation" size={24} color="#3858D6" />
           </TouchableOpacity>
         </View>
 
-        
+
         <BottomSheet ref={bottomSheetRef} snapPoints={snapPoints}>
           <BottomSheetView style={styles.contentContainer}>
             {activeSelectedPlace && (
