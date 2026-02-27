@@ -20,7 +20,11 @@ import { useState } from "react";
 
 export default function ItineraryPage() {
   const router = useRouter();
-  const [showNewContent, setShowNewContent] = useState(false);
+  const [showNameItin, setShowNameItin] = useState(false); 
+  const [itinName, setItinName] = useState("");
+  const [showItin, setShowItin] = useState(false); 
+  const [showActivityCreation, setShowActivityCreation] = useState(false);
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: BACKGROUND_COLOR }}>
@@ -56,7 +60,7 @@ export default function ItineraryPage() {
         </View>
 
         <TouchableOpacity
-          onPress={() => setShowNewContent(!showNewContent)}
+        onPress={() => router.push("/(main_navigation)/(itinerary)/AiItineraryMaker")}
           style={{
             backgroundColor: SECONDARY_BACKGROUND_COLOR,
             padding: 10,
@@ -70,21 +74,75 @@ export default function ItineraryPage() {
 
       {/* Main Content */}
       <View
-        style={{
-          flex: 1,
-          backgroundColor: SECONDARY_BACKGROUND_COLOR,
-          justifyContent: "center",
-          alignItems: "center",
-          paddingHorizontal: 15,
-        }}
+        style={[
+          {
+            flex: 1,
+            backgroundColor: SECONDARY_BACKGROUND_COLOR,
+            alignItems: "center",
+            paddingHorizontal: 15,
+          },
+          showItin
+            ? { justifyContent: "flex-start", paddingTop: 20 }
+            : { justifyContent: "center" },
+        ]}
       >
-        {!showNewContent ? (
+        {showItin ? (
+          // *** Third page ***
+          <View style={{ width: "100%" }}>
+            
+            <View style={{backgroundColor:"#0e1e38", padding: 20, borderRadius: 15, width: "100%", borderColor: "#96a0ad", borderWidth: 0.75, marginBottom: 20, justifyContent:"flex-start", alignItems:"flex-start"}}>
+                <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 22, fontWeight: "800" }}>
+                {itinName}
+                </Text>
+            
+                <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "500" }}>
+                Plan your day from midght to midnight!
+                </Text>
+            </View>
+            
+           <TouchableOpacity
+           onPress={() => setShowActivityCreation(true)}
+            style={{
+              backgroundColor:"#0e1e38",
+              width: "100%",
+              paddingVertical: 20,
+              borderRadius: 15,
+              alignItems: "center",
+              borderColor: "#4c5158", 
+              borderWidth: 0.75,
+            }}
+          >
+            <Text style={{ fontSize: 14.5, fontWeight: "900", color: "#96a0ad" }}>
+              + Add Activity
+            </Text>
+          </TouchableOpacity>
+          </View>
+
+
+) : showActivityCreation ? (
+            <View style={{ width: "100%" }}>
+            
+            <View style={{backgroundColor:"#0e1e38", padding: 20, borderRadius: 15, width: "100%", borderColor: "#96a0ad", borderWidth: 0.75, marginBottom: 20, justifyContent:"flex-start", alignItems:"flex-start"}}>
+                <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 22, fontWeight: "800" }}>
+                {itinName}
+                </Text>
+            
+                <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "500" }}>
+                Plan your day from midght to midnight!
+                </Text>
+            </View>
+            </View>
+
+
+
+
+
+        ) : !showNameItin ? (
           <>
             {/* First State */}
             <TouchableOpacity
               onPress={() =>
-                router.push("/(main_navigation)/(itinerary)/AiItineraryMaker")
-              }
+                router.push("/(main_navigation)/(itinerary)/AiItineraryMaker")}
               style={{
                 paddingVertical: 20,
                 borderRadius: 15,
@@ -129,9 +187,7 @@ export default function ItineraryPage() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() =>
-                router.push("/(main_navigation)/(itinerary)/ItineraryChoose")
-              }
+              onPress={() => setShowNameItin(!showNameItin)}
               style={{
                 backgroundColor: "#2c4eb5",
                 width: "100%",
@@ -175,6 +231,9 @@ export default function ItineraryPage() {
             </Text>
             
             <TextInput
+              value={itinName}
+              //onChangeText={(text) => setItinName(text)}
+              onChangeText={setItinName}
               placeholder="Enter itinerary name..."
               placeholderTextColor="gray"
               style={{
@@ -189,7 +248,11 @@ export default function ItineraryPage() {
             
             
             <TouchableOpacity
-              onPress={() => setShowNewContent(false)}
+              onPress={() => {
+                setShowNameItin(false);
+                setShowItin(true); // transition to third page after saving
+                // you can also do something with itinName here
+              }}
               style={{
                 backgroundColor: "#2c4eb5",
                 width: "100%",
@@ -205,7 +268,7 @@ export default function ItineraryPage() {
 
 
             <TouchableOpacity
-              onPress={() => setShowNewContent(false)}
+              onPress={() => setShowNameItin(false)}
               style={{
                 backgroundColor: "#1a2f4e",
                 width: "100%",
