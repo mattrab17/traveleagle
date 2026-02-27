@@ -33,7 +33,7 @@ export default {
          {
           "locationAlwaysAndWhenInUsePermission": "Allow TravelEagle to use your location."
         }
-      ]
+      ],
       [
         "expo-splash-screen",
         {
