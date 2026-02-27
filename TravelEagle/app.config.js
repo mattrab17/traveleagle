@@ -29,6 +29,11 @@ export default {
     },
     "plugins": [
       "expo-router",
+      ["expo-location",
+         {
+          "locationAlwaysAndWhenInUsePermission": "Allow TravelEagle to use your location."
+        }
+      ]
       [
         "expo-splash-screen",
         {
