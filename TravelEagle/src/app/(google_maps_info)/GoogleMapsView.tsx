@@ -9,7 +9,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import useLocation from "../../../LocationServices/liveLocation"
 
 import Feather from '@expo/vector-icons/Feather'; //import icon library
-
+import MapViewDirections from 'react-native-maps-directions'
 
 type SelectedPlace = {
   name: string;
@@ -64,6 +64,12 @@ export default function GoogleMapsView({
   
 }, [latitude, longitude]);
 
+const origin = latitude != null && longitude != null
+    ? { latitude, longitude } : undefined;
+const destination = activeSelectedPlace 
+    ? {latitude: activeSelectedPlace.lat, longitude:activeSelectedPlace.lng}
+    : undefined;
+const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY!;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -140,6 +146,13 @@ export default function GoogleMapsView({
               title={activeSelectedPlace.name}
             />
           )}
+            {origin !=null && destination != null ?
+         
+            <MapViewDirections
+              origin={origin}
+              destination={destination}
+              apikey={GOOGLE_MAPS_APIKEY}
+            /> : null}
         </MapView>
         {showSearchInput && (
           <GooglePlacesInput
@@ -147,7 +160,7 @@ export default function GoogleMapsView({
             setSelectedPlace={activeSetSelectedPlace}
           />
         )}
-
+        
 
 
         {/* ShowUserLocation Button */}

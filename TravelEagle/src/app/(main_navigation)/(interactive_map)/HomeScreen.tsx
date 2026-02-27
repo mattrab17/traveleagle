@@ -7,6 +7,7 @@ import { View,
   Text, //Text component like <p>
   TouchableOpacity, //creates an interactive box
   StatusBar, //Component that controls the device's status settings like Wifi, Battery, and time
+  Modal, //Component that helps display content as an overlay or on top of the current screen
 } from "react-native";
 import { Feather } from "@expo/vector-icons"; //Vector icon family import
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'; //Vector icon family import
@@ -16,14 +17,24 @@ import {
 } from "../../constants/colors";
 import GoogleMapsView from "../../(google_maps_info)/GoogleMapsView";
 
+//IMPORT FOR DATA AND TIME PICKING FROM EXPO 
+import DateTimePicker from '@react-native-community/datetimepicker'; // Add this import
+
 export default function HomeScreen()
 {
-  /* CONTROLS THE STATE OF THE LOCATION POPUP */
-  const [selectedPlace, setSelectedPlace] = useState(null)
+  //STATES:==========================
+  
+  
+  /*CONTROLS THE BOTTOM SHEET FOR MARKERS/PINS*/
+  const [selectedPlace, setSelectedPlace] = useState(null);
   //selectedPlace -> holds the current value of the selected item (address, marker, marker data)
   //setSelectedPlace -> function used to update the selectedPlace variable
   //useState is initialized with a value of null
   
+
+  //CONTROLS THE POPUP AFTER PRESSING ADD TRIP
+  const [isAddTripVisible, setIsAddTripVisible] = useState(false);
+
   return (
     
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -79,7 +90,7 @@ export default function HomeScreen()
 
 
           
-          {/* Travel Eagle Bottom Sheet Marker Card / Pop up */}
+          {/* Travel Eagle Bottom Sheet Marker Card / Pop up =========================================================================*/}
           {selectedPlace && ( //IF SELECTEDPLACE IS TRUE OR HAS A PLACE, THEN RENDER THE CARD, OTHERWISE, DON'T RENDER ANYTHING
             
             <View style={styles.popUpCard}>
@@ -124,19 +135,94 @@ export default function HomeScreen()
                 {/* ADD TRIP BUTTON */}
                 <TouchableOpacity 
                   style={styles.addBtn}
-                  onPress={() => setSelectedPlace(null)} // Closes the card by setting state to null -> CHANGE THIS TO DO A SPECIFIC ACTION
+                  onPress={() =>
+                  {
+                    setIsAddTripVisible(true) //opens the Add to Itinerary Modal
+                    setSelectedPlace(null) //hides the "Marker" popup
+
+                  }} 
                 >
-                  <Text style={styles.btnText}>Add Trip</Text>
+                  <Text style={styles.btnText}>Add to Trip</Text>
                 </TouchableOpacity>
               </View>
             </View>
           )}
         </View>
       </View>
+      {/* Travel Eagle Bottom Sheet Marker Card / Pop up end ========================================================================= */}
+
+      {/* Add Trip Button Modal =============================================================================================*/}
+
+      <Modal
+        animationType="fade" //the popup fades in 
+        transparent = {true} //overlays the popup over the map
+        visible={isAddTripVisible} //activates the Add Trip Popup
+        
+  
+>
+  {/* Popup Overlay */}
+        <View style={styles.modalOverlay}> 
+          {/* Inside Popup */}
+    <View style={styles.itineraryContainer}>
+      
+      {/* Header */}
+      <View style={styles.itineraryHeader}>
+        <Feather name="plus" size={20} color="white" />
+        <Text style={styles.itineraryTitle}>Add to Itinerary</Text>
+      </View>
+
+            {/* Divides the Header and main content in the popup */}
+      <View style={styles.divider} />
+
+      {/* Itinerary Inputs */}
+      <Text style={styles.inputLabel}>Select Itinerary:</Text> 
+            {/* Itinerary Inputs */}
+            <TouchableOpacity style={styles.itineraryInput}> 
+            {/* EXAMPLE ITINERARY PLACEHOLDER */}
+        <Text style={styles.inputText}>Example Trip</Text> 
+        <Feather name="chevron-down" size={20} color="white" />
+      </TouchableOpacity>
+
+      {/* Select Time Input */}
+      <Text style={styles.inputLabel}>Select Time:</Text> 
+            <TouchableOpacity style={styles.itineraryInput}>
+              {/* Example time */}
+        <Text style={styles.inputText}>12:00 AM</Text>
+        <Feather name="clock" size={20} color="white" />
+      </TouchableOpacity>
+
+            {/* Buttons Row */}
+            <View style={styles.itineraryButtonRow}>
+            {/* cancel button */}
+        <TouchableOpacity 
+          style={styles.cancelBtn}
+          onPress={() => setIsAddTripVisible(false)}
+        >
+          
+          <Text style={styles.cancelBtnText}>Cancel</Text>
+        </TouchableOpacity>
+
+              {/* Add button */}
+        <TouchableOpacity 
+          style={styles.addItineraryBtn}
+          onPress={() => setIsAddTripVisible(false)}
+        >
+           <Feather name="check" size={18} color="white" style={{marginRight: 8}} />
+           <Text style={styles.addBtnText}>Add</Text>
+        </TouchableOpacity>
+      </View>
+
+    </View>
+  </View>
+      </Modal>
+
+      {/* Add Trip Button Modal end =============================================================================================*/}
+      
     </SafeAreaView>
   );
 }
 
+//STYLES
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
@@ -145,16 +231,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-
-  
   topBox: {
     backgroundColor: BACKGROUND_COLOR,
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 15,
-    
   },
-
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -171,7 +253,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "white",
   },
-
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -200,19 +281,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
-  // MIDDLE CONTENT AREA
   contentArea: {
     flex: 1,
     backgroundColor: "#0A1628", 
     borderColor: "#ffffff75",
-    borderTopWidth: .17
+    borderTopWidth: 0.17
   },
-
-  // NEW STYLES FOR THE MARKER CARD
   popUpCard: {
-    position: 'absolute', // Allows the card to float on top of the map
-    bottom: 20,           // Pushes the card up from the bottom edge
+    position: 'absolute', 
+    bottom: 20,           
     left: 15,
     right: 15,
     backgroundColor: '#0A1931', 
@@ -220,7 +297,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderWidth: 1,
     borderColor: '#ffffff30',
-    zIndex: 100,          // Ensures it stays in front of the Map layer
+    zIndex: 100,          
   },
   cardHeader: {
     flexDirection: 'row',
@@ -247,7 +324,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   infoBtn: {
-    backgroundColor: '#FFB347', // Orange color
+    backgroundColor: '#FFB347', 
     padding: 10,
     borderRadius: 8,
     flex: 1,
@@ -255,7 +332,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dirBtn: {
-    backgroundColor: '#3858D6', // Blue color
+    backgroundColor: '#3858D6', 
     padding: 10,
     borderRadius: 8,
     flex: 1,
@@ -273,5 +350,83 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 12,
     fontWeight: '600',
+  },
+
+  //MODAL STYLES ================================
+  modalOverlay: { //main overlay
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  itineraryContainer: { //main popup
+    width: '90%',
+    backgroundColor: '#051124', 
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#ffffff15',
+  },
+  itineraryHeader: { //Top header of popup
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  itineraryTitle: { //Add to Itinerary Title
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '500',
+    marginLeft: 10,
+  },
+  divider: { //Gray line that divides header and main content
+    height: 1,
+    backgroundColor: '#ffffff20',
+    marginBottom: 20,
+  },
+  inputLabel: { //input subheadings: "Select Itinerary:" & "Select Time"
+    color: '#D1D1D1',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  itineraryInput: { //input box styling
+    backgroundColor: '#0A1A31', 
+    borderRadius: 8,
+    padding: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  inputText: { //inside input boxes: "Example Trip" & "12:00 AM"
+    color: 'white',
+    fontSize: 16,
+  },
+  itineraryButtonRow: { //Buttons: "Cancel" and "Add"
+    flexDirection: 'row', 
+    justifyContent: 'flex-end',
+    marginTop: 10,
+  },
+  cancelBtn: { //Cancel Button Styling
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginRight: 10,
+    backgroundColor: 'THIRD_BACKGROUND_COLOR',
+    borderRadius: 6,
+  },
+  cancelBtnText: { //Cancel Button Text Styling
+    color: 'white',
+    fontWeight: '500',
+  },
+  addItineraryBtn: { //Add Button Styling
+    flexDirection: 'row',
+    backgroundColor: '#3858D6', 
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  addBtnText: { //Add Button Text Styling
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
