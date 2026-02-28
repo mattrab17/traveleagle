@@ -8,6 +8,7 @@ import { View,
   TouchableOpacity, //creates an interactive box
   StatusBar, //Component that controls the device's status settings like Wifi, Battery, and time
   Modal, //Component that helps display content as an overlay or on top of the current screen
+  Platform, //Provides platform-specific logic
 } from "react-native";
 import { Feather } from "@expo/vector-icons"; //Vector icon family import
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'; //Vector icon family import
@@ -34,6 +35,36 @@ export default function HomeScreen()
 
   //CONTROLS THE POPUP AFTER PRESSING ADD TRIP
   const [isAddTripVisible, setIsAddTripVisible] = useState(false);
+
+  //CONTROLS THE TIME PICKER AFTER PRESSING ADD TRIP
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  // State to store the actual Date/Time object
+  const [time, setTime] = useState(new Date()); 
+
+  // State to store the selected trip name from the dropdown in "Add Trip"
+  const [selectedTrip, setSelectedTrip] = useState("Example Trip");
+
+  // Helper function to format the Date object into a readable "12:00 AM" string
+  const formatTime = (date) => {
+    return date.toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: true 
+    });
+  };
+
+  // Function called when the user scrolls the time wheel
+  const onTimeChange = (event, selectedDate) => {
+    // For Android, we hide the picker after they press "OK"
+    if (Platform.OS === 'android') {
+      setShowTimePicker(false);
+    }
+    
+    if (selectedDate) { //sets the date
+      setTime(selectedDate);
+    }
+  };
 
   return (
     
@@ -157,8 +188,7 @@ export default function HomeScreen()
         animationType="fade" //the popup fades in 
         transparent = {true} //overlays the popup over the map
         visible={isAddTripVisible} //activates the Add Trip Popup
-        
-  
+        onRequestClose={() => setIsAddTripVisible(false)} //Handles hardware back button
 >
   {/* Popup Overlay */}
         <View style={styles.modalOverlay}> 
@@ -177,19 +207,40 @@ export default function HomeScreen()
       {/* Itinerary Inputs */}
       <Text style={styles.inputLabel}>Select Itinerary:</Text> 
             {/* Itinerary Inputs */}
-            <TouchableOpacity style={styles.itineraryInput}> 
+            <TouchableOpacity 
+              style={styles.itineraryInput}
+              onPress={() => {
+                // Toggles between two names to show selection logic
+                setSelectedTrip(selectedTrip === "Example Trip" ? "California Trip" : "Example Trip");
+              }}
+            > 
             {/* EXAMPLE ITINERARY PLACEHOLDER */}
-        <Text style={styles.inputText}>Example Trip</Text> 
+        <Text style={styles.inputText}>{selectedTrip}</Text> 
         <Feather name="chevron-down" size={20} color="white" />
       </TouchableOpacity>
 
       {/* Select Time Input */}
       <Text style={styles.inputLabel}>Select Time:</Text> 
-            <TouchableOpacity style={styles.itineraryInput}>
+            <TouchableOpacity 
+              style={styles.itineraryInput}
+              onPress={() => setShowTimePicker(true)}
+            >
               {/* Example time */}
-        <Text style={styles.inputText}>12:00 AM</Text>
+        <Text style={styles.inputText}>{formatTime(time)}</Text>
         <Feather name="clock" size={20} color="white" />
       </TouchableOpacity>
+
+      {/* Time Scroller Component */}
+      {showTimePicker && (
+        <DateTimePicker
+          value={time}
+          mode="time"
+          is24Hour={false}
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={onTimeChange}
+          textColor="white" // Only for iOS so that the display doesn't look strange
+        />
+      )}
 
             {/* Buttons Row */}
             <View style={styles.itineraryButtonRow}>
@@ -410,7 +461,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     marginRight: 10,
-    backgroundColor: 'THIRD_BACKGROUND_COLOR',
+    backgroundColor: '#1c3252',
     borderRadius: 6,
   },
   cancelBtnText: { //Cancel Button Text Styling

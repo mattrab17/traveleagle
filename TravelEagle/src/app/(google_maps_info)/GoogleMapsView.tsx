@@ -30,12 +30,12 @@ type GoogleMapsViewProps = {
 
 export default function GoogleMapsView({
 
-  //exported functions for usability
+  //exported properties for usability
   mapRef,
   selectedPlace,
   setSelectedPlace,
   showSearchInput = true,
-  onMarkerPress, //function for marker/pin event
+  onMarkerPress, //property for marker/pin event
 }: GoogleMapsViewProps) {
   /* Template for daily itinerary --> Map view with Markers
     Gets list of places from db, [id, lat,long, etc..]
@@ -47,7 +47,7 @@ export default function GoogleMapsView({
   const activeMapRef = mapRef ?? internalMapRef;
   const activeSelectedPlace = selectedPlace ?? internalSelectedPlace;
   const activeSetSelectedPlace = setSelectedPlace ?? internalSetSelectedPlace;
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomSheet>(null); //constant that aids in controlling the rendering for the bottom sheet
   const snapPoints = ["25%", "50%", "4%"];
 
   const places = [
@@ -137,8 +137,8 @@ const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY!;
             </Marker>
           ))}
 
-          {activeSelectedPlace && (
-            <Marker
+          {activeSelectedPlace && ( //if user selects a marker
+            <Marker 
               coordinate={{
                 latitude: activeSelectedPlace.lat,
                 longitude: activeSelectedPlace.lng,
