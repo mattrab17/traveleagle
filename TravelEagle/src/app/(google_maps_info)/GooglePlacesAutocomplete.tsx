@@ -18,8 +18,13 @@ export default function GooglePlacesInput({mapRef, setSelectedPlace}) {
             }
             /*Remove logs & alert*/
             console.log("Selected place:", data);
-            console.log("Place details:", details);
+            // console.log("Place details:", details);
             Alert.alert("Place Selected", data.description);
+           /*  console.log(data.place_id);
+            console.log(details?.name);
+            console.log(details?.formatted_address);
+            console.log(details?.geometry.location.lat);
+            console.log(details?.geometry.location.lng); */
           }}
 
           query={{
@@ -61,7 +66,8 @@ export  function GooglePlacesInputTrip({ onSelect, placeholder = "Where would yo
           placeholder={placeholder}
           onPress={(data, details) => {
             onSelect?.(data, details)
-            console.log("Selected place:", data);
+            // console.log("Selected place:", data);
+            // console.log('details:', details)
           }}
 
           query={{
