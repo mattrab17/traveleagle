@@ -23,16 +23,22 @@ export const itineraryQueries = {
 
          if(error) throw error;
          return data || [];
-    }
+    },
 
-    /* async addItem(item: {
+   async addItem(item: {
         trip_id: number;
         place_id: number;
         day_number: number;
         time_slot?: string;
         notes?: string;
-    }): Promise<ItineraryItem>{
-
-    }
-    */
+        order_index?:number;
+    }): Promise<ItineraryItems>{
+        const {data, error} = await supabase
+        .from('itinerary_items')
+        .insert(item)
+        .select('*, place:places(*)')
+        .single();
+        if (error) throw error;
+        return data;
+    },
 }

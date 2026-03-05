@@ -21,7 +21,7 @@ export const placeQueries = {
         .from('places')
         .select('*')
         .eq('google_place_id', googlePlaceId)
-        .single();
+        .maybeSingle();
 
 
         if(error) throw error;
