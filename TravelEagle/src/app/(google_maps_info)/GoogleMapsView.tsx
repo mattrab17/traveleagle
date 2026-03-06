@@ -11,6 +11,8 @@ import useLocation from "../../../LocationServices/liveLocation"
 import Feather from '@expo/vector-icons/Feather'; //import icon library
 import MapViewDirections from 'react-native-maps-directions'
 
+import { PlacesAPI } from "../../../LocationServices/PointOfInterest"
+
 type SelectedPlace = {
   name: string;
   lng: number;
@@ -71,6 +73,31 @@ const destination = activeSelectedPlace
     : undefined;
 const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY!;
 
+//code for the markers from GeoApify
+const [poiMarkers, setPoiMarkers] = useState<any[]>([]);
+const [category, setCategory] = useState("leisure.park");
+const geo = useRef(new PlacesAPI()).current;//useRef will allow the markers to stay on the map without ReRendering everytime
+
+useEffect(() => {
+  const run = async () => {
+    try {
+      if ((latitude == null || longitude == null) && !activeSelectedPlace) return;
+      const poiResults = await geo.findPlaces({
+        userLocation: { latitude, longitude },
+        searchedPlace: activeSelectedPlace,
+        category,
+        radius: 2500,
+        limit: 20,
+      });
+
+      setPoiMarkers(poiResults);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+  run();
+}, [latitude, longitude, activeSelectedPlace, category]);
+  
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
@@ -137,6 +164,20 @@ const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY!;
             </Marker>
           ))}
 
+           {/* POI Markers*/}
+  {poiMarkers.map((p) => (
+  <Marker
+    key={p.id}
+    coordinate={{ latitude: p.latitude, longitude: p.longitude }}
+    title={p.name}
+    description={p.address}
+    pinColor="blue"
+    onPress={() => {
+      onMarkerPress(p.original);
+    }}
+  />
+))}
+          
           {activeSelectedPlace && ( //if user selects a marker
             <Marker 
               coordinate={{
