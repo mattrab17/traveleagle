@@ -11,10 +11,9 @@ export class PlacesAPI {
     radius = 2500,
     limit = 10,//will only show 10 closest markers to stop map from slowing in performance
   }) {
-    const lat =
-      searchedPlace?.lat != null ? searchedPlace.lat : userLocation?.latitude;
-    const lng =//checks to see if lat and longitude of user and searched place exist
-      searchedPlace?.lng != null ? searchedPlace.lng : userLocation?.longitude;
+    const lat = searchedPlace?.lat 
+    const lng =  searchedPlace?.lng
+    //checks to see if lat and longitude of searched place exist
 
     if (lat == null || lng == null) return [];
       //if values dont exist b/c user didnt search or give their location, API wont be called
