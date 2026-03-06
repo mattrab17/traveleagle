@@ -22,6 +22,8 @@ export default function ItineraryPage() {
   const router = useRouter();
   const [showNameItin, setShowNameItin] = useState(false); 
   const [itinName, setItinName] = useState("");
+  const [activityName, setActivityName] = useState("");
+  const [activityDescription, setActivityDescription] = useState("");
   const [showItin, setShowItin] = useState(false); 
   const [showActivityCreation, setShowActivityCreation] = useState(false);
 
@@ -87,57 +89,97 @@ export default function ItineraryPage() {
         ]}
       >
         {showItin ? (
-          // *** Third page ***
-          <View style={{ width: "100%" }}>
-            
-            <View style={{backgroundColor:"#0e1e38", padding: 20, borderRadius: 15, width: "100%", borderColor: "#96a0ad", borderWidth: 0.75, marginBottom: 20, justifyContent:"flex-start", alignItems:"flex-start"}}>
-                <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 22, fontWeight: "800" }}>
-                {itinName}
-                </Text>
-            
-                <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "500" }}>
-                Plan your day from midght to midnight!
-                </Text>
-            </View>
-            
-           <TouchableOpacity
-           onPress={() => setShowActivityCreation(true)}
-            style={{
-              backgroundColor:"#0e1e38",
-              width: "100%",
-              paddingVertical: 20,
-              borderRadius: 15,
-              alignItems: "center",
-              borderColor: "#4c5158", 
-              borderWidth: 0.75,
-            }}
-          >
-            <Text style={{ fontSize: 14.5, fontWeight: "900", color: "#96a0ad" }}>
-              + Add Activity
-            </Text>
-          </TouchableOpacity>
-          </View>
-
-
-) : showActivityCreation ? (
+          // *** Third page placeholder ***
+          showActivityCreation ? (
+            // activity creation state
             <View style={{ width: "100%" }}>
-            
-            <View style={{backgroundColor:"#0e1e38", padding: 20, borderRadius: 15, width: "100%", borderColor: "#96a0ad", borderWidth: 0.75, marginBottom: 20, justifyContent:"flex-start", alignItems:"flex-start"}}>
-                <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 22, fontWeight: "800" }}>
-                {itinName}
+              <View style={{backgroundColor:"#0e1e38", padding: 20, borderRadius: 15, width: "100%", borderColor: "#96a0ad", borderWidth: 0.75, marginBottom: 20, justifyContent:"flex-start", alignItems:"flex-start"}}>
+                  <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 22, fontWeight: "800" }}>
+                  {itinName}
+                  </Text>
+              
+                  <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "500" }}>
+                  Plan your day from midght to midnight!
+                  </Text>
+              </View>
+
+              <View style={{backgroundColor:"#0e1e38", padding: 20, borderRadius: 15, width: "100%", borderColor: ORANGE_COLOR, borderWidth: 0.75}}>
+                    <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 20, fontWeight: "500", paddingBottom: 10 }}>
+                      Add Activity
+                    </Text>
+                    <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "500", paddingBottom: 3 }}>
+                      Time
+                    </Text>
+                    <TextInput 
+                        value={"12:00 PM"}
+                        style={{padding: 10, backgroundColor: "#262a2f", borderRadius: 5, color: WHITE_TEXT_COLOR}}></TextInput>
+                    <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "500", paddingBottom: 3, paddingTop: 10 }}>Activity</Text>
+                    <TextInput 
+                    value={activityName} 
+                    onChangeText={setActivityName}
+                    placeholder="What are you doing?"
+                    placeholderTextColor="gray"
+                    style={{padding: 10, backgroundColor: "#262a2f", borderRadius: 5, color: WHITE_TEXT_COLOR}}></TextInput>
+                    <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "500", paddingBottom: 3, paddingTop: 10 }}>Description</Text>
+                    <TextInput value={activityDescription}
+                    onChangeText={setActivityDescription}
+                    placeholder="Add details..."
+                    placeholderTextColor="gray"
+                    style={{paddingTop: 10,paddingLeft: 10,paddingRight: 10,paddingBottom: 20, backgroundColor: "#262a2f", borderRadius: 5, color: WHITE_TEXT_COLOR}}></TextInput>
+              
+              
+              <View style={{flexDirection: "row", paddingTop: 10, justifyContent: "space-between"}}>
+                <TouchableOpacity>
+                <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "700", backgroundColor: "#2c4eb5", padding: 13,paddingLeft: 108,paddingRight: 108, borderRadius: 5 }}>
+                  Add
                 </Text>
-            
-                <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "500" }}>
-                Plan your day from midght to midnight!
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setShowActivityCreation(false)}
+              >
+                <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "300", backgroundColor: "#262a2f", padding: 13, borderRadius: 5 }}>
+                  Cancel
                 </Text>
+              </TouchableOpacity>
+              </View>
+              
+
+              </View>
             </View>
+          ) : (
+            // regular third page (before adding activity)
+            <View style={{ width: "100%" }}>
+              <View style={{backgroundColor:"#0e1e38", padding: 20, borderRadius: 15, width: "100%", borderColor: "#96a0ad", borderWidth: 0.75, marginBottom: 20, justifyContent:"flex-start", alignItems:"flex-start"}}>
+                  <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 22, fontWeight: "800" }}>
+                  {itinName}
+                  </Text>
+              
+                  <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "500" }}>
+                  Plan your day from midght to midnight!
+                  </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowActivityCreation(true)}
+                style={{
+                  backgroundColor:"#0e1e38",
+                  width: "100%",
+                  paddingVertical: 20,
+                  borderRadius: 15,
+                  alignItems: "center",
+                  borderColor: "#4c5158", 
+                  borderWidth: 0.75,
+                }}
+              >
+                <Text style={{ fontSize: 14.5, fontWeight: "900", color: "#96a0ad" }}>
+                  + Add Activity
+                </Text>
+              </TouchableOpacity>
             </View>
+          )
 
 
-
-
-
-        ) : !showNameItin ? (
+) : !showNameItin ? (
           <>
             {/* First State */}
             <TouchableOpacity
@@ -243,6 +285,7 @@ export default function ItineraryPage() {
                 borderRadius: 10,
                 marginBottom: 20,
                 fontSize: 16,
+                color: "white",
               }}
             />
             
