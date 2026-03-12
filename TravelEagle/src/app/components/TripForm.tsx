@@ -78,6 +78,8 @@ export default function TripForm({onClose}) {
                 calendarActiveDateRanges={calendarActiveDateRanges}
                 onCalendarDayPress={onCalendarDayPress}   
                 calendarMonthHeaderHeight={0}
+                //Fix calendar, dev changed the default styling, Dates don't appear correctly.
+            
                            
             /></View></View>
             <View style={{marginTop: 15, flexDirection: "row", gap:10}}>

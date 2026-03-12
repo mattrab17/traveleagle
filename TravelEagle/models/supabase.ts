@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       itinerary_items: {
@@ -70,7 +45,22 @@ export type Database = {
           time_slot?: string | null
           trip_id?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "itinerary_items_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["places_id"]
+          },
+          {
+            foreignKeyName: "itinerary_items_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["trip_id"]
+          },
+        ]
       }
       places: {
         Row: {
@@ -115,7 +105,7 @@ export type Database = {
           end_date: string | null
           start_date: string | null
           trip_id: number
-          user_id: number | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -123,7 +113,7 @@ export type Database = {
           end_date?: string | null
           start_date?: string | null
           trip_id?: number
-          user_id?: number | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -131,45 +121,37 @@ export type Database = {
           end_date?: string | null
           start_date?: string | null
           trip_id?: number
-          user_id?: number | null
+          user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "trips_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       users: {
         Row: {
           avatar_url: string | null
           created_at: string
           email: string | null
+          id: string
           interests: Json | null
           name: string | null
-          user_id: number
-          username: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          id?: string
           interests?: Json | null
           name?: string | null
-          user_id?: number
-          username?: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          id?: string
           interests?: Json | null
           name?: string | null
-          user_id?: number
-          username?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -307,15 +289,10 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
 } as const
-
-
 
 export type Trip = Tables<'trips'>;
 export type Place = Tables<'places'>

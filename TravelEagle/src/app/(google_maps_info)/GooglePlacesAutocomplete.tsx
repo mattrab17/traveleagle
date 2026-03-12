@@ -64,6 +64,16 @@ export default function GooglePlacesInput({
           if (details && mapRef && setSelectedPlace) {
             goToSearchedPlace(mapRef, details, setSelectedPlace);
           }
+            /*Remove logs & alert*/
+            console.log("Selected place:", data);
+            // console.log("Place details:", details);
+            Alert.alert("Place Selected", data.description);
+           /*  console.log(data.place_id);
+            console.log(details?.name);
+            console.log(details?.formatted_address);
+            console.log(details?.geometry.location.lat);
+            console.log(details?.geometry.location.lng); */
+          }}
 
           activeSetSearchText(data.description || "");
         }}
@@ -136,6 +146,16 @@ export default function GooglePlacesInput({
     </View>
   );
 }
+export  function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you like to go?"}) {
+  return (
+      <View style={styles.container}>
+        <GooglePlacesAutocomplete
+          placeholder={placeholder}
+          onPress={(data, details) => {
+            onSelect?.(data, details)
+            // console.log("Selected place:", data);
+            // console.log('details:', details)
+          }}
 
 export function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you like to go?" }: GooglePlacesInputTripProps) {
   return (
