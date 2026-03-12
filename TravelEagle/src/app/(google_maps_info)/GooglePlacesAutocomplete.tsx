@@ -58,7 +58,14 @@ export default function GooglePlacesInput({
               activeGooglePlacesRef.current.focus();
               activeGooglePlacesRef.current.setAddressText(activeSearchText);
             }
-<<<<<<< HEAD
+<<<<<<<<< Temporary merge branch 1
+          },
+        }}
+        onPress={(data, details = null) => {
+          if (details && mapRef && setSelectedPlace) {
+            goToSearchedPlace(mapRef, details, setSelectedPlace);
+          }
+=========
             /*Remove logs & alert*/
             console.log("Selected place:", data);
             // console.log("Place details:", details);
@@ -69,14 +76,7 @@ export default function GooglePlacesInput({
             console.log(details?.geometry.location.lat);
             console.log(details?.geometry.location.lng); */
           }}
-=======
-          },
-        }}
-        onPress={(data, details = null) => {
-          if (details && mapRef && setSelectedPlace) {
-            goToSearchedPlace(mapRef, details, setSelectedPlace);
-          }
->>>>>>> SearchBarFeature
+>>>>>>>>> Temporary merge branch 2
 
           activeSetSearchText(data.description || "");
         }}
@@ -149,10 +149,58 @@ export default function GooglePlacesInput({
     </View>
   );
 }
+export  function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you like to go?"}) {
+  return (
+      <View style={styles.container}>
+        <GooglePlacesAutocomplete
+          placeholder={placeholder}
+          onPress={(data, details) => {
+            onSelect?.(data, details)
+            // console.log("Selected place:", data);
+            // console.log('details:', details)
+          }}
 
 export function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you like to go?" }: GooglePlacesInputTripProps) {
   return (
-<<<<<<< HEAD
+<<<<<<<<< Temporary merge branch 1
+    <View style={styles.tripContainer}>
+      <GooglePlacesAutocomplete
+        placeholder={placeholder}
+        minLength={2}
+        listViewDisplayed="auto"
+        keyboardShouldPersistTaps="handled"
+        fetchDetails={true}
+        query={{
+          key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+          language: "en",
+        }}
+        enablePoweredByContainer={false}
+        debounce={200}
+        onPress={(data, details = null) => onSelect(data, details)}
+        styles={{
+          container: {
+            flex: 0,
+            width: '100%',
+          },
+          textInputContainer: {
+            width: '100%',
+            backgroundColor: "transparent",
+          },
+          textInput: {
+            width: '100%',
+            height: 50,
+            color: "#5d5d5d",
+            fontSize: 16,
+            borderWidth: 1,
+            borderColor: "#ddd",
+            borderRadius: 8,
+            paddingHorizontal: 12,
+            backgroundColor: 'white'
+          },
+        }}
+      />
+    </View>
+=========
       <View style={styles.container}>
         <GooglePlacesAutocomplete
           placeholder={placeholder}
@@ -196,45 +244,7 @@ export function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you
           debounce={200}
         />
       </View>
-=======
-    <View style={styles.tripContainer}>
-      <GooglePlacesAutocomplete
-        placeholder={placeholder}
-        minLength={2}
-        listViewDisplayed="auto"
-        keyboardShouldPersistTaps="handled"
-        fetchDetails={true}
-        query={{
-          key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-          language: "en",
-        }}
-        enablePoweredByContainer={false}
-        debounce={200}
-        onPress={(data, details = null) => onSelect(data, details)}
-        styles={{
-          container: {
-            flex: 0,
-            width: '100%',
-          },
-          textInputContainer: {
-            width: '100%',
-            backgroundColor: "transparent",
-          },
-          textInput: {
-            width: '100%',
-            height: 50,
-            color: "#5d5d5d",
-            fontSize: 16,
-            borderWidth: 1,
-            borderColor: "#ddd",
-            borderRadius: 8,
-            paddingHorizontal: 12,
-            backgroundColor: 'white'
-          },
-        }}
-      />
-    </View>
->>>>>>> SearchBarFeature
+>>>>>>>>> Temporary merge branch 2
   );
 }
 

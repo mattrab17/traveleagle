@@ -154,7 +154,9 @@ useEffect(() => {
             </Marker>
           ))}
 
-<<<<<<< HEAD
+<<<<<<<<< Temporary merge branch 1
+          {activeSelectedPlace && !isSelectedPlaceFromPresetMarkers && (
+=========
            {/* POI Markers*/}
   {poiMarkers.map((p) => (
   <Marker
@@ -170,9 +172,7 @@ useEffect(() => {
 ))}
           
           {activeSelectedPlace && ( //if user selects a marker
-=======
-          {activeSelectedPlace && !isSelectedPlaceFromPresetMarkers && (
->>>>>>> SearchBarFeature
+>>>>>>>>> Temporary merge branch 2
             <Marker 
               coordinate={{
                 latitude: activeSelectedPlace.lat,
