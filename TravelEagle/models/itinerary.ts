@@ -41,4 +41,14 @@ export const itineraryQueries = {
         if (error) throw error;
         return data;
     },
+
+    async deleteItem(itemId: number){
+        const {error}  = await supabase
+        .from('itinerary_items')
+        .delete()
+        .eq('id', itemId)
+
+        if (error) throw error;
+
+    }
 }

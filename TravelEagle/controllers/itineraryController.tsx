@@ -49,4 +49,16 @@ export const itineraryController = {
         }  
         
     },
+    async deleteItemFromItinerary(itemId: number){
+
+        try{
+            await itineraryQueries.deleteItem(itemId);
+            return {error: null};
+        }
+        catch (error){
+
+            return {error};
+
+        }
+    }
 };

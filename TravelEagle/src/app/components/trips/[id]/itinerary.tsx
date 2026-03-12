@@ -1,5 +1,6 @@
 import { itineraryController } from "@/controllers/itineraryController";
 import {GooglePlacesInput, GooglePlacesInputTrip } from "@/src/app/(google_maps_info)/GooglePlacesAutocomplete";
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { View, Text, FlatList, Image, TouchableOpacity, ScrollView, Alert } from "react-native";
@@ -10,13 +11,14 @@ export default function ItineraryScreen(){
     const [itinerary, setItinerary] = useState<any>([]);
     const router = useRouter();
     const [selectedPlace, setSelectedPlace] = useState<any>(null);
-    useEffect(() => {
-        async function loadItinerary(){
+    async function loadItinerary(){
             const {data} = await itineraryController.loadAllItems(Number(id));
             setItinerary(data)
-            console.log(data)
         }
-    loadItinerary()}, [id]);
+
+    useEffect(() => {
+        
+    loadItinerary();}, [id]);
 
 
     async function handleAddPlace(){
@@ -39,6 +41,24 @@ export default function ItineraryScreen(){
             setItinerary(updatedData)
             setSelectedPlace(null);
             console.log(updatedData)
+    }
+
+    async function handleDelete(itemId: number){
+        Alert.alert(
+            'Delete from Itinerary',
+            'Are you sure you want to delete this item from your itinerary?',
+            [
+                {text: 'Cancel', style: 'cancel'},
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        await itineraryController.deleteItemFromItinerary(itemId);
+                        loadItinerary();
+                    }
+                }
+            ]
+        )
     }
 
 
@@ -110,13 +130,41 @@ export default function ItineraryScreen(){
             data={itinerary}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({item}) => (
-                <View style={{backgroundColor: 'white', padding:15, borderRadius: 10, marginBottom: 10}}>
-                <Text style={{fontSize:16}}>
+                <View style={{backgroundColor: 'white', padding:10, borderRadius: 10, marginBottom: 10, flexDirection: 'row', alignItems: 'center' }}>
+                {item.place?.place_data?.photos && item.place.place_data.photos[0] && (
+                     <Image 
+                            source={{
+                                uri: `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${item.place.place_data.photos[0].photo_reference}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`
+
+                            }}
+                            style={{width:120, height: 80}}>
+                            </Image>
+                )
+            }
+                <View style={{flex: 1, paddingLeft: 15}}>
+                <Text style={{fontSize:16, fontWeight: '500'}}>
                     {item.place.name}
                 </Text>
-                <Text style={{fontSize: 16, }}>
-                Day {item.day_number}
+                 <Text style={{fontSize:10, paddingTop: 3}}>
+                {item.place.address}
                 </Text>
+                <Text style={{fontSize: 12, fontWeight: item.time_slot ? '200' : 'ultralight', color: item.time_slot ? '#000000' : '#919191', paddingTop: 10  }}>
+                    Time: {item.time_slot}
+                </Text>
+                </View>
+                <View style={{
+                    flexDirection:'row', position:'absolute', top:8, right: 8, gap: 4
+                }
+                }>
+                    <TouchableOpacity onPress={()=> {}}>
+                        <Ionicons name='settings-outline' size={15}></Ionicons>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={()=> handleDelete(item.id)}>
+                        <Ionicons name='trash-outline' size={15} color='red'></Ionicons>
+                    </TouchableOpacity>
+                    
+                </View>
+
                 </View>
             )}
             ListEmptyComponent={
