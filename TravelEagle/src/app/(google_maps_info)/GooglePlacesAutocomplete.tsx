@@ -1,21 +1,69 @@
-import React, { useState } from "react";
+import React, { useRef } from "react";
 import {
   StyleSheet,
   View,
-  Alert,
+  Text,
 } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-import {goToSearchedPlace,} from "../../../controllers/mapController";
+import { goToSearchedPlace } from "../../../controllers/mapController";
+import { Feather } from "@expo/vector-icons"; // Added for the location icon
+import MapView from "react-native-maps";
 
-export default function GooglePlacesInput({mapRef, setSelectedPlace}) {
+type SelectedPlace = {
+  name: string;
+  lng: number;
+  lat: number;
+  description?: string;
+} | null;
+
+type GooglePlacesInputProps = {
+  mapRef?: React.RefObject<MapView | null>;
+  setSelectedPlace?: React.Dispatch<React.SetStateAction<SelectedPlace>>;
+  googlePlacesRef?: React.RefObject<any>;
+  searchText?: string;
+  setSearchText?: React.Dispatch<React.SetStateAction<string>> | ((text: string) => void);
+};
+
+type GooglePlacesInputTripProps = {
+  onSelect: (data: any, details: any) => void;
+  placeholder?: string;
+};
+
+export default function GooglePlacesInput({
+  mapRef,
+  setSelectedPlace,
+  googlePlacesRef,
+  searchText,
+  setSearchText,
+  
+}: GooglePlacesInputProps) {
+  const internalGooglePlacesRef = useRef<any>(null);
+  const activeGooglePlacesRef = googlePlacesRef ?? internalGooglePlacesRef;
+  const activeSearchText = searchText ?? "";
+  const activeSetSearchText = setSearchText ?? (() => {});
+
   return (
-      <View style={styles.container}>
-        <GooglePlacesAutocomplete
-          placeholder="Search for a place"
-          onPress={(data, details) => {
-            if (details) {
-              goToSearchedPlace(mapRef, details, setSelectedPlace);
+    <View style={styles.container}>
+      <GooglePlacesAutocomplete
+        ref={activeGooglePlacesRef}
+        placeholder="Search for a place"
+        fetchDetails={true} // Ensures coordinates are sent to mapController
+        textInputProps={{
+          value: activeSearchText,
+          onChangeText: (text) => activeSetSearchText(text),
+          placeholderTextColor: "#8F8F8F",
+          returnKeyType: "search",
+          onSubmitEditing: () => {
+            if (activeGooglePlacesRef.current && activeSearchText.trim() !== "") {
+              activeGooglePlacesRef.current.focus();
+              activeGooglePlacesRef.current.setAddressText(activeSearchText);
             }
+          },
+        }}
+        onPress={(data, details = null) => {
+          if (details && mapRef && setSelectedPlace) {
+            goToSearchedPlace(mapRef, details, setSelectedPlace);
+          }
             /*Remove logs & alert*/
             console.log("Selected place:", data);
             // console.log("Place details:", details);
@@ -27,36 +75,75 @@ export default function GooglePlacesInput({mapRef, setSelectedPlace}) {
             console.log(details?.geometry.location.lng); */
           }}
 
-          query={{
-            key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
-            language: "en",
-          }}
-          fetchDetails={true}
-          styles={{
-            textInputContainer: {
-              backgroundColor: "transparent",
-              borderTopWidth: 0,
-              borderBottomWidth: 0,
-            },
-            /*Move TexInput into styles later or Remove it entirely */
-            textInput: {
-              marginLeft: 0,
-              marginRight: 0,
-              height: 50,
-              color: "#5d5d5d",
-              fontSize: 16,
-              borderWidth: 1,
-              borderColor: "#ddd",
-              borderRadius: 8,
-              paddingHorizontal: 12,
-            },
-            predefinedPlacesDescription: {
-              color: "#1faadb",
-            },
-          }}
-          debounce={200}
-        />
-      </View>
+          activeSetSearchText(data.description || "");
+        }}
+        query={{
+          key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+          language: "en",
+        }}
+        enablePoweredByContainer={false}
+        debounce={200}
+        nearbyPlacesAPI="GooglePlacesSearch"
+        renderRow={(data) => (
+          <View style={styles.rowContainer}>
+            <Feather name="map-pin" size={18} color="#8F8F8F" style={styles.rowIcon} />
+            <Text style={styles.descriptionText} numberOfLines={1}>{data.description}</Text>
+          </View>
+        )}
+        styles={{
+          container: {
+            flex: 1,
+            overflow: "visible", 
+          },
+          textInputContainer: {
+            flex: 1,
+            backgroundColor: "transparent",
+            height: 50, // Matches searchContainer height for centering
+            justifyContent: 'center', 
+            alignItems: 'center',
+            borderTopWidth: 0,
+            borderBottomWidth: 0,
+            paddingHorizontal: 0,
+            marginHorizontal: 0,
+          },
+          textInput: {
+            height: 40,
+            color: "#FFFFFF",
+            fontSize: 15,
+            backgroundColor: "transparent",
+            borderWidth: 0,
+            marginTop: 0,
+            marginBottom: 0,
+            paddingTop: 0,
+            paddingBottom: 0,
+            paddingLeft: 0,
+            textAlignVertical: 'center',
+          },
+          listView: {
+            position: "absolute",
+            top: 55, 
+            left: -44, 
+            right: -56,
+            backgroundColor: "#FFFFFF",
+            borderRadius: 12,
+            zIndex: 5000,
+            elevation: 5000,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 5,
+          },
+          row: {
+            backgroundColor: "transparent",
+            padding: 0, 
+          },
+          separator: {
+            height: 1,
+            backgroundColor: "#E8E8E8",
+          },
+        }}
+      />
+    </View>
   );
 }
 export  function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you like to go?"}) {
@@ -70,139 +157,69 @@ export  function GooglePlacesInputTrip({ onSelect, placeholder = "Where would yo
             // console.log('details:', details)
           }}
 
-          query={{
-            key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
-            language: "en",
-          }}
-          fetchDetails={true}
-          
-          styles={{
-            container: {
-              flex: 0,
-              width: '100%',
-            },
-            textInputContainer: {
-              width: '100%',
-              backgroundColor: "transparent",
-            },
-            /*Move TexInput into styles later or Remove it entirely */
-            textInput: {
-              width: '100%',
-              height: 50,
-              color: "#5d5d5d",
-              fontSize: 16,
-              borderWidth: 1,
-              borderColor: "#ddd",
-              borderRadius: 8,
-              paddingHorizontal: 12,
-              backgroundColor: 'white'
-            },
-            predefinedPlacesDescription: {
-              color: "#1faadb",
-            },
-          }}
-          debounce={200}
-        />
-      </View>
+export function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you like to go?" }: GooglePlacesInputTripProps) {
+  return (
+    <View style={styles.tripContainer}>
+      <GooglePlacesAutocomplete
+        placeholder={placeholder}
+        minLength={2}
+        listViewDisplayed="auto"
+        keyboardShouldPersistTaps="handled"
+        fetchDetails={true}
+        query={{
+          key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+          language: "en",
+        }}
+        enablePoweredByContainer={false}
+        debounce={200}
+        onPress={(data, details = null) => onSelect(data, details)}
+        styles={{
+          container: {
+            flex: 0,
+            width: '100%',
+          },
+          textInputContainer: {
+            width: '100%',
+            backgroundColor: "transparent",
+          },
+          textInput: {
+            width: '100%',
+            height: 50,
+            color: "#5d5d5d",
+            fontSize: 16,
+            borderWidth: 1,
+            borderColor: "#ddd",
+            borderRadius: 8,
+            paddingHorizontal: 12,
+            backgroundColor: 'white'
+          },
+        }}
+      />
+    </View>
   );
 }
 
-
-
-/* Add styles to a diff file and import late */
 const styles = StyleSheet.create({
   container: {
-    width:'100%',
+    flex: 1,
+    zIndex: 1000,
+    elevation: 1000,
+  },
+  tripContainer: {
+    width: '100%',
+    zIndex: 1000,
+  },
+  rowContainer: {
     flexDirection: 'row',
-    backgroundColor: "#f5f5f5",
+    alignItems: 'center',
+    padding: 15,
   },
-  keyboardAvoidingView: {
-    flex: 1,
+  rowIcon: {
+    marginRight: 15,
   },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 16,
-  },
-  header: {
-    marginBottom: 24,
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
+  descriptionText: {
     color: "#333",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#666",
-  },
-  section: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 12,
-  },
-  resultSection: {
-    marginTop: 24,
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  resultBox: {
-    backgroundColor: "#f9f9f9",
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-  },
-  resultLabel: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#666",
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  resultText: {
-    fontSize: 14,
-    color: "#333",
-    marginBottom: 4,
-  },
-  footer: {
-    marginTop: 16,
-    marginBottom: 32,
-    padding: 12,
-    backgroundColor: "#fff3cd",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ffc107",
-  },
-  footerText: {
-    fontSize: 12,
-    color: "#856404",
-    textAlign: "center",
+    flex: 1,
   },
 });
