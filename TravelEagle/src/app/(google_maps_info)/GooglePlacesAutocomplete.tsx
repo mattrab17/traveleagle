@@ -3,6 +3,7 @@ import {
   StyleSheet,
   View,
   Text,
+  Alert, // Added Alert since it is used in your code
 } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { goToSearchedPlace } from "../../../controllers/mapController";
@@ -35,7 +36,6 @@ export default function GooglePlacesInput({
   googlePlacesRef,
   searchText,
   setSearchText,
-  
 }: GooglePlacesInputProps) {
   const internalGooglePlacesRef = useRef<any>(null);
   const activeGooglePlacesRef = googlePlacesRef ?? internalGooglePlacesRef;
@@ -58,25 +58,21 @@ export default function GooglePlacesInput({
               activeGooglePlacesRef.current.focus();
               activeGooglePlacesRef.current.setAddressText(activeSearchText);
             }
-<<<<<<<<< Temporary merge branch 1
           },
         }}
         onPress={(data, details = null) => {
           if (details && mapRef && setSelectedPlace) {
             goToSearchedPlace(mapRef, details, setSelectedPlace);
           }
-=========
-            /*Remove logs & alert*/
-            console.log("Selected place:", data);
-            // console.log("Place details:", details);
-            Alert.alert("Place Selected", data.description);
-           /*  console.log(data.place_id);
+          /*Remove logs & alert*/
+          console.log("Selected place:", data);
+          // console.log("Place details:", details);
+          Alert.alert("Place Selected", data.description);
+          /* console.log(data.place_id);
             console.log(details?.name);
             console.log(details?.formatted_address);
             console.log(details?.geometry.location.lat);
             console.log(details?.geometry.location.lng); */
-          }}
->>>>>>>>> Temporary merge branch 2
 
           activeSetSearchText(data.description || "");
         }}
@@ -96,13 +92,13 @@ export default function GooglePlacesInput({
         styles={{
           container: {
             flex: 1,
-            overflow: "visible", 
+            overflow: "visible",
           },
           textInputContainer: {
             flex: 1,
             backgroundColor: "transparent",
             height: 50, // Matches searchContainer height for centering
-            justifyContent: 'center', 
+            justifyContent: 'center',
             alignItems: 'center',
             borderTopWidth: 0,
             borderBottomWidth: 0,
@@ -124,8 +120,8 @@ export default function GooglePlacesInput({
           },
           listView: {
             position: "absolute",
-            top: 55, 
-            left: -44, 
+            top: 55,
+            left: -44,
             right: -56,
             backgroundColor: "#FFFFFF",
             borderRadius: 12,
@@ -138,7 +134,7 @@ export default function GooglePlacesInput({
           },
           row: {
             backgroundColor: "transparent",
-            padding: 0, 
+            padding: 0,
           },
           separator: {
             height: 1,
@@ -149,20 +145,9 @@ export default function GooglePlacesInput({
     </View>
   );
 }
-export  function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you like to go?"}) {
-  return (
-      <View style={styles.container}>
-        <GooglePlacesAutocomplete
-          placeholder={placeholder}
-          onPress={(data, details) => {
-            onSelect?.(data, details)
-            // console.log("Selected place:", data);
-            // console.log('details:', details)
-          }}
 
 export function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you like to go?" }: GooglePlacesInputTripProps) {
   return (
-<<<<<<<<< Temporary merge branch 1
     <View style={styles.tripContainer}>
       <GooglePlacesAutocomplete
         placeholder={placeholder}
@@ -197,54 +182,12 @@ export function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you
             paddingHorizontal: 12,
             backgroundColor: 'white'
           },
+          predefinedPlacesDescription: {
+            color: "#1faadb",
+          },
         }}
       />
     </View>
-=========
-      <View style={styles.container}>
-        <GooglePlacesAutocomplete
-          placeholder={placeholder}
-          onPress={(data, details) => {
-            onSelect?.(data, details)
-            // console.log("Selected place:", data);
-            // console.log('details:', details)
-          }}
-
-          query={{
-            key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
-            language: "en",
-          }}
-          fetchDetails={true}
-          
-          styles={{
-            container: {
-              flex: 0,
-              width: '100%',
-            },
-            textInputContainer: {
-              width: '100%',
-              backgroundColor: "transparent",
-            },
-            /*Move TexInput into styles later or Remove it entirely */
-            textInput: {
-              width: '100%',
-              height: 50,
-              color: "#5d5d5d",
-              fontSize: 16,
-              borderWidth: 1,
-              borderColor: "#ddd",
-              borderRadius: 8,
-              paddingHorizontal: 12,
-              backgroundColor: 'white'
-            },
-            predefinedPlacesDescription: {
-              color: "#1faadb",
-            },
-          }}
-          debounce={200}
-        />
-      </View>
->>>>>>>>> Temporary merge branch 2
   );
 }
 

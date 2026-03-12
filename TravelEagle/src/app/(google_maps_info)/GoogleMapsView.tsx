@@ -154,25 +154,21 @@ useEffect(() => {
             </Marker>
           ))}
 
-<<<<<<<<< Temporary merge branch 1
-          {activeSelectedPlace && !isSelectedPlaceFromPresetMarkers && (
-=========
-           {/* POI Markers*/}
-  {poiMarkers.map((p) => (
-  <Marker
-    key={p.id}
-    coordinate={{ latitude: p.latitude, longitude: p.longitude }}
-    title={p.name}
-    description={p.address}
-    pinColor="blue"
-    onPress={() => {
-      onMarkerPress(p.original);
-    }}
-  />
-))}
+          {/* POI Markers*/}
+          {poiMarkers.map((p) => (
+            <Marker
+              key={p.id}
+              coordinate={{ latitude: p.latitude, longitude: p.longitude }}
+              title={p.name}
+              description={p.address}
+              pinColor="blue"
+              onPress={() => {
+                onMarkerPress(p.original);
+              }}
+            />
+          ))}
           
-          {activeSelectedPlace && ( //if user selects a marker
->>>>>>>>> Temporary merge branch 2
+          {activeSelectedPlace && !isSelectedPlaceFromPresetMarkers && (
             <Marker 
               coordinate={{
                 latitude: activeSelectedPlace.lat,
@@ -276,6 +272,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
-  
 });
