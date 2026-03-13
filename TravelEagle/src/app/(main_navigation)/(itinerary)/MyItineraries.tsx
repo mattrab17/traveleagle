@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInput,
+  ScrollView,
 } from "react-native";
 import {
   BACKGROUND_COLOR,
@@ -24,8 +25,116 @@ export default function ItineraryPage() {
   const [itinName, setItinName] = useState("");
   const [activityName, setActivityName] = useState("");
   const [activityDescription, setActivityDescription] = useState("");
+  const [activityHour, setActivityHour] = useState("");
+  const [activityMinute, setActivityMinute] = useState("");
+  const [activityPeriod, setActivityPeriod] = useState<boolean | null>(null); // true = AM, false = PM, null = not selected
+  const [errorMessage, setErrorMessage] = useState("");
+  const [activities, setActivities] = useState<Array<{
+    id: string;
+    name: string;
+    description: string;
+    hour: number;
+    minute: number;
+    period: boolean; // true = AM, false = PM
+  }>>([]);
   const [showItin, setShowItin] = useState(false); 
   const [showActivityCreation, setShowActivityCreation] = useState(false);
+  const [showAddedActivity, setShowAddedActivity] = useState(false); 
+
+  const sanitizeNumber = (text: string) => text.replace(/[^0-9]/g, "");
+
+  const handleHourChange = (text: string) => {
+    const cleaned = sanitizeNumber(text).slice(0, 2);
+    if (!cleaned) {
+      setActivityHour("");
+      return;
+    }
+
+    const numeric = parseInt(cleaned, 10);
+    if (numeric > 12) {
+      setActivityHour("12");
+      return;
+    }
+
+    setActivityHour(String(numeric));
+    setErrorMessage("");
+  };
+
+  const handleMinuteChange = (text: string) => {
+    const cleaned = sanitizeNumber(text).slice(0, 2);
+    if (!cleaned) {
+      setActivityMinute("");
+      return;
+    }
+
+    const numeric = parseInt(cleaned, 10);
+    if (numeric > 59) {
+      setActivityMinute("59");
+      return;
+    }
+
+    // Preserve the user's input format (e.g., "00" stays "00", "0" becomes "0")
+    setActivityMinute(cleaned);
+    setErrorMessage("");
+  };
+
+  const getFormattedTime = () => {
+    if (!activityHour || !activityMinute || activityPeriod === null) return "";
+    const h = activityHour.padStart(2, "0");
+    const m = activityMinute.padStart(2, "0");
+    const period = activityPeriod ? "AM" : "PM";
+    return `${h}:${m} ${period}`;
+  };
+
+  // Convert 12-hour time to 24-hour format for sorting
+  const getTimeInMinutes = (hour: number, minute: number, isAM: boolean) => {
+    let totalMinutes = hour * 60 + minute;
+    if (!isAM && hour !== 12) {
+      totalMinutes += 12 * 60; // Add 12 hours for PM (except 12 PM)
+    } else if (isAM && hour === 12) {
+      totalMinutes = minute; // 12 AM is 00:XX
+    }
+    return totalMinutes;
+  };
+
+  // Get activities sorted by time
+  const getSortedActivities = () => {
+    return [...activities].sort((a, b) => {
+      const timeA = getTimeInMinutes(a.hour, a.minute, a.period);
+      const timeB = getTimeInMinutes(b.hour, b.minute, b.period);
+      return timeA - timeB;
+    });
+  };
+
+  const handleAddActivity = () => {
+    if (!activityHour.trim() || !activityMinute.trim() || !activityName.trim() || !activityDescription.trim() || activityPeriod === null) {
+      setErrorMessage("Please fill out time (including AM/PM), activity name, and description.");
+      return;
+    }
+
+    const hour = parseInt(activityHour, 10);
+    const minute = parseInt(activityMinute, 10);
+
+    if (isNaN(hour) || isNaN(minute) || hour < 1 || hour > 12 || minute < 0 || minute > 59) {
+      setErrorMessage("Enter a valid time (1-12 for hours, 00-59 for minutes).");
+      return;
+    }
+
+    setErrorMessage("");
+    
+    // Add activity to the list
+    const newActivity = {
+      id: Date.now().toString(), // Simple ID generation
+      name: activityName,
+      description: activityDescription,
+      hour: hour,
+      minute: minute,
+      period: activityPeriod,
+    };
+    
+    setActivities(prev => [...prev, newActivity]);
+    setShowAddedActivity(true);
+  };
 
 
   return (
@@ -90,7 +199,87 @@ export default function ItineraryPage() {
       >
         {showItin ? (
           // *** Third page placeholder ***
-          showActivityCreation ? (
+          showAddedActivity ? (
+            // activity added confirmation page
+            <View style={{ width: "100%" }}>
+              <View style={{backgroundColor:"#0e1e38", padding: 20, borderRadius: 15, width: "100%", borderColor: "#96a0ad", borderWidth: 0.75, marginBottom: 20, justifyContent:"flex-start", alignItems:"flex-start"}}>
+                  <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 22, fontWeight: "800" }}>
+                  {itinName}
+                  </Text>
+              
+                  <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "500" }}>
+                  Plan your day from midght to midnight!
+                  </Text>
+              </View>
+
+              <View style={{backgroundColor:"#0e1e38", padding: 20, borderRadius: 15, width: "100%", borderColor: "#96a0ad", borderWidth: 0.75}}>
+                    
+                    <View style={{ padding: 15, borderRadius: 10, marginBottom: 15 }}>
+                      <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 18, fontWeight: "600", marginBottom: 8 }}>
+                        {activityName}
+                      </Text>
+                      
+                      <Text style={{ color: "#96a0ad", fontSize: 16, marginBottom: 8 }}>
+                        ⏰ {getFormattedTime()}
+                      </Text>
+                      
+                      <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 14, lineHeight: 20 }}>
+                        {activityDescription}
+                      </Text>
+                    </View>
+
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setShowAddedActivity(false);
+                          setShowActivityCreation(true);
+                          // Reset form fields but keep activities
+                          setActivityName("");
+                          setActivityDescription("");
+                          setActivityHour("");
+                          setActivityMinute("");
+                          setActivityPeriod(null);
+                          setErrorMessage("");
+                        }}
+                        style={{
+                          backgroundColor: "#2c4eb5",
+                          padding: 13,
+                          paddingLeft: 30,
+                          paddingRight: 30,
+                          borderRadius: 5,
+                        }}
+                      >
+                        <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "700" }}>
+                          Add Another
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => {
+                          setShowAddedActivity(false);
+                          setShowActivityCreation(false);
+                          // Reset form fields but keep activities for display
+                          setActivityName("");
+                          setActivityDescription("");
+                          setActivityHour("");
+                          setActivityMinute("");
+                          setActivityPeriod(null);
+                          setErrorMessage("");
+                        }}
+                        style={{
+                          backgroundColor: "#262a2f",
+                          padding: 13,
+                          borderRadius: 5,
+                        }}
+                      >
+                        <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "300" }}>
+                          Done
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+              </View>
+            </View>
+          ) : showActivityCreation ? (
             // activity creation state
             <View style={{ width: "100%" }}>
               <View style={{backgroundColor:"#0e1e38", padding: 20, borderRadius: 15, width: "100%", borderColor: "#96a0ad", borderWidth: 0.75, marginBottom: 20, justifyContent:"flex-start", alignItems:"flex-start"}}>
@@ -110,10 +299,63 @@ export default function ItineraryPage() {
                     <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "500", paddingBottom: 3 }}>
                       Time
                     </Text>
-                    <TextInput 
-                        value={"12:00 PM"}
-                        style={{padding: 10, backgroundColor: "#262a2f", borderRadius: 5, color: WHITE_TEXT_COLOR}}></TextInput>
+
+                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+                      <TextInput
+                        value={activityHour}
+                        onChangeText={handleHourChange}
+                        placeholder="HH"
+                        placeholderTextColor="gray"
+                        keyboardType="numeric"
+                        maxLength={2}
+                        style={{ flex: 0.7, padding: 10, backgroundColor: "#262a2f", borderRadius: 5, color: WHITE_TEXT_COLOR, marginRight: 6 }}
+                      />
+                      <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 18, marginRight: 6 }}>: </Text>
+                      <TextInput
+                        value={activityMinute}
+                        onChangeText={handleMinuteChange}
+                        placeholder="MM"
+                        placeholderTextColor="gray"
+                        keyboardType="numeric"
+                        maxLength={2}
+                        style={{ flex: 0.7, padding: 10, backgroundColor: "#262a2f", borderRadius: 5, color: WHITE_TEXT_COLOR, marginRight: 6 }}
+                      />
+                      <View style={{ flex: 1, flexDirection: "row", marginRight: 6 }}>
+                        <TouchableOpacity
+                          onPress={() => setActivityPeriod(true)}
+                          style={{
+                            flex: 1,
+                            padding: 10,
+                            backgroundColor: activityPeriod === true ? "#2c4eb5" : "#262a2f",
+                            borderRadius: 5,
+                            marginRight: 3,
+                            alignItems: "center",
+                          }}
+                        >
+                          <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 16, fontWeight: "500" }}>AM</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => setActivityPeriod(false)}
+                          style={{
+                            flex: 1,
+                            padding: 10,
+                            backgroundColor: activityPeriod === false ? "#2c4eb5" : "#262a2f",
+                            borderRadius: 5,
+                            marginLeft: 3,
+                            alignItems: "center",
+                          }}
+                        >
+                          <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 16, fontWeight: "500" }}>PM</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {errorMessage ? (
+                      <Text style={{ color: "#ff6b6b", marginBottom: 8 }}>{errorMessage}</Text>
+                    ) : null}
+                    
                     <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "500", paddingBottom: 3, paddingTop: 10 }}>Activity</Text>
+
                     <TextInput 
                     value={activityName} 
                     onChangeText={setActivityName}
@@ -129,15 +371,23 @@ export default function ItineraryPage() {
               
               
               <View style={{flexDirection: "row", paddingTop: 10, justifyContent: "space-between"}}>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={handleAddActivity}>
                 <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "700", backgroundColor: "#2c4eb5", padding: 13,paddingLeft: 108,paddingRight: 108, borderRadius: 5 }}>
                   Add
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => setShowActivityCreation(false)}
-              >
+                onPress={() => {
+                  setShowActivityCreation(false);
+                  // Reset form fields but keep activities
+                  setActivityName("");
+                  setActivityDescription("");
+                  setActivityHour("");
+                  setActivityMinute("");
+                  setActivityPeriod(null);
+                  setErrorMessage("");
+                }}>
                 <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "300", backgroundColor: "#262a2f", padding: 13, borderRadius: 5 }}>
                   Cancel
                 </Text>
@@ -148,17 +398,49 @@ export default function ItineraryPage() {
               </View>
             </View>
           ) : (
-            // regular third page (before adding activity)
-            <View style={{ width: "100%" }}>
+            // regular third page - show activities list
+            <View style={{ flex: 1, width: "100%" }}>
               <View style={{backgroundColor:"#0e1e38", padding: 20, borderRadius: 15, width: "100%", borderColor: "#96a0ad", borderWidth: 0.75, marginBottom: 20, justifyContent:"flex-start", alignItems:"flex-start"}}>
                   <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 22, fontWeight: "800" }}>
                   {itinName}
                   </Text>
-              
+
                   <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 15, fontWeight: "500" }}>
                   Plan your day from midght to midnight!
                   </Text>
               </View>
+
+              {/* Display sorted activities */}
+              <ScrollView 
+                style={{ flex: 1, width: "100%" }} 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 20 }}
+              >
+                {getSortedActivities().map((activity) => (
+                  <View key={activity.id} style={{
+                    backgroundColor: "#0e1e38",
+                    padding: 15,
+                    borderRadius: 10,
+                    marginBottom: 10,
+                    borderColor: "#4c5158",
+                    borderWidth: 0.75,
+                    width: "100%"
+                  }}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                      <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 18, fontWeight: "600", flex: 1 }}>
+                        {activity.name}
+                      </Text>
+                      <Text style={{ color: "#96a0ad", fontSize: 14, fontWeight: "500" }}>
+                        {activity.hour.toString().padStart(2, "0")}:{activity.minute.toString().padStart(2, "0")} {activity.period ? "AM" : "PM"}
+                      </Text>
+                    </View>
+                    <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 14, lineHeight: 20 }}>
+                      {activity.description}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+
               <TouchableOpacity
                 onPress={() => setShowActivityCreation(true)}
                 style={{
@@ -167,8 +449,9 @@ export default function ItineraryPage() {
                   paddingVertical: 20,
                   borderRadius: 15,
                   alignItems: "center",
-                  borderColor: "#4c5158", 
+                  borderColor: "#4c5158",
                   borderWidth: 0.75,
+                  marginTop: 10,
                 }}
               >
                 <Text style={{ fontSize: 14.5, fontWeight: "900", color: "#96a0ad" }}>
