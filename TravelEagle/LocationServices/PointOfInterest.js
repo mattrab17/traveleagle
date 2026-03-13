@@ -1,3 +1,15 @@
+const filterOptions = [
+  { label: "Hotels", value: "accommodation.hotel" },
+  { label: "Gas", value: "commercial.gas" },
+  { label: "Bars", value: "catering.bar" },
+  { label: "Museums", value: "entertainment.museum" },
+  { label: "Zoos", value: "entertainment.zoo" },
+  { label: "Parks", value: "leisure.park" },
+  { label: "Rental Cars", value: "rental.car" },
+  { label: "Restaurants", value: "catering.restaurant" },
+  { label: "Coffee", value: "catering.cafe" },
+];
+
 export class PlacesAPI {
   constructor(apiKey) {
     this.apiKey = process.env.EXPO_PUBLIC_GEOAPIFY_KEY;
@@ -7,7 +19,7 @@ export class PlacesAPI {
   async findPlaces({
     userLocation,
     searchedPlace,
-    category = "leisure.park",//later change this to category the user selects
+    selectedFilters = ['leisure.park'],
     radius = 2500,
     limit = 10,//will only show 10 closest markers to stop map from slowing in performance
   }) {
@@ -18,7 +30,7 @@ export class PlacesAPI {
     if (lat == null || lng == null) return [];
       //if values dont exist b/c user didnt search or give their location, API wont be called
     const params = new URLSearchParams({// params determine what will be returned from the GET
-      categories: category,
+      categories: selectedFilters.join(","),//this will join the selected categories together into an array
       filter: `circle:${lng},${lat},${radius}`,//the radius will return POIs within 2500 meters
       bias: `proximity:${lng},${lat}`,
       limit: String(limit),
