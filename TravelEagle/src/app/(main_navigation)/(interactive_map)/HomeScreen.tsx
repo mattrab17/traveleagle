@@ -65,19 +65,18 @@ export default function HomeScreen()
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
   // defines filterOptions
-  const filterOptions = [
-    "Exciting",
-    "Calm",
-    "Relaxing",
-    "Adventure",
-    "Nature",
-    "Food",
-    "Romantic",
-    "Scenic",
-    "Fun",
-    "Luxury",
-    "Nightlife",
-  ];
+    // defines filterOptions
+ const filterOptions = [
+  "Hotels",
+  "Gas",
+  "Bars",
+  "Museums",
+  "Zoos",
+  "Parks",
+  "Rental Cars",
+  "Restaurants",
+  "Coffee",
+];
 
   // Helper function to format the Date object into a readable "12:00 AM" string
   const formatTime = (date: Date) => {
