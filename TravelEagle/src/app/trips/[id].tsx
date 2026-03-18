@@ -40,7 +40,7 @@ export default function TripScreen(){
             </View>
             <View style={{marginTop: 20, borderRadius: 15, backgroundColor: 'white', flex: 1}}>
                 <TouchableOpacity
-                onPress={() => router.push(`/components/trips/${id}/itinerary`)}>
+                onPress={() => router.push(`/trips/${id}/itinerary`)}>
                  <Text style={{fontSize:16, fontWeight: 15}}> Itinerary </Text>   
                 </TouchableOpacity>
                 

@@ -27,6 +27,14 @@ export const tripController = {
             return { data: [], error};
         }
     },
+     getTotalDays(trip: any): number {
+
+        if (!trip?.start_date || !trip?.end_date) return 1;
+        const start = new Date(trip.start_date);
+        const end = new Date(trip.end_date);
+        const diffInTime = end.getTime() - start.getTime();
+        return Math.ceil(diffInTime/ (1000 * 60 * 60 * 24)) + 1;
+    }
 }
     export function goToPreviousMonth(currentMonth: Date) {
             const newMonth = new Date(currentMonth)

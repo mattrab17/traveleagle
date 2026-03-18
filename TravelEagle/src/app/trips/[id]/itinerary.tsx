@@ -1,9 +1,11 @@
 import { itineraryController } from "@/controllers/itineraryController";
+import { tripController } from "@/controllers/tripController";
 import {GooglePlacesInput, GooglePlacesInputTrip } from "@/src/app/(google_maps_info)/GooglePlacesAutocomplete";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { View, Text, FlatList, Image, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { Picker } from '@react-native-picker/picker'
 
 
 export default function ItineraryScreen(){
@@ -11,9 +13,18 @@ export default function ItineraryScreen(){
     const [itinerary, setItinerary] = useState<any>([]);
     const router = useRouter();
     const [selectedPlace, setSelectedPlace] = useState<any>(null);
+    const [trip, setTrip] = useState<any>(null);
+    const [selectedDay, setSelectedDay] = useState<number>(1);
+    const totalDays = tripController.getTotalDays(trip);
+
     async function loadItinerary(){
             const {data} = await itineraryController.loadAllItems(Number(id));
             setItinerary(data)
+
+            const {data: tripData } = await tripController.loadTrip(Number(id));
+            setTrip(tripData);
+            console.log(tripData)
+            console.log(tripController.getTotalDays(tripData))
         }
 
     useEffect(() => {
@@ -40,7 +51,7 @@ export default function ItineraryScreen(){
         const {data: updatedData} = await itineraryController.loadAllItems(Number(id));
             setItinerary(updatedData)
             setSelectedPlace(null);
-            console.log(updatedData)
+            // console.log(updatedData)
     }
 
     async function handleDelete(itemId: number){
@@ -79,7 +90,7 @@ export default function ItineraryScreen(){
                 {/* Update styling in Search bar later */}
                 <GooglePlacesInputTrip 
                 onSelect={(data, details) => {
-                    console.log('Selected:', details);
+                   // console.log('Selected:', details);
                     setSelectedPlace(details);
                 }}
                 placeholder="Search for a place">
@@ -101,7 +112,24 @@ export default function ItineraryScreen(){
                         <Text style={{fontSize: 16, fontWeight:'600', fontFamily:'Inter'
                         }}>{selectedPlace.name}</Text>
                         <Text style={{fontSize: 12, fontWeight:'300', color: 'gray', fontFamily: 'Inter'}}>{selectedPlace.formatted_address}</Text>
-                        {/*Add picker for dayNumber later, it is default to dayNumber=0 for now.*/}
+                        <Text style={{marginTop: 20, fontSize: 14, fontFamily: 'Inter', fontWeight: '500' }}>Select Day</Text>
+                        <View style={{borderRadius:8, backgroundColor: '#ffffff', height: 100 }}>
+                            <Picker
+                            selectedValue={selectedDay}
+                            onValueChange={(value) => setSelectedDay(value)}
+                            itemStyle={{height:120, fontSize: 14,}}
+                            >
+                                {Array.from({length: totalDays}, (_, i) => i+1).map((day) => (
+                                    <Picker.Item
+                                    key={day}
+                                    label={`Day ${day}`}
+                                    value={day}
+                                    color="black"
+                                    />
+                                ))}
+
+                            </Picker>    
+                        </View>
                         {/*Also add text box for any notes the user wants to leave on the itinerary item*/}
                         <TouchableOpacity
                             style={{
