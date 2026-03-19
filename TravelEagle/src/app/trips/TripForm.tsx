@@ -126,7 +126,7 @@ export default function TripForm({onClose}) {
                 padding:10,
                 backgroundColor: '#e7e7e7',
                 borderRadius:10,
-                marginTop: 20,
+                marginTop: 3,
                 width: '30%',
                 alignContent: 'center',
                 alignItems: 'center'
