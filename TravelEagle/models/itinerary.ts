@@ -30,7 +30,7 @@ export const itineraryQueries = {
         place_id: number;
         day_number: number;
         time_slot?: string;
-        notes?: string;
+        notes?: string | null;
         order_index?:number;
     }): Promise<ItineraryItems>{
         const {data, error} = await supabase

@@ -15,7 +15,7 @@ export const itineraryController = {
             return { data: [], error};
         }
     },
-    async addPlaceFromGoogle(tripId: number, googlePlaceDetails: any, dayNumber: number){
+    async addPlaceFromGoogle(tripId: number, googlePlaceDetails: any, dayNumber: number, notes?: string){
         try{
             //Checks if place_id is in databse already, if not it will insert into place table then itinerary table
             let place = await placeQueries.getByGooglePlaceId(googlePlaceDetails.place_id);
@@ -39,6 +39,9 @@ export const itineraryController = {
             place_id: place.places_id,
             day_number: dayNumber,
             order_index: orderIndex,
+            notes: notes || null,
+            //time_slot: timeSlot
+            
         });
         return {data: item, error:null};
 

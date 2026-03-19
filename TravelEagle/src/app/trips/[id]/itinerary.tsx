@@ -4,7 +4,7 @@ import {GooglePlacesInput, GooglePlacesInputTrip } from "@/src/app/(google_maps_
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { View, Text, FlatList, Image, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { View, Text, FlatList, Image, TouchableOpacity, ScrollView, Alert, TextInput } from "react-native";
 import { Picker } from '@react-native-picker/picker'
 
 
@@ -16,6 +16,7 @@ export default function ItineraryScreen(){
     const [trip, setTrip] = useState<any>(null);
     const [selectedDay, setSelectedDay] = useState<number>(1);
     const totalDays = tripController.getTotalDays(trip);
+    const [notes, setNotes] = useState<string>('');
 
     async function loadItinerary(){
             const {data} = await itineraryController.loadAllItems(Number(id));
@@ -41,17 +42,19 @@ export default function ItineraryScreen(){
         const {data, error} = await itineraryController.addPlaceFromGoogle(
             Number(id),
             selectedPlace,
-            1
+            selectedDay,
+            notes
         );
         if (error){
             Alert.alert('Error', 'Failed to add to itinerary');
             return;
         }
 
-        const {data: updatedData} = await itineraryController.loadAllItems(Number(id));
-            setItinerary(updatedData)
+            loadItinerary();
             setSelectedPlace(null);
-            // console.log(updatedData)
+            setSelectedDay(1);
+            setNotes('');
+            
     }
 
     async function handleDelete(itemId: number){
@@ -85,7 +88,7 @@ export default function ItineraryScreen(){
             </View>
             
         <View style={{marginTop: 30, backgroundColor:'white', borderRadius: 10, padding:15}}>
-                <Text style={{fontSize:18, fontWeight: 400, fontFamily: 'Inter' }}>Add a place</Text>
+                <Text style={{fontSize:18, fontWeight: 600, fontFamily: 'Inter', marginBottom: 10 }}>Add a place</Text>
 
                 {/* Update styling in Search bar later */}
                 <GooglePlacesInputTrip 
@@ -96,6 +99,8 @@ export default function ItineraryScreen(){
                 placeholder="Search for a place">
                 </GooglePlacesInputTrip>
             
+
+            {/* Dropdown from searchbar*/}
                 {selectedPlace && (
                     <View style={{marginTop:15}}>
                         {selectedPlace.photos && selectedPlace.photos[0] && (
@@ -109,11 +114,11 @@ export default function ItineraryScreen(){
                         )
                     }
                         <View style={{paddingTop:20}}>
-                        <Text style={{fontSize: 16, fontWeight:'600', fontFamily:'Inter'
+                        <Text style={{fontSize: 16, fontWeight:'600', fontFamily:'Inter',
                         }}>{selectedPlace.name}</Text>
                         <Text style={{fontSize: 12, fontWeight:'300', color: 'gray', fontFamily: 'Inter'}}>{selectedPlace.formatted_address}</Text>
                         <Text style={{marginTop: 20, fontSize: 14, fontFamily: 'Inter', fontWeight: '500' }}>Select Day</Text>
-                        <View style={{borderRadius:8, backgroundColor: '#ffffff', height: 100 }}>
+                        <View style={{borderRadius:8, backgroundColor: '#f6f6f6', height: 100, borderColor: '#ddd' }}>
                             <Picker
                             selectedValue={selectedDay}
                             onValueChange={(value) => setSelectedDay(value)}
@@ -129,6 +134,29 @@ export default function ItineraryScreen(){
                                 ))}
 
                             </Picker>    
+                        </View>
+                        <View style={{marginTop: 20, }}>
+                            <Text> Notes (optional) </Text>
+                            <TextInput
+                            style={{
+                               backgroundColor: '#f6f6f6',
+                               borderColor: '#ddd',
+                               borderRadius: 8,
+                               padding: 12,
+                               marginTop: 8,
+                               minHeight: 40,
+                               textAlignVertical: 'top'
+
+                            }}
+                            placeholder="Add any notes for this place"
+                            value={notes}
+                            onChangeText={setNotes}
+                            multiline={true}
+                            placeholderTextColor={'black'}
+                            
+                            />
+
+                            
                         </View>
                         {/*Also add text box for any notes the user wants to leave on the itinerary item*/}
                         <TouchableOpacity
@@ -179,6 +207,10 @@ export default function ItineraryScreen(){
                 <Text style={{fontSize: 12, fontWeight: item.time_slot ? '200' : 'ultralight', color: item.time_slot ? '#000000' : '#919191', paddingTop: 10  }}>
                     Time: {item.time_slot}
                 </Text>
+
+                {item.notes && (
+                    <Text style={{fontSize: 12, fontStyle: 'italic', paddingTop: 10, color: '#6f6e6e'}}>{item.notes}</Text>
+                )}
                 </View>
                 <View style={{
                     flexDirection:'row', position:'absolute', top:8, right: 8, gap: 4
