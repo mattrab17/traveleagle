@@ -6,6 +6,13 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { View, Text, FlatList, Image, TouchableOpacity, ScrollView, Alert, TextInput } from "react-native";
 import { Picker } from '@react-native-picker/picker'
+import {
+  BACKGROUND_COLOR,
+  WHITE_TEXT_COLOR,
+  ORANGE_COLOR,
+  SECONDARY_BACKGROUND_COLOR,
+  SEARCH_BACKGROUND_COLOR,
+} from "../../constants/colors"
 
 
 export default function ItineraryScreen(){
@@ -17,6 +24,9 @@ export default function ItineraryScreen(){
     const [selectedDay, setSelectedDay] = useState<number>(1);
     const totalDays = tripController.getTotalDays(trip);
     const [notes, setNotes] = useState<string>('');
+    const [currentDay, setCurrentDay] = useState<number>(0);
+    const itineraryForCurrentDay = currentDay === 0 ? itinerary : itinerary.filter(item => item.day_number === currentDay);
+    const [searchBarVisible, setSearchBarVisible] = useState<boolean>(false);
 
     async function loadItinerary(){
             const {data} = await itineraryController.loadAllItems(Number(id));
@@ -82,14 +92,37 @@ export default function ItineraryScreen(){
 
     return(
         <ScrollView>
-        <View style={{padding: 20, marginTop:20, flex:1}}>
-        <View style={{paddingTop: 60, }}>
+        <View style={{padding: 20, marginTop:20, flex:1,}}>
+        <View style={{paddingTop: 60, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text style={{color: 'white', fontSize: 36, fontFamily:'Inter'}}>Itinerary</Text>
+            {!searchBarVisible && (
+                    <TouchableOpacity 
+                    style={{
+                        backgroundColor: 'white',
+                        borderRadius: 10,
+                        paddingVertical: 8,
+                        paddingHorizontal: 12,
+                    }}
+                    onPress={()=>setSearchBarVisible(true)}>
+                        <Text>+ Add to Itinerary</Text>
+                    </TouchableOpacity>
+                )
+                }
             </View>
-            
+            {searchBarVisible && (
         <View style={{marginTop: 30, backgroundColor:'white', borderRadius: 10, padding:15}}>
+                <View style={{justifyContent:'space-between', flexDirection: 'row', marginBottom:10 }}>
                 <Text style={{fontSize:18, fontWeight: 600, fontFamily: 'Inter', marginBottom: 10 }}>Add a place</Text>
-
+                <TouchableOpacity 
+                onPress={() => {
+                    setSearchBarVisible(false);
+                    setSelectedPlace(null);
+                    setSelectedDay(1);
+                    setNotes('');
+                }}>
+                <Ionicons name="close-circle" size={20} color="red" />
+                </TouchableOpacity>
+                </View>
                 {/* Update styling in Search bar later */}
                 <GooglePlacesInputTrip 
                 onSelect={(data, details) => {
@@ -180,10 +213,30 @@ export default function ItineraryScreen(){
                      </View>
                 )}
         </View>
+)}
         <View style={{paddingTop: 30, flex:1,  backgroundColor: 'whtie' }}>
-            <Text style={{color:'white', fontSize:20, marginBottom: 15}}>Your Itinerary</Text>
+            <ScrollView horizontal style={{marginBottom:20, marginTop: 20,}}>
+                <View style={{flexDirection: 'row', gap: 5}}>
+                    <TouchableOpacity 
+                        style={{borderRadius: 20, backgroundColor: currentDay === 0 ? ORANGE_COLOR : '#9E9E9E', paddingVertical: 10, paddingHorizontal:20, }}
+                        onPress={()=>setCurrentDay(0)}>
+                            <Text style={{color: WHITE_TEXT_COLOR}}>All</Text>
+                        </TouchableOpacity>
+                    {Array.from({length: totalDays}, (_, i) => i+1).map((day) => (
+                        <TouchableOpacity 
+                        style={{borderRadius: 20, backgroundColor: currentDay === day ? ORANGE_COLOR : '#9E9E9E', paddingVertical: 10, paddingHorizontal:20, }}
+                        key={day}
+                        onPress={()=>setCurrentDay(day)}
+                        >
+                            <Text style={{color: WHITE_TEXT_COLOR}}>Day {day}</Text>
+                        </TouchableOpacity>
+                                   
+                                ))}
+                    
+                </View>
+            </ScrollView>
             <FlatList
-            data={itinerary}
+            data={itineraryForCurrentDay}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({item}) => (
                 <View style={{backgroundColor: 'white', padding:10, borderRadius: 10, marginBottom: 10, flexDirection: 'row', alignItems: 'center' }}>
