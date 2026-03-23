@@ -27,7 +27,26 @@ type SelectedPlaceType = { //describes the structure of a Place object
   lat?: number;
   lng?: number;
   description?: string;
+  rating?: number; //stores the rating
+  address?: string; //stores the address
+  website?: string; //stores the website
+  openHours?: string; //stores the openhours
+  crowdLevel?: string; //stores the crowd levels
+  photoUrl?: string; //stores the photo
+  placeId?: string; //stores the placeid
 } | null;
+
+const FILTER_CATEGORY_MAP: Record<string, string> = {
+  Hotels: "accommodation.hotel", //hotels filter
+  Gas: "commercial.gas", //gas filter
+  Bars: "catering.bar", //bars filter
+  Museums: "entertainment.museum", //museum filter
+  Zoos: "entertainment.zoo", //zoos filter
+  Parks: "leisure.park", //parks filter
+  "Rental Cars": "rental.car", //rental cars filter
+  Restaurants: "catering.restaurant", //restaurants filter
+  Coffee: "catering.cafe", //coffee
+};
 
 
 export default function HomeScreen()
@@ -42,6 +61,9 @@ export default function HomeScreen()
   //selectedPlace -> holds the current value of the selected item (address, marker, marker data)
   //setSelectedPlace -> function used to update the selectedPlace variable
   //useState is initialized with a value of null
+
+  //CONTROLS THE DIRECTIONS FROM A USER TO A LOCATION
+  const [showDirections, setShowDirections] = useState(false);
 
   //CONTROLS THE POPUP AFTER PRESSING ADD TRIP
   const [isAddTripVisible, setIsAddTripVisible] = useState(false);
@@ -107,6 +129,51 @@ export default function HomeScreen()
     }
   };
 
+  
+  /* 1. DYNAMIC IMAGE SELECTION -> decides which picture to show for a place. 
+  
+*/
+const selectedPlaceImage = selectedPlace?.photoUrl 
+    // IF we have a photo URL from Google...
+    ? { uri: selectedPlace.photoUrl } 
+    // otherwise...  use our local 'house.png' as a placeholder.
+    : require("../../../../assets/images/house.png"); //in the assets/image folder
+
+
+/* 2. RATING FORMATTER - ensures the star rating are always rounded to the tenth place
+*/
+const selectedPlaceRating = typeof selectedPlace?.rating === "number"
+    // If the rating is a valid number, add a Star Emoji and round it to 10th place
+    // 
+    ? `${"\u2B50"} ${selectedPlace.rating.toFixed(1)}`
+    // if no rating exists, show n
+    : `${"\u2B50"} N/A`;
+
+
+
+    //Updates the place when a user clicks on it
+  const handleSetSelectedPlace = (place: SelectedPlaceType) =>
+  {
+  
+    // Save the new place data into our state variable.
+    setSelectedPlace(place);
+
+    // Reset the directions—if we were looking at directions for the OLD place, 
+    // we want them to disappear now that we have a NEW place.
+    setShowDirections(false);
+};
+
+
+/* APPLIES FILTERS TO MAP -> this takes the list of filters the user clicks
+  and translates them into the technical IDs the API needs
+*/
+  const activeFilterCategories = selectedFilters
+  
+    // .map() loops through each name and swaps it using the dictionary
+    .map((filterName) => FILTER_CATEGORY_MAP[filterName])
+
+    .filter(Boolean);    // .filter(Boolean) -> a method that allows us to remove null values
+
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       {/* edges property places padding at the top edge of the screen */}
@@ -131,7 +198,7 @@ export default function HomeScreen()
               <Feather name="search" size={18} color="#8F8F8F" style={styles.searchIcon} />
               <GooglePlacesInput
                 mapRef={mapRef}
-                setSelectedPlace={setSelectedPlace}
+                setSelectedPlace={handleSetSelectedPlace}
               />
             </View>
 
@@ -161,13 +228,17 @@ export default function HomeScreen()
 
         {/* MIDDLE CONTENT AREA FOR MAP */}
         <View style={styles.contentArea}>
-          {/* Google Maps Component */}
+          {/* ===============Google Maps Component =====================*/}
+
+          
           <GoogleMapsView
             mapRef={mapRef} // Passing the mapRef as an argument to GoogleMapsView
+            showDirections={showDirections}
+            activeFilterCategories={activeFilterCategories}
             selectedPlace={selectedPlace}
-            setSelectedPlace={setSelectedPlace}
+            setSelectedPlace={handleSetSelectedPlace}
             //When marker is pressed, retrieve placeData, then set placeData to the selected place
-            onMarkerPress={(placeData: SelectedPlaceType) => setSelectedPlace(placeData)}
+            onMarkerPress={(placeData: SelectedPlaceType) => handleSetSelectedPlace(placeData)}
           />
 
           {/* Travel Eagle Bottom Sheet Marker Card / Pop up =========================================================================*/}
@@ -179,13 +250,13 @@ export default function HomeScreen()
                 <Text style={styles.cardTitle}>{selectedPlace?.name || "Selected Place"}</Text>  
 
                 {/* SET THE PLACE RATING HERE  */} 
-                <Text style={styles.ratingText}>⭐ 4.6</Text> 
+                <Text style={styles.ratingText}>{selectedPlaceRating}</Text> 
               </View>
 
               {/* Card Image */}
               {/* SET THE PLACE IMAGE HERE */}
               <Image 
-                source={require("../../../../assets/images/traveleaglelogo.png")}
+                source={selectedPlaceImage}
                 style={styles.cardImage} 
               />
 
@@ -207,9 +278,9 @@ export default function HomeScreen()
                 <TouchableOpacity
                   style={styles.dirBtn}
                   onPress={() => {
-                    // For now, just keep it simple.
-                    // Since the map already draws directions when a place is selected,
-                    // we are only keeping the card open.
+                    if (selectedPlace) {
+                      setShowDirections(true);
+                    }
                   }}
                 >
                   <Text style={styles.btnText}>Directions</Text>
@@ -315,7 +386,7 @@ export default function HomeScreen()
             <View style={styles.divider} />
 
             <Image
-              source={require("../../../../assets/images/traveleaglelogo.png")}
+              source={selectedPlaceImage}
               style={styles.moreInfoImage}
             />
 
@@ -325,23 +396,23 @@ export default function HomeScreen()
               {/* LOCATION TIME */}
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Open Hours:</Text> 
-              <Text style={styles.infoValue}>9:00 AM - 10:00 PM</Text>
+              <Text style={styles.infoValue}>{selectedPlace?.openHours || "Not available"}</Text>
             </View>
 
             {/* CROWD LEVEL */}
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Crowd Level:</Text>
-              <Text style={styles.infoValue}>Moderate</Text>
+              <Text style={styles.infoValue}>{selectedPlace?.crowdLevel || "Not available"}</Text>
             </View>
               {/* ADDRESS */}
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Address:</Text>
-              <Text style={styles.infoValue}>123 Example Street, New York, NY</Text>
+              <Text style={styles.infoValue}>{selectedPlace?.address || "Not available"}</Text>
             </View>
               {/* WEBSITE */}
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Website:</Text>
-              <Text style={styles.infoValue}>www.exampleplace.com</Text>
+              <Text style={styles.infoValue}>{selectedPlace?.website || "Not available"}</Text>
             </View>
 
             <TouchableOpacity
@@ -453,7 +524,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 15,
+    overflow: "visible",
     zIndex: 20,
+    elevation: 20,
   },
   header: {
     flexDirection: "row",
@@ -474,7 +547,9 @@ const styles = StyleSheet.create({
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
+    overflow: "visible",
     zIndex: 30,
+    elevation: 30,
   },
   searchContainer: {
     flex: 1,
@@ -484,7 +559,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 12,
     minHeight: 50,
+    overflow: "visible",
     zIndex: 40,
+    elevation: 40,
   },
   searchIcon: {
     marginRight: 8,
@@ -517,7 +594,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#0A1628", 
     borderColor: "#ffffff75",
-    borderTopWidth: 0.17
+    borderTopWidth: 0.17,
+    zIndex: 1,
   },
   popUpCard: {
     position: 'absolute', 
@@ -784,3 +862,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
+
+

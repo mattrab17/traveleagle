@@ -1,20 +1,30 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   StyleSheet,
   View,
   Text,
-  Alert, // Added Alert since it is used in your code
+  Platform,
 } from "react-native";
+// Added Alert since it is used in your code
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { goToSearchedPlace } from "../../../controllers/mapController";
 import { Feather } from "@expo/vector-icons"; // Added for the location icon
 import MapView from "react-native-maps";
 
+
+//Selected Place Object Attributes
 type SelectedPlace = {
-  name: string;
-  lng: number;
-  lat: number;
-  description?: string;
+  name: string; //name
+  lng: number; //longitude
+  lat: number; //latitude
+  description?: string; //description
+  rating?: number; //star rating
+  address?: string; //address
+  website?: string; //website
+  openHours?: string; //open hours
+  crowdLevel?: string; //crowd level (NOT CURRENTLY WORKING)
+  photoUrl?: string; //photo of the location
+  placeId?: string; //placeID
 } | null;
 
 type GooglePlacesInputProps = {
@@ -38,16 +48,28 @@ export default function GooglePlacesInput({
   setSearchText,
 }: GooglePlacesInputProps) {
   const internalGooglePlacesRef = useRef<any>(null);
+  const [internalSearchText, setInternalSearchText] = useState("");
+  const apiKey = (process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "").trim();
   const activeGooglePlacesRef = googlePlacesRef ?? internalGooglePlacesRef;
-  const activeSearchText = searchText ?? "";
-  const activeSetSearchText = setSearchText ?? (() => {});
+  const activeSearchText = searchText ?? internalSearchText;
+  const activeSetSearchText = setSearchText ?? setInternalSearchText;
 
   return (
     <View style={styles.container}>
       <GooglePlacesAutocomplete
         ref={activeGooglePlacesRef}
         placeholder="Search for a place"
+        minLength={2}
+        listViewDisplayed="auto"
+        keyboardShouldPersistTaps="handled"
+        keepResultsAfterBlur={false}
         fetchDetails={true} // Ensures coordinates are sent to mapController
+        onFail={(error) => {
+          console.warn("Google Places autocomplete failed:", error);
+        }}
+        onNotFound={() => {
+          console.warn("Google Places autocomplete returned no matches.");
+        }}
         textInputProps={{
           value: activeSearchText,
           onChangeText: (text) => activeSetSearchText(text),
@@ -65,9 +87,6 @@ export default function GooglePlacesInput({
             goToSearchedPlace(mapRef, details, setSelectedPlace);
           }
           /*Remove logs & alert*/
-          console.log("Selected place:", data);
-          // console.log("Place details:", details);
-          Alert.alert("Place Selected", data.description);
           /* console.log(data.place_id);
             console.log(details?.name);
             console.log(details?.formatted_address);
@@ -76,10 +95,18 @@ export default function GooglePlacesInput({
 
           activeSetSearchText(data.description || "");
         }}
-        query={{
-          key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+        query={{ //api query
+          key: apiKey,
           language: "en",
         }}
+        requestUrl={
+          Platform.OS === "web"
+            ? {
+                useOnPlatform: "web",
+                url: "https://maps.googleapis.com/maps/api", //google maps api info
+              }
+            : undefined
+        }
         enablePoweredByContainer={false}
         debounce={200}
         nearbyPlacesAPI="GooglePlacesSearch"
@@ -92,6 +119,7 @@ export default function GooglePlacesInput({
         styles={{
           container: {
             flex: 1,
+            position: "relative",
             overflow: "visible",
           },
           textInputContainer: {
@@ -121,10 +149,11 @@ export default function GooglePlacesInput({
           listView: {
             position: "absolute",
             top: 55,
-            left: -44,
-            right: -56,
+            left: 0,
+            right: 0,
             backgroundColor: "#FFFFFF",
             borderRadius: 12,
+            maxHeight: 260,
             zIndex: 5000,
             elevation: 5000,
             shadowColor: "#000",

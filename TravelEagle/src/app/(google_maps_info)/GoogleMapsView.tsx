@@ -1,7 +1,7 @@
 import MapView, { PROVIDER_GOOGLE, Marker } from "react-native-maps";
 import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
 import { useEffect, useRef, useState } from "react";
-import { animateToRegion } from "../../../controllers/mapController";
+import { animateToRegion, enrichPlaceFromMapPin } from "../../../controllers/mapController";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import useLocation from "../../../LocationServices/liveLocation";
@@ -15,6 +15,13 @@ type SelectedPlace = {
   lng: number;
   lat: number;
   description?: string;
+  rating?: number;
+  address?: string;
+  website?: string;
+  openHours?: string;
+  crowdLevel?: string;
+  photoUrl?: string;
+  placeId?: string;
 } | null;
 
 type Place = {
@@ -24,6 +31,9 @@ type Place = {
   lat: number;
   emoji: string;
   description?: string;
+  placeId?: string;
+  address?: string;
+  popularity?: number;
 };
 
 type GoogleMapsViewProps = {
@@ -31,7 +41,9 @@ type GoogleMapsViewProps = {
   selectedPlace?: SelectedPlace;
   setSelectedPlace?: React.Dispatch<React.SetStateAction<SelectedPlace>>;
   showSearchInput?: boolean;
-  onMarkerPress: (place: Place) => void;
+  showDirections?: boolean;
+  activeFilterCategories?: string[];
+  onMarkerPress: (place: SelectedPlace) => void;
   //the place variable takes any data type: ID, title, etc
   //void is used to indicate the function doesn't return any value, it updates a state
 };
@@ -42,6 +54,8 @@ export default function GoogleMapsView({
   selectedPlace,
   setSelectedPlace,
   showSearchInput = true,
+  showDirections = false,
+  activeFilterCategories = [],
   onMarkerPress, //property for marker/pin event
 }: GoogleMapsViewProps) {
   /* Template for daily itinerary --> Map view with Markers
@@ -92,19 +106,22 @@ export default function GoogleMapsView({
 
 //code for the markers from GeoApify
 const [poiMarkers, setPoiMarkers] = useState<any[]>([]);
-const [category, setCategory] = useState("leisure.park");
 const geo = useRef(new PlacesAPI()).current;//useRef will allow the markers to stay on the map without ReRendering everytime
 
 useEffect(() => {
   const run = async () => {
     try {
-      if ((latitude == null || longitude == null) && !activeSelectedPlace) return;
+      if (latitude == null || longitude == null) return;
+      if (!Array.isArray(activeFilterCategories) || activeFilterCategories.length === 0) {
+        setPoiMarkers([]);
+        return;
+      }
+
       const poiResults = await geo.findPlaces({
         userLocation: { latitude, longitude },
-        searchedPlace: activeSelectedPlace,
-        category,
-        radius: 2500,
-        limit: 20,
+        selectedFilters: activeFilterCategories,
+        radius: 40234,
+        limit: 60,
       });
 
       setPoiMarkers(poiResults);
@@ -113,7 +130,7 @@ useEffect(() => {
     }
   };
   run();
-}, [latitude, longitude, activeSelectedPlace, category]);
+}, [latitude, longitude, activeFilterCategories, geo]);
   
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -121,6 +138,12 @@ useEffect(() => {
         <MapView
           ref={activeMapRef}
           provider={PROVIDER_GOOGLE}
+          onPress={(event) => {
+            const action = (event?.nativeEvent as { action?: string })?.action;
+            if (action === "marker-press") return;
+            activeSetSelectedPlace(null);
+            bottomSheetRef.current?.snapToIndex(2);
+          }}
 
           //Code to display user's location on map with an animated circle
           showsUserLocation={true} //shows the user where they are on the map
@@ -140,11 +163,12 @@ useEffect(() => {
               coordinate={{ latitude: place.lat, longitude: place.lng }}
               title={place.name}
               key={place.id}
-              onPress={() =>
+              onPress={async () =>
               {
                 animateToRegion(activeMapRef, place.lat, place.lng);
-                onMarkerPress(place);
-                activeSetSelectedPlace(place);
+                const enrichedPlace = await enrichPlaceFromMapPin(place);
+                onMarkerPress(enrichedPlace);
+                activeSetSelectedPlace(enrichedPlace);
                 bottomSheetRef.current?.snapToIndex(1);
               }}
             >
@@ -162,8 +186,24 @@ useEffect(() => {
               title={p.name}
               description={p.address}
               pinColor="blue"
-              onPress={() => {
-                onMarkerPress(p.original);
+              onPress={async () => {
+                const poiPlace = {
+                  id: Number(p.id) || Date.now(),
+                  name: p.name,
+                  lat: p.latitude,
+                  lng: p.longitude,
+                  emoji: "📍",
+                  description: p.address,
+                };
+                animateToRegion(activeMapRef, p.latitude, p.longitude);
+                const enrichedPoi = await enrichPlaceFromMapPin({
+                  ...poiPlace,
+                  address: p.address,
+                  popularity: p.original?.properties?.rank?.popularity,
+                });
+                onMarkerPress(enrichedPoi);
+                activeSetSelectedPlace(enrichedPoi);
+                bottomSheetRef.current?.snapToIndex(1);
               }}
             />
           ))}
@@ -178,7 +218,7 @@ useEffect(() => {
             />
           )}
 
-          {origin != null && destination != null && GOOGLE_MAPS_APIKEY ? (
+          {showDirections && origin != null && destination != null && GOOGLE_MAPS_APIKEY ? (
             <MapViewDirections
               origin={origin}
               destination={destination}
