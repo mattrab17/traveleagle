@@ -31,7 +31,6 @@ export default function ItineraryScreen(){
     async function loadItinerary(){
             const {data} = await itineraryController.loadAllItems(Number(id));
             setItinerary(data)
-
             const {data: tripData } = await tripController.loadTrip(Number(id));
             setTrip(tripData);
             console.log(tripData)
@@ -93,8 +92,11 @@ export default function ItineraryScreen(){
     return(
         <ScrollView>
         <View style={{padding: 20, marginTop:20, flex:1,}}>
+            <TouchableOpacity onPress={() => router.back()} style={{marginTop:20}}><Ionicons name='arrow-back' size={16} color="white"/> </TouchableOpacity>
         <View style={{paddingTop: 60, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{color: 'white', fontSize: 36, fontFamily:'Inter'}}>Itinerary</Text>
+            
+            <Text style={{color: 'white', fontSize: 36, fontFamily:'Inter', fontWeight: 800}}>Itinerary</Text>
+         
             {!searchBarVisible && (
                     <TouchableOpacity 
                     style={{
@@ -109,6 +111,7 @@ export default function ItineraryScreen(){
                 )
                 }
             </View>
+               {/*SEARCH BAR*/}
             {searchBarVisible && (
         <View style={{marginTop: 30, backgroundColor:'white', borderRadius: 10, padding:15}}>
                 <View style={{justifyContent:'space-between', flexDirection: 'row', marginBottom:10 }}>
@@ -237,6 +240,7 @@ export default function ItineraryScreen(){
             </ScrollView>
             <FlatList
             data={itineraryForCurrentDay}
+            scrollEnabled={false}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({item}) => (
                 <View style={{backgroundColor: 'white', padding:10, borderRadius: 10, marginBottom: 10, flexDirection: 'row', alignItems: 'center' }}>

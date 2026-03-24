@@ -174,10 +174,10 @@ export default function TripsScreen() {
                 borderBottomWidth: 1,
                 marginBottom: 10,
               }}
-              onPress={() => router.push(`/trips/${item.trip_id}`)}
+              onPress={() => router.push(`/trips/${item.trip_id}/itinerary`)}
             >
               <View style={{flexDirection:'row', justifyContent: 'space-between'}}>
-              <Text style={{ fontSize: 24, color: WHITE_TEXT_COLOR, fontWeight: '600' }}>Trip to {item.destination}</Text>
+              <Text style={{ fontSize: 20, color: WHITE_TEXT_COLOR, fontWeight: '600' }}>Trip to {item.destination}</Text>
               <Text style={{fontSize: 14, color: ORANGE_COLOR}}>{tripController.getTotalDays(item)} Days</Text>
               </View>
               <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 14, marginTop: 5 }}>
