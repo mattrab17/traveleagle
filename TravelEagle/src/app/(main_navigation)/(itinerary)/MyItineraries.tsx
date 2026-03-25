@@ -166,7 +166,7 @@ export default function ItineraryPage() {
               color: WHITE_TEXT_COLOR,
             }}
           >
-            My Itineraries
+            My Trips
           </Text>
         </View>
 
@@ -183,7 +183,9 @@ export default function ItineraryPage() {
         </TouchableOpacity>
       </View>
 
-      {/* Main Content */}
+      
+
+      {/*  User Trips Screen =========================================================================== */}
       <View
         style={[
           {
@@ -487,7 +489,7 @@ export default function ItineraryPage() {
                   color: SEARCH_BACKGROUND_COLOR,
                 }}
               >
-                No itineraries yet
+                No Trips Yet
               </Text>
             </TouchableOpacity>
 
@@ -507,7 +509,7 @@ export default function ItineraryPage() {
               <Text
                 style={{ fontSize: 14.5, fontWeight: "900", color: "white" }}
               >
-                Create Itinerary with AI
+                Create Trip with AI
               </Text>
             </TouchableOpacity>
 
@@ -524,12 +526,17 @@ export default function ItineraryPage() {
               <Text
                 style={{ fontSize: 14.5, fontWeight: "900", color: "white" }}
               >
-                Create Manually
+                Create Trip Manually
               </Text>
             </TouchableOpacity>
           </>
         ) : (
-          <>
+              <>
+                
+
+
+
+
             {/* New Itinerary Form */}
 
         <View
@@ -552,14 +559,14 @@ export default function ItineraryPage() {
                 paddingTop: 5,
               }}
             >
-              Create a New Itinerary
+              Create a New Trip
             </Text>
             
             <TextInput
               value={itinName}
               //onChangeText={(text) => setItinName(text)}
               onChangeText={setItinName}
-              placeholder="Enter itinerary name..."
+              placeholder="Enter trip name..."
               placeholderTextColor="gray"
               style={{
                 backgroundColor: "#1a2f4e",
@@ -588,7 +595,7 @@ export default function ItineraryPage() {
               }}
             >
               <Text style={{ fontWeight: "500", color: "white", fontSize: 16 }}>
-                Save Itinerary
+                Save Trip
               </Text>
             </TouchableOpacity>
 

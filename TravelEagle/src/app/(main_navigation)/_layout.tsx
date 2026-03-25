@@ -49,7 +49,7 @@ export default function RootLayout() {
         <Tabs.Screen
           name="(itinerary)/MyItineraries"
           options={{
-            title: "Itinerary",
+            title: "My Trips",
             tabBarIcon: ({ color, size }) => (
               
               <Feather name="calendar" size={size} color={color} />
