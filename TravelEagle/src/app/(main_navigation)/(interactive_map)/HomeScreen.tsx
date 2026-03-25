@@ -9,6 +9,7 @@ import { View,
   Modal, //Component that helps display content as an overlay or on top of the current screen
   Platform, //Provides platform-specific logic
   ScrollView,
+  Linking, //A tap handler that allows Strings to be pressed and used as links
 } from "react-native";
 import { Feather } from "@expo/vector-icons"; //Vector icon family import
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'; //Vector icon family import
@@ -36,9 +37,12 @@ type SelectedPlaceType = { //describes the structure of a Place object
   placeId?: string; //stores the placeid
 } | null;
 
+//Defines the UI labels for filters.
+//Every UI label is mapped to GeoapifyAPI string in a dictionary data structure
+
 const FILTER_CATEGORY_MAP: Record<string, string> = {
   Hotels: "accommodation.hotel", //hotels filter
-  Gas: "commercial.gas", //gas filter
+  Gas: "service.vehicle.fuel", //gas filter
   Bars: "catering.bar", //bars filter
   Museums: "entertainment.museum", //museum filter
   Zoos: "entertainment.zoo", //zoos filter
@@ -120,11 +124,33 @@ export default function HomeScreen()
     }
   };
 
-  // Simple function to add or remove a filter
+  //FILTER SELECTION LOGIC===================================
+
+  //Notes:
+  //When a user taps a filter, toggleFilter function updates the filter's state
+  //toggleFilter takes a filterName parameter, which is a filter from the user's selection
+ 
   const toggleFilter = (filterName: string) => {
-    if (selectedFilters.includes(filterName)) {
+    
+    if (selectedFilters.includes(filterName)) { //if the state "selectedFilters" contains a filter
+      
+      //Set the state of a filter:
+      //1. Go into the selectedFilters array
+      //2. Call the .filter method, which creates an array that adds items that pass a condition
+      //3. '(item) =>' a function that iterates through every item in the selected filters array
+      //4. if a selected index(item) is equal to the filterName, keep the item in setSelectedFilters, otherwise, remove it
+      
       setSelectedFilters(selectedFilters.filter((item) => item !== filterName));
-    } else {
+      
+
+
+      //Adding additional filters to the list
+      //1. '[]' creates a new empty array 
+      //2. ...selectedFilters -> this is a spread operator, which tells the
+      //                      code to take everything currently in the selectedFilters array and copy it into the new array
+      //3. take filterName and add it to the end of the new array
+    } else
+    {
       setSelectedFilters([...selectedFilters, filterName]);
     }
   };
@@ -150,6 +176,23 @@ const selectedPlaceRating = typeof selectedPlace?.rating === "number"
     : `${"\u2B50"} N/A`;
 
 
+/* 3. WEBSITE LINK HANDLER - opens a location's website in the phone's default browser
+*/
+const openWebsite = async (website?: string) => {
+  if (!website || website === "Not available") return; //if a website is not available, return nothing
+
+  const trimmedWebsite = website.trim();
+  const websiteWithProtocol = /^https?:\/\//i.test(trimmedWebsite) //prepend the website with https:// if it is missing
+    ? trimmedWebsite
+    : `https://${trimmedWebsite}`;
+
+  const canOpen = await Linking.canOpenURL(websiteWithProtocol);
+  if (canOpen) {
+    await Linking.openURL(websiteWithProtocol);
+  }
+};
+
+
 
     //Updates the place when a user clicks on it
   const handleSetSelectedPlace = (place: SelectedPlaceType) =>
@@ -164,15 +207,20 @@ const selectedPlaceRating = typeof selectedPlace?.rating === "number"
 };
 
 
-/* APPLIES FILTERS TO MAP -> this takes the list of filters the user clicks
-  and translates them into the technical IDs the API needs
-*/
-  const activeFilterCategories = selectedFilters
   
-    // .map() loops through each name and swaps it using the dictionary
+  
+  
+  //Function that translates filter labels to API keys that Geoapify recognizes
+  const activeFilterCategories = selectedFilters //put user's selected filters into the "activeFilters" variable
+  
+    // .map -> a function that takes filter as a parameter
+    //      What it does: it goes through selectedFilters one by one, and for each filter, looks it's name up in a dictionary called "FILTER_CATEGORY_MAP"
+    //      Simply put, it matches a name to a value
     .map((filterName) => FILTER_CATEGORY_MAP[filterName])
 
-    .filter(Boolean);    // .filter(Boolean) -> a method that allows us to remove null values
+
+    //.filter is a shortcut for "Keep only real filters in the dictionary and don't keep null or undefined values"
+    .filter(Boolean);   
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -412,7 +460,13 @@ const selectedPlaceRating = typeof selectedPlace?.rating === "number"
               {/* WEBSITE */}
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Website:</Text>
-              <Text style={styles.infoValue}>{selectedPlace?.website || "Not available"}</Text>
+              {selectedPlace?.website && selectedPlace.website !== "Not available" ? (
+                <TouchableOpacity onPress={() => openWebsite(selectedPlace.website)}>
+                  <Text style={[styles.infoValue, styles.websiteLink]}>{selectedPlace.website}</Text>
+                </TouchableOpacity>
+              ) : (
+                <Text style={styles.infoValue}>Not available</Text>
+              )}
             </View>
 
             <TouchableOpacity
@@ -510,7 +564,7 @@ const selectedPlaceRating = typeof selectedPlace?.rating === "number"
   );
 }
 
-//STYLES
+//STYLES============================================================================
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
@@ -777,6 +831,10 @@ const styles = StyleSheet.create({
   infoValue: {
     color: 'white',
     fontSize: 15,
+  },
+  websiteLink: {
+    color: '#7FB8FF',
+    textDecorationLine: 'underline',
   },
   closeMoreInfoBtn: {
     marginTop: 15,

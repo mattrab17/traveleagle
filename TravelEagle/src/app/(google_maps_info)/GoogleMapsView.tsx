@@ -105,32 +105,44 @@ export default function GoogleMapsView({
     : false;
 
 //code for the markers from GeoApify
-const [poiMarkers, setPoiMarkers] = useState<any[]>([]);
-const geo = useRef(new PlacesAPI()).current;//useRef will allow the markers to stay on the map without ReRendering everytime
+const [poiMarkers, setPoiMarkers] = useState<any[]>([]); //THIS CONTROLS THE STATE FOR RENDERING LISTS OF PLACES ON THE MAP
+  const geo = useRef(new PlacesAPI()).current; //sets up the SearchTool PlacesAPI will use
+  //useRef is the memory hook that will store search engine objects
+  //      -> useRef is needed here to create a search engine object once so that this object will just rerender. Otherwise, it would create a new search engine object each time causing the app to lag and waste time on rendering
 
-useEffect(() => {
-  const run = async () => {
-    try {
-      if (latitude == null || longitude == null) return;
-      if (!Array.isArray(activeFilterCategories) || activeFilterCategories.length === 0) {
+useEffect(() => { //useEffect -> a hook that helps render components (THE POINT OF THE CODE IS TO AUTOMATICALLY UPDATE LOCATIONS WHEN DIFFERENT FILTERS ARE ACTIVATED)
+  
+  const run = async () => { //run function
+   
+    try { //A try-catch block is used to prevent the code from crashing when a filter is not activated
+      if (latitude == null || longitude == null) return; //if the app doesn't know the user's location yet, return nothing (do nothing)
+      if (!Array.isArray(activeFilterCategories) || activeFilterCategories.length === 0) { //if no filters are selected, clear the map (setPOIMARKERS to an array filled with null)
         setPoiMarkers([]);
         return;
       }
 
-      const poiResults = await geo.findPlaces({
+      const poiResults = await geo.findPlaces({ //the search engine variable
+                                                //poiResults calls findPlaces and searches for your location, your filters, a radius (25 miles), and a limit of 60 results
+                                                //Await -> the code runs in the background and waits for results to come back before executing the code below
         userLocation: { latitude, longitude },
+        searchedPlace: activeSelectedPlace && activeSelectedPlace.lat != null && activeSelectedPlace.lng != null
+          ? { lat: activeSelectedPlace.lat, lng: activeSelectedPlace.lng }
+          : undefined,
         selectedFilters: activeFilterCategories,
         radius: 40234,
-        limit: 60,
+        initialRadius: 2500,
+        radiusStep: 5000,
+        limit: 20,
       });
 
-      setPoiMarkers(poiResults);
+      setPoiMarkers(poiResults); //put poiResults into the setPoiMarkers array. (UPDATES THE SCREEN WITH PLACES)
     } catch (e) {
       console.error(e);
     }
   };
-  run();
-}, [latitude, longitude, activeFilterCategories, geo]);
+  run(); //run method is called to constantly wait for search engine info
+}, [latitude, longitude, activeFilterCategories, geo, activeSelectedPlace]); //this code only runs when a variable changes. 
+                                                        //Ex: if your location changes, then it will render different locations based on your latitude and longitude
   
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -178,15 +190,16 @@ useEffect(() => {
             </Marker>
           ))}
 
-          {/* POI Markers*/}
-          {poiMarkers.map((p) => (
-            <Marker
+          {/* Draws Markers to the screen*/}
+          {poiMarkers.map((p) => ( //.map function loops through the poiMarkers list. For every place, it renames the place 'p' and runs the code inside
+            
+            <Marker //this is an actual marker with it's attributes
               key={p.id}
               coordinate={{ latitude: p.latitude, longitude: p.longitude }}
               title={p.name}
               description={p.address}
               pinColor="blue"
-              onPress={async () => {
+              onPress={async () => { //this controls what happens when you press a marker
                 const poiPlace = {
                   id: Number(p.id) || Date.now(),
                   name: p.name,
@@ -195,15 +208,16 @@ useEffect(() => {
                   emoji: "📍",
                   description: p.address,
                 };
-                animateToRegion(activeMapRef, p.latitude, p.longitude);
-                const enrichedPoi = await enrichPlaceFromMapPin({
+                animateToRegion(activeMapRef, p.latitude, p.longitude); //populates the map with markers
+                const enrichedPoi = await enrichPlaceFromMapPin({ //holds information such as: photos, reviews, open hours
+                  //NOTE: The application does not need to receive location information unless a user presses on a specific marker
                   ...poiPlace,
                   address: p.address,
                   popularity: p.original?.properties?.rank?.popularity,
                 });
                 onMarkerPress(enrichedPoi);
                 activeSetSelectedPlace(enrichedPoi);
-                bottomSheetRef.current?.snapToIndex(1);
+                bottomSheetRef.current?.snapToIndex(1); //Pop out the bottomSheet with location info so that it takes up 25% of the screen
               }}
             />
           ))}
