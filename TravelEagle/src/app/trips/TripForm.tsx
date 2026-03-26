@@ -1,10 +1,12 @@
-import {Calendar, toDateId, useDateRange} from "@marceloterreiro/flash-calendar"
+import {Calendar, toDateId, useDateRange, CalendarTheme} from "@marceloterreiro/flash-calendar"
+
 import { View, Text, TouchableOpacity } from "react-native";
 import {GooglePlacesInputTrip} from "../(google_maps_info)/GooglePlacesAutocomplete";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
 import { useState } from "react";
 import { tripQueries } from "@/models/trips";
 import { tripController, goToPreviousMonth, goToNextMonth } from "@/controllers/tripController";
+import { BACKGROUND_COLOR, ORANGE_COLOR, WHITE_TEXT_COLOR} from "../constants/colors";
 
 export default function TripForm({onClose}) {
 
@@ -36,29 +38,26 @@ export default function TripForm({onClose}) {
   }
 }
     return(
-        <View style={{padding:15, paddingTop:20, flex:1}}>
-            
-            <Text style={{ fontSize: 20, color: "black", fontWeight: "bold" }}>Add a Trip</Text>
-            <Text style={{ fontSize:16, color: "black", paddingVertical: 20, fontWeight:'400'
+        <ScrollView style={{flex:1,}} contentContainerStyle={{padding:10, paddingBottom: 80}}>
+            <Text style={{ fontSize: 22, color: ORANGE_COLOR, fontWeight:'800',}}>Add a Trip</Text>
+            <Text style={{ fontSize:14, color: "white", paddingVertical: 20, fontWeight:'400'
              }}>Plan out your new trip by building an Itinerary</Text>
-
-
             {/* Destination Box/Input */}
-            <Text style={{fontSize: 16, marginBottom: 10, fontWeight: '600'}}>Destination</Text>
+            <Text style={{fontSize: 16, marginBottom: 10, fontWeight: '400', color: '#3CB371'}}>Destination</Text>
             <View style={{flex:1, width:'100%', marginBottom: 20, zIndex:1 }}>
                 <GooglePlacesInputTrip 
                 onSelect={(data) => setDestination(data.description)}
-                placeholder="Where are you going?">
+                placeholder="Where would you like to go?"
+                >
                 </GooglePlacesInputTrip>
             </View>
 
-            <Text style={{ fontSize: 16, paddingBottom: 20, fontWeight: '600'}}>Select Dates</Text>
+            <Text style={{ fontSize: 16, paddingBottom: 20, fontWeight: '400', color: '#3CB371'}}>Select Dates</Text>
             <View style={{flex:1}}>
                 {/* Add borders or a symbol to make the buttons better for user experience*/}
                 {/* Also might need to add a drop down menu, to navigate to further months easier*/}
              <View style={{
                     flex: 1,
-                    backgroundColor: 'white',
                     padding: 10,
                     borderRadius:10,
                     borderWidth:1,
@@ -66,51 +65,53 @@ export default function TripForm({onClose}) {
                 }}>
             <View style={{flexDirection: "row", paddingBottom:12, justifyContent: 'space-between' }}>
                 <TouchableOpacity onPress={() => setCurrentMonth(goToPreviousMonth(currentMonth))}>
-                <Text style={{fontSize: 12, color: 'blue'}}> Previous </Text>
+                <Text style={{fontSize: 12, color: 'white'}}>Previous</Text>
                 </TouchableOpacity>
-                <Text style={{fontSize:14, fontWeight: 'bold',}}>{currentMonthTitle}</Text>
+                <Text style={{fontSize:14, fontWeight: 'bold', color: ORANGE_COLOR}}>{currentMonthTitle}</Text>
                 <TouchableOpacity onPress={() => setCurrentMonth(goToNextMonth(currentMonth))}>
-                <Text style={{fontSize: 12, color: 'blue'}}> Next </Text>
+                <Text style={{fontSize: 12, color: 'white'}}>Next</Text>
                 </TouchableOpacity>
             </View>
+            
             <Calendar
                 calendarMonthId={monthID}
                 calendarActiveDateRanges={calendarActiveDateRanges}
                 onCalendarDayPress={onCalendarDayPress}   
                 calendarMonthHeaderHeight={0}
-                //Fix calendar, dev changed the default styling, Dates don't appear correctly.
-            
+                theme={{
+                    itemWeekName:{
+                        content: {color: ORANGE_COLOR}
+                    }
+                }}
                            
             /></View></View>
             <View style={{marginTop: 15, flexDirection: "row", gap:10}}>
                 <View style={{
                     flex: 1,
-                    backgroundColor: 'white',
                     padding: 10,
                     borderRadius:10,
                     borderWidth:1,
                     borderColor: '#d8d8d8'
                 }}>
-                <Text style={{fontSize:12, color: '#777676', }}>
+                <Text style={{fontSize:12, color: ORANGE_COLOR, }}>
                     Start
                 </Text>
-                <Text style={{fontSize: 14, fontWeight: '500'}}>
+                <Text style={{fontSize: 14, fontWeight: '500', color: WHITE_TEXT_COLOR, marginTop: 10}}>
                     {dateRange.startId || 'Select a Starting Date'}
                 </Text>
                 </View>
 
                 <View style={{
                     flex: 1,
-                    backgroundColor: 'white',
                     padding: 10,
                     borderRadius:10,
                     borderWidth:1,
                     borderColor: '#d8d8d8'
                 }}>
-                <Text style={{fontSize:12, color: '#777676', }}>
+                <Text style={{fontSize:12, color: ORANGE_COLOR, }}>
                     End
                 </Text>
-                <Text style={{fontSize: 14, fontWeight: '500'}}>
+                <Text style={{fontSize: 14, fontWeight: '500', color: WHITE_TEXT_COLOR, marginTop: 10 }}>
                     {dateRange.endId || 'Select an Ending Date'}
                 </Text>
                 </View>
@@ -136,9 +137,10 @@ export default function TripForm({onClose}) {
                 <Text>Create Trip</Text>
             </TouchableOpacity>
             </View>
+             
             
-            
-            </View>   
+        </ScrollView>   
     )
 
 }
+

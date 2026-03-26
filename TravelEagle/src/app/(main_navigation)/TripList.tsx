@@ -175,7 +175,7 @@ export default function TripsScreen() {
             index={-1} 
             style={{flex:1}}
             enablePanDownToClose={true}
-            backgroundStyle={{backgroundColor: 'white'}}>
+            backgroundStyle={{backgroundColor: SECONDARY_BACKGROUND_COLOR}}>
                        
         <BottomSheetView style={styles.contentContainer}>
             <TripForm onClose={closeSheet} />

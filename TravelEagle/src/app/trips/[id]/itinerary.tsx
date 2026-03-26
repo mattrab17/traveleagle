@@ -92,7 +92,7 @@ export default function ItineraryScreen(){
     return(
         <ScrollView>
         <View style={{padding: 20, marginTop:20, flex:1,}}>
-            <TouchableOpacity onPress={() => router.back()} style={{marginTop:20}}><Ionicons name='arrow-back' size={16} color="white"/> </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.back()} style={{marginTop:20}}><Ionicons name='arrow-back' size={16} color="white"/></TouchableOpacity>
         <View style={{paddingTop: 60, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             
             <Text style={{color: 'white', fontSize: 36, fontFamily:'Inter', fontWeight: 800}}>Itinerary</Text>
@@ -218,7 +218,7 @@ export default function ItineraryScreen(){
         </View>
 )}
         <View style={{paddingTop: 30, flex:1,  backgroundColor: 'whtie' }}>
-            <ScrollView horizontal style={{marginBottom:20, marginTop: 20,}}>
+            <ScrollView horizontal style={{marginBottom:20, marginTop: 20,}} showsHorizontalScrollIndicator={false}>
                 <View style={{flexDirection: 'row', gap: 5}}>
                     <TouchableOpacity 
                         style={{borderRadius: 20, backgroundColor: currentDay === 0 ? ORANGE_COLOR : '#9E9E9E', paddingVertical: 10, paddingHorizontal:20, }}

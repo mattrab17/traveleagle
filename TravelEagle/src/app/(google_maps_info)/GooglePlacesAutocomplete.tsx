@@ -190,6 +190,10 @@ export function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you
         }}
         enablePoweredByContainer={false}
         debounce={200}
+        textInputProps={{
+          placeholderTextColor: 'black'
+        }
+        }
         onPress={(data, details = null) => onSelect(data, details)}
         styles={{
           container: {
