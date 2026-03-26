@@ -557,7 +557,6 @@ const openWebsite = async (website?: string) => {
               {/* Add check for if trips are empty. If trips are empty, 
               don't show picker and show button to redirect to tripsList.tsx */}
              <DropDownPicker
-             {/*Add better styling for picker*/}
                     open={open}
                     value={selectedTrip}
                     items={(trips || []).map(({destination, trip_id}) => ({label: destination, value: trip_id}))}
