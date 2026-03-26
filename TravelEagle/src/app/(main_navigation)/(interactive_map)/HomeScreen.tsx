@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useState } from "react"; //a hook that helps declare the state of a variable on a screen
 import { View,
   StyleSheet, //Style component to style objects
@@ -9,7 +9,8 @@ import { View,
   Modal, //Component that helps display content as an overlay or on top of the current screen
   Platform, //Provides platform-specific logic
   ScrollView,
-  Linking, //A tap handler that allows Strings to be pressed and used as links
+  Linking,
+  Alert, //A tap handler that allows Strings to be pressed and used as links
 } from "react-native";
 import { Feather } from "@expo/vector-icons"; //Vector icon family import
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'; //Vector icon family import
@@ -22,6 +23,9 @@ import GoogleMapsView from "../../(google_maps_info)/GoogleMapsView";
 //IMPORT FOR DATA AND TIME PICKING FROM EXPO 
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'; // Import for Data and Time picking
 import GooglePlacesInput from "../../(google_maps_info)/GooglePlacesAutocomplete"; //Import to connect Travel Eagle Search bar with Google Maps Search
+import { tripController } from "@/controllers/tripController";
+import { itineraryController } from "@/controllers/itineraryController";
+import DropDownPicker from 'react-native-dropdown-picker'; 
 
 type SelectedPlaceType = { //describes the structure of a Place object
   name?: string; 
@@ -35,6 +39,11 @@ type SelectedPlaceType = { //describes the structure of a Place object
   crowdLevel?: string; //stores the crowd levels
   photoUrl?: string; //stores the photo
   placeId?: string; //stores the placeid
+  place_id?: number;
+  formatted_address?: string;
+  place_data?: any;
+  geometry?: any;
+
 } | null;
 
 //Defines the UI labels for filters.
@@ -85,7 +94,7 @@ export default function HomeScreen()
   const [time, setTime] = useState(new Date()); 
 
   // State to store the selected trip name from the dropdown in "Add Trip"
-  const [selectedTrip, setSelectedTrip] = useState("Example Trip");
+  const [selectedTrip, setSelectedTrip] = useState(null);
 
   // State to store selected filters
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
@@ -205,6 +214,49 @@ const openWebsite = async (website?: string) => {
     // we want them to disappear now that we have a NEW place.
     setShowDirections(false);
 };
+
+
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState([]); 
+
+  
+  const [trips, setTrips] = useState<any[]>([]);
+  useEffect(() => {
+    loadTrips();}, []);
+
+    const  userID = 'bde439b9-f312-45af-81b2-f07e1ee74648';
+    async function loadTrips(){
+      const {data} = await tripController.loadAllTrips(userID);
+      setTrips(data);
+
+    }
+
+ async function handleAddPlace(){
+         /*  console.log('selectedTrip:', selectedTrip);
+          console.log('selectedPlace:', selectedPlace);
+          console.log('place_data:', selectedPlace?.place_data);
+          console.log('placeId:', selectedPlace?.placeId);
+          console.log('time:', time); */
+        const {data, error} = await itineraryController.addPlaceFromGoogleMaps(
+            Number(selectedTrip),
+            selectedPlace,
+            time,
+        );
+        
+      
+        if (error){
+            Alert.alert('Error', 'Failed to add to itinerary');
+            return;
+        }
+        setIsAddTripVisible(false);
+        setSelectedTrip(null);
+        setSelectedPlace(null);
+        setTime(new Date());
+        //Redirect to itinerary?? || Stay in MapView
+    }
+
+
+
 
 
   
@@ -502,18 +554,20 @@ const openWebsite = async (website?: string) => {
 
             {/* Itinerary Inputs */}
             <Text style={styles.inputLabel}>Select Itinerary:</Text> 
+              {/* Add check for if trips are empty. If trips are empty, 
+              don't show picker and show button to redirect to tripsList.tsx */}
+             <DropDownPicker
+             {/*Add better styling for picker*/}
+                    open={open}
+                    value={selectedTrip}
+                    items={(trips || []).map(({destination, trip_id}) => ({label: destination, value: trip_id}))}
+                    setOpen={setOpen}
+                    setValue={setSelectedTrip}
+                    placeholder={'Select a trip'}
+                    listMode="SCROLLVIEW"
+                />
 
-            <TouchableOpacity 
-              style={styles.itineraryInput}
-              onPress={() => {
-                // Toggles between two names to show selection logic
-                setSelectedTrip(selectedTrip === "Example Trip" ? "California Trip" : "Example Trip");
-              }}
-            > 
-              {/* EXAMPLE ITINERARY PLACEHOLDER */}
-              <Text style={styles.inputText}>{selectedTrip}</Text> 
-              <Feather name="chevron-down" size={20} color="white" />
-            </TouchableOpacity>
+
 
             {/* Select Time Input */}
             <Text style={styles.inputLabel}>Select Time:</Text> 
@@ -550,8 +604,8 @@ const openWebsite = async (website?: string) => {
               {/* Add button */}
               <TouchableOpacity 
                 style={styles.addItineraryBtn}
-                onPress={() => setIsAddTripVisible(false)}
-              >
+                onPress={handleAddPlace}
+>
                 <Feather name="check" size={18} color="white" style={{marginRight: 8}} />
                 <Text style={styles.addBtnText}>Add</Text>
               </TouchableOpacity>

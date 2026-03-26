@@ -13,7 +13,7 @@ export const itineraryQueries = {
      return data || [];
     },
 
-/*     async getByDay (tripId: number, dayNumber: number): Promise<ItineraryItems[]>{
+    async getByDay (tripId: number, dayNumber: number): Promise<ItineraryItems[]>{
          const { data, error } = await supabase 
          .from('itinerary_items')
          .select('*, place:places(*)')
@@ -23,7 +23,7 @@ export const itineraryQueries = {
 
          if(error) throw error;
          return data || [];
-    }, */
+    },
 
    async addItem(item: {
         trip_id: number;

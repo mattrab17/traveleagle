@@ -84,6 +84,11 @@ const mapGoogleDetailsToSelectedPlace = (details, fallback = {}) => {
     crowdLevel: getCrowdLevel(details?.user_ratings_total),
     photoUrl: buildGooglePhotoUrl(photoReference, apiKey) || fallback.photoUrl,
     placeId: details?.place_id || fallback.placeId,
+    place_id: details?.place_id,
+    formatted_address: details.formatted_address,
+    place_data: details,
+    geometry: details?.geometry,
+
   };
 };
 

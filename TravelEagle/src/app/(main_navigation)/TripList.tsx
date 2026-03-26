@@ -28,25 +28,6 @@ export default function TripsScreen() {
  // const {user} = useAuth();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [trips, setTrips] = useState<any[]>([]);
-    /* {
-      trip_id: 1,
-      destination: "New York City, USA",
-      start_date: "2026-02-11",
-      end_date: "2026-02-12",
-    },
-    {
-      trip_id: 2,
-      destination: "New York, USA",
-      start_date: "2026-02-11",
-      end_date: "2026-02-14",
-    },
-    {
-      trip_id: 3,
-      destination: "New, USA",
-      start_date: "2026-02-11",
-      end_date: "2026-02-13",
-    },
-  ]); */
   function formatDate(date: string): string {
     const newDate = new Date(date)
     return newDate.toLocaleDateString(
