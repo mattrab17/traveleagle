@@ -76,6 +76,7 @@ export default function TripForm({onClose, /* userId */}) {
             <Calendar
                 calendarMonthId={monthID}
                 calendarActiveDateRanges={calendarActiveDateRanges}
+                calendarMinDateId={today}
                 onCalendarDayPress={onCalendarDayPress}   
                 calendarMonthHeaderHeight={0}
                 theme={{
