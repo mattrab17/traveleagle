@@ -564,6 +564,10 @@ const openWebsite = async (website?: string) => {
                     setValue={setSelectedTrip}
                     placeholder={'Select a trip'}
                     listMode="SCROLLVIEW"
+                    style={styles.tripPicker}
+                    dropDownContainerStyle={styles.tripPickerDropdown}
+                    textStyle={styles.tripPickerText}
+                    placeholderStyle={styles.tripPickerPlaceholder}
                 />
 
 
@@ -927,7 +931,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   inputLabel: { //input subheadings: "Select Itinerary:" & "Select Time"
-    color: '#D1D1D1',
+    color: '#ffffff20',
     fontSize: 14,
     marginBottom: 8,
   },
@@ -939,6 +943,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+  },
+  tripPicker: {
+    backgroundColor: '#0A1A31',
+    borderColor: '#0A1A31',
+    borderRadius: 8,
+    marginBottom: 20,
+    minHeight: 48,
+  },
+  tripPickerDropdown: {
+    backgroundColor: '#0A1A31',
+    borderColor: '#0A1A31',
+  },
+  tripPickerText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  tripPickerPlaceholder: {
+    color: 'white',
+    fontSize: 16,
   },
   inputText: { //inside input boxes: "Example Trip" & "12:00 AM"
     color: 'white',

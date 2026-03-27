@@ -125,9 +125,6 @@ useEffect(() => { //useEffect -> a hook that helps render components (THE POINT 
                                                 //poiResults calls findPlaces and searches for your location, your filters, a radius (25 miles), and a limit of 60 results
                                                 //Await -> the code runs in the background and waits for results to come back before executing the code below
         userLocation: { latitude, longitude },
-        searchedPlace: activeSelectedPlace && activeSelectedPlace.lat != null && activeSelectedPlace.lng != null
-          ? { lat: activeSelectedPlace.lat, lng: activeSelectedPlace.lng }
-          : undefined,
         selectedFilters: activeFilterCategories,
         radius: 40234,
         initialRadius: 2500,
@@ -141,7 +138,7 @@ useEffect(() => { //useEffect -> a hook that helps render components (THE POINT 
     }
   };
   run(); //run method is called to constantly wait for search engine info
-}, [latitude, longitude, activeFilterCategories, geo, activeSelectedPlace]); //this code only runs when a variable changes. 
+}, [latitude, longitude, activeFilterCategories, geo]); //this code only runs when a variable changes. 
                                                         //Ex: if your location changes, then it will render different locations based on your latitude and longitude
   
   return (

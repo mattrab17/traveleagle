@@ -7,6 +7,8 @@ const useLocation = () => {
     const [latitude, setLatitude] = useState(null);
     const [longitude, setLongitude] = useState(null);
 
+
+
     const getUserLocation = async () => {//will ask user for permission to retrieve their location
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status != 'granted') {
@@ -17,9 +19,12 @@ const useLocation = () => {
         let { coords } = await Location.getCurrentPositionAsync();//gets location of user and set
         if (coords) {
             const { latitude, longitude } = coords
+            
 
             setLatitude(latitude)
             setLongitude(longitude)
+
+            
 
             //this will return the location in a proper address, not coordinate points
             let address = await Location.reverseGeocodeAsync({
@@ -31,6 +36,8 @@ const useLocation = () => {
         useEffect(() => {
             getUserLocation()
         }, [])
+    
+        
     
     return {latitude, longitude, errorMsg}
 }

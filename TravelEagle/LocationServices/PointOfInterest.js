@@ -174,8 +174,8 @@ export class PlacesAPI {
     //limit caps total returned places for performance and UI readability.
     limit = 10,//will only show 10 closest markers to stop map from slowing in performance
   }) {
-    //center prefers searchedPlace first, then userLocation, then empty object fallback.
-    const center = searchedPlace ?? userLocation ?? {};
+    //Search center is always the user's live location.
+    const center = userLocation ?? {};
     //lat resolves either from .lat or .latitude formats.
     const lat = center?.lat ?? center?.latitude;
     //lng resolves either from .lng or .longitude formats.
