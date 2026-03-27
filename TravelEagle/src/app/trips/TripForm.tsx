@@ -8,7 +8,7 @@ import { tripQueries } from "@/models/trips";
 import { tripController, goToPreviousMonth, goToNextMonth } from "@/controllers/tripController";
 import { BACKGROUND_COLOR, ORANGE_COLOR, WHITE_TEXT_COLOR} from "../constants/colors";
 
-export default function TripForm({onClose}) {
+export default function TripForm({onClose, /* userId */}) {
 
     const [destination, setDestination] = useState('')
     const { calendarActiveDateRanges, onCalendarDayPress, dateRange, onClearDateRange} = useDateRange();
@@ -21,8 +21,8 @@ export default function TripForm({onClose}) {
   async function handleCreate(){
   try {
     const data = await tripQueries.create({
-        //Temporary id for now, will add auth later...
       user_id: 'bde439b9-f312-45af-81b2-f07e1ee74648',
+      /* user_id: userId, */
       destination: destination,
       start_date: dateRange.startId,
       end_date: dateRange.endId,

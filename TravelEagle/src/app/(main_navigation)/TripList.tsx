@@ -25,7 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AntDesign } from "@expo/vector-icons";
 
 export default function TripsScreen() {
- // const {user} = useAuth();
+  /* const {user} = useAuth(); */
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [trips, setTrips] = useState<any[]>([]);
   function formatDate(date: string): string {
@@ -46,11 +46,20 @@ export default function TripsScreen() {
     bottomSheetRef.current?.close();
     loadTrips();
   }
-  useEffect(() => {
-    loadTrips();}, []);
 
+ /*  useEffect(() => {
+    if(user?.id){
+    loadTrips();}}, [user]); */
+
+    useEffect(() => {
+    loadTrips();}, []);
     const  userID = 'bde439b9-f312-45af-81b2-f07e1ee74648';
-    async function loadTrips(){
+/*     async function loadTrips(){
+      const {data} = await tripController.loadAllTrips(user.id);
+      setTrips(data);
+
+    } */
+     async function loadTrips(){
       const {data} = await tripController.loadAllTrips(userID);
       setTrips(data);
 
@@ -144,6 +153,7 @@ export default function TripsScreen() {
        ): (
         <FlatList
           data={trips}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={{
@@ -178,7 +188,7 @@ export default function TripsScreen() {
             backgroundStyle={{backgroundColor: SECONDARY_BACKGROUND_COLOR}}>
                        
         <BottomSheetView style={styles.contentContainer}>
-            <TripForm onClose={closeSheet} />
+            <TripForm onClose={closeSheet} /* userId={user?.id} */ />
         </BottomSheetView>
       </BottomSheet>
       </SafeAreaView>

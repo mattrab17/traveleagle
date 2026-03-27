@@ -184,6 +184,7 @@ export function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you
         listViewDisplayed="auto"
         keyboardShouldPersistTaps="handled"
         fetchDetails={true}
+        disableScroll={true}
         query={{
           key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "",
           language: "en",
