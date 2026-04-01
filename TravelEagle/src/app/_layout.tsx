@@ -4,6 +4,7 @@ import { View } from "react-native";
 import { BACKGROUND_COLOR } from "../app/constants/colors";
 import { AuthProvider, useAuth } from "./(authentication)/Auth";
 import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 
 
@@ -14,18 +15,17 @@ function RootNavigatior(){
 
 
 //Commented Out for testing, uncomment when ready to use app wide auth redirects
- /* useEffect(()=>{
+ useEffect(()=>{
     if (isLoading) return;
     setTimeout(()=> {
     if(isLoggedIn){
-      //Will Replace with home screen eventually,
-      router.replace('/TripList')
+      router.replace('/HomeScreen')
     }
     else{
-      router.replace('/(authentication)/LogInScreen')
+      router.replace('/WelcomePage')
     } }, 0);
 }, [isLoggedIn, isLoading,]);
-*/
+
   return (
     <Stack
           screenOptions={{
@@ -42,10 +42,12 @@ export default function RootLayout() {
   return (
     <AuthProvider>
     <SafeAreaProvider>
+      <GestureHandlerRootView>
       {/* ROOT BACKGROUND LAYER */}
       <View style={{ flex: 1, backgroundColor: BACKGROUND_COLOR }}>
        <RootNavigatior />
       </View>
+      </GestureHandlerRootView>
     </SafeAreaProvider>
     </AuthProvider>
   );

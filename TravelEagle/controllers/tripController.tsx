@@ -34,7 +34,28 @@ export const tripController = {
         const end = new Date(trip.end_date);
         const diffInTime = end.getTime() - start.getTime();
         return Math.ceil(diffInTime/ (1000 * 60 * 60 * 24)) + 1;
-    }
+     },
+     getSortedTripList(trips: any[]){
+        const today = new Date().toISOString().split('T')[0];
+
+        const upcoming = trips.filter(trip => trip.end_date >= today).sort((tripA, tripB) => tripA.start_date.localeCompare(tripB.start_date));
+        const past = trips.filter(trip => trip.end_date < today).sort((tripA, tripB) => tripB.start_date.localeCompare(tripA.start_date));
+
+        return [
+            ...(upcoming.length ? [
+                {title: 'Upcoming', data: upcoming}] :
+                []
+            ),
+            ...(past.length ? [
+                {title: 'Past', data: past}] :
+                []
+            ),
+        ]
+     },
+     getUpcomingTrips(trips: any[]){
+        const today = new Date().toISOString().split('T')[0];
+        return trips.filter(trip => trip.end_date >= today).sort((tripA, tripB) => tripA.start_date.localeCompare(tripB.start_date));
+     }
 }
     export function goToPreviousMonth(currentMonth: Date) {
             const newMonth = new Date(currentMonth)

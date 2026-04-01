@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { useState } from "react"; //a hook that helps declare the state of a variable on a screen
 import { View,
   StyleSheet, //Style component to style objects
@@ -26,6 +26,8 @@ import GooglePlacesInput from "../../(google_maps_info)/GooglePlacesAutocomplete
 import { tripController } from "@/controllers/tripController";
 import { itineraryController } from "@/controllers/itineraryController";
 import DropDownPicker from 'react-native-dropdown-picker'; 
+import { useAuth } from "../../(authentication)/Auth";
+import { useFocusEffect } from "expo-router";
 
 type SelectedPlaceType = { //describes the structure of a Place object
   name?: string; 
@@ -64,6 +66,8 @@ const FILTER_CATEGORY_MAP: Record<string, string> = {
 
 export default function HomeScreen()
 {
+  const {user} = useAuth();
+  
   const mapRef = useRef<any>(null);
   //mapRef -> references the Google maps map. Null means it doesn't load immediately
 
@@ -218,18 +222,26 @@ const openWebsite = async (website?: string) => {
 
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]); 
-
-  
   const [trips, setTrips] = useState<any[]>([]);
-  useEffect(() => {
-    loadTrips();}, []);
 
-    const  userID = 'bde439b9-f312-45af-81b2-f07e1ee74648';
+/*   useEffect(() => {
+    loadTrips();}, []); */
+
+     useFocusEffect(useCallback(() => {
+      if(user?.id){
+      loadTrips();}}, [user]));
+
+      async function loadTrips(){
+      const {data} = await tripController.loadAllTrips(user.id);
+      setTrips(tripController.getUpcomingTrips(data));
+    }
+
+   /*  const  userID = 'bde439b9-f312-45af-81b2-f07e1ee74648';
     async function loadTrips(){
       const {data} = await tripController.loadAllTrips(userID);
       setTrips(data);
 
-    }
+    } */
 
  async function handleAddPlace(){
          /*  console.log('selectedTrip:', selectedTrip);

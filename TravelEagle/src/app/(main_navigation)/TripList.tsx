@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  SectionList,
 } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
@@ -25,9 +26,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AntDesign } from "@expo/vector-icons";
 
 export default function TripsScreen() {
-  /* const {user} = useAuth(); */
+  const {user} = useAuth();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [trips, setTrips] = useState<any[]>([]);
+  const [sections, setSections]= useState<any[]>([]);
   function formatDate(date: string): string {
     const newDate = new Date(date)
     return newDate.toLocaleDateString(
@@ -39,7 +41,7 @@ export default function TripsScreen() {
       }
     );
   }
-
+  
 
 
   function closeSheet(){
@@ -47,24 +49,24 @@ export default function TripsScreen() {
     loadTrips();
   }
 
- /*  useEffect(() => {
+  useEffect(() => {
     if(user?.id){
-    loadTrips();}}, [user]); */
+    loadTrips();}}, [user]);
 
-    useEffect(() => {
+    /* useEffect(() => {
     loadTrips();}, []);
-    const  userID = 'bde439b9-f312-45af-81b2-f07e1ee74648';
-/*     async function loadTrips(){
+    const  userID = 'bde439b9-f312-45af-81b2-f07e1ee74648'; */
+    async function loadTrips(){
       const {data} = await tripController.loadAllTrips(user.id);
-      setTrips(data);
+      setSections(tripController.getSortedTripList(data));
 
-    } */
-     async function loadTrips(){
+    }
+     /* async function loadTrips(){
       const {data} = await tripController.loadAllTrips(userID);
       setTrips(data);
 
     }
-
+ */
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>  
     <SafeAreaView style={{ flex: 1, backgroundColor: BACKGROUND_COLOR }}>
@@ -122,7 +124,7 @@ export default function TripsScreen() {
         >
           My Trips
         </Text> */}
-       {trips.length === 0 ? (
+       {sections.length === 0 ? (
         <View style={{flex:1, justifyContent:'center', alignItems:'center'}}>
         <TouchableOpacity
               onPress={() =>
@@ -151,9 +153,21 @@ export default function TripsScreen() {
             </TouchableOpacity>
             </View>
        ): (
-        <FlatList
-          data={trips}
+        <SectionList
+          sections={sections}
           showsVerticalScrollIndicator={false}
+          renderSectionHeader={({section})=>(
+            <Text style={{
+              color: WHITE_TEXT_COLOR,
+              fontWeight:'700',
+              fontSize: 20,
+              paddingVertical: 12,
+              paddingLeft: 10,
+            
+
+            }}
+            >{section.title}</Text>
+          )}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={{
@@ -188,7 +202,7 @@ export default function TripsScreen() {
             backgroundStyle={{backgroundColor: SECONDARY_BACKGROUND_COLOR}}>
                        
         <BottomSheetView style={styles.contentContainer}>
-            <TripForm onClose={closeSheet} /* userId={user?.id} */ />
+            <TripForm onClose={closeSheet} userId={user?.id} />
         </BottomSheetView>
       </BottomSheet>
       </SafeAreaView>
