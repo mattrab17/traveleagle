@@ -8,6 +8,8 @@ export const itineraryQueries = {
         .from('itinerary_items')
         .select('*, place:places(*)')
         .eq('trip_id', tripId)
+        .order('day_number', {ascending: true})
+        .order('time_slot', {ascending: true, nullsFirst:false})
         .order('order_index', {ascending: true} );
      if (error) throw error;
      return data || [];
@@ -19,6 +21,7 @@ export const itineraryQueries = {
          .select('*, place:places(*)')
          .eq('trip_id', tripId)
          .eq('day_number', dayNumber)
+         .order('time_slot', {ascending: true, nullsFirst:false})
          .order('order_index');
 
          if(error) throw error;
@@ -36,6 +39,20 @@ export const itineraryQueries = {
         const {data, error} = await supabase
         .from('itinerary_items')
         .insert(item)
+        .select('*, place:places(*)')
+        .single();
+        if (error) throw error;
+        return data;
+    },
+    async updateItem(itemId: number, updates:{
+        time_slot?: string | null;
+        day_number: number;
+        notes?: string | null;
+    }) {
+        const {data, error} = await supabase
+        .from('itinerary_items')
+        .update(updates)
+        .eq('id', itemId)
         .select('*, place:places(*)')
         .single();
         if (error) throw error;
