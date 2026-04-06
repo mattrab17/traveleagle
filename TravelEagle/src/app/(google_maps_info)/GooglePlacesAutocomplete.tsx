@@ -182,7 +182,7 @@ export function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you
         placeholder={placeholder}
         minLength={2}
         listViewDisplayed="auto"
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="always"
         fetchDetails={true}
         disableScroll={true}
         query={{
@@ -200,6 +200,8 @@ export function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you
           container: {
             flex: 0,
             width: '100%',
+            zIndex: 3000,
+            elevation: 3000,
           },
           textInputContainer: {
             width: '100%',
@@ -218,6 +220,22 @@ export function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you
           },
           predefinedPlacesDescription: {
             color: "#1faadb",
+          },
+          listView: {
+            position: "absolute",
+            top: 56,
+            left: 0,
+            right: 0,
+            backgroundColor: "#FFFFFF",
+            borderRadius: 12,
+            maxHeight: 260,
+            zIndex: 4000,
+            elevation: 4000,
+          },
+          row: {
+            backgroundColor: "#FFFFFF",
+            paddingVertical: 12,
+            paddingHorizontal: 10,
           },
         }}
       />

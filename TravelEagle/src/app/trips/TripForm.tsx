@@ -50,13 +50,14 @@ export default function TripForm({onClose, userId}) {
         <ScrollView
           style={{ flex: 1, backgroundColor: SECONDARY_BACKGROUND_COLOR }}
           contentContainerStyle={{ padding: 10, paddingBottom: 80 }}
+          keyboardShouldPersistTaps="always"
         >
             <Text style={{ fontSize: 22, color: ORANGE_COLOR, fontWeight:'800',}}>Add a Trip</Text>
             <Text style={{ fontSize:14, color: WHITE_TEXT_COLOR, paddingVertical: 20, fontWeight:'400'
              }}>Plan out your new trip by building an Itinerary</Text>
             {/* Destination Box/Input */}
             <Text style={{fontSize: 16, marginBottom: 10, fontWeight: '500', color: ORANGE_COLOR}}>Destination</Text>
-            <View style={{flex:1, width:'100%', marginBottom: 20, zIndex:1 }}>
+            <View style={{flex:1, width:'100%', marginBottom: 20, zIndex: 2000, elevation: 2000 }}>
                 <GooglePlacesInputTrip 
                 onSelect={(data) => setDestination(data.description)}
                 placeholder="Where would you like to go?"
@@ -65,7 +66,7 @@ export default function TripForm({onClose, userId}) {
             </View>
 
             <Text style={{ fontSize: 16, paddingBottom: 20, fontWeight: '500', color: ORANGE_COLOR}}>Select Dates</Text>
-            <View style={{flex:1}}>
+            <View style={{flex:1, zIndex: 1}}>
                 {/* Add borders or a symbol to make the buttons better for user experience*/}
                 {/* Also might need to add a drop down menu, to navigate to further months easier*/}
              <View style={{
