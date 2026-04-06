@@ -13,7 +13,7 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import TripForm from '../trips/TripForm'
 import { tripController } from "@/controllers/tripController";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../(authentication)/Auth";
 import {
   BACKGROUND_COLOR,
@@ -27,6 +27,7 @@ import { AntDesign } from "@expo/vector-icons";
 
 export default function TripsScreen() {
   const {user} = useAuth();
+  const { openCreate } = useLocalSearchParams<{ openCreate?: string }>();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [trips, setTrips] = useState<any[]>([]);
   const [sections, setSections]= useState<any[]>([]);
@@ -52,6 +53,16 @@ export default function TripsScreen() {
   useEffect(() => {
     if(user?.id){
     loadTrips();}}, [user]);
+
+  useEffect(() => {
+    if (openCreate === "1") {
+      // Open the existing TripForm bottom sheet when navigated from manual creation.
+      const timer = setTimeout(() => {
+        bottomSheetRef.current?.snapToIndex(3);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [openCreate]);
 
     /* useEffect(() => {
     loadTrips();}, []);

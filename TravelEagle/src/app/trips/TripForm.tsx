@@ -6,7 +6,12 @@ import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler
 import { useState } from "react";
 import { tripQueries } from "@/models/trips";
 import { tripController, goToPreviousMonth, goToNextMonth } from "@/controllers/tripController";
-import { BACKGROUND_COLOR, ORANGE_COLOR, WHITE_TEXT_COLOR} from "../constants/colors";
+import {
+  BACKGROUND_COLOR,
+  ORANGE_COLOR,
+  SECONDARY_BACKGROUND_COLOR,
+  WHITE_TEXT_COLOR,
+} from "../constants/colors";
 import { validateTripForm } from "../utils/validation";
 
 export default function TripForm({onClose, userId}) {
@@ -42,12 +47,15 @@ export default function TripForm({onClose, userId}) {
   }
 }
     return(
-        <ScrollView style={{flex:1,}} contentContainerStyle={{padding:10, paddingBottom: 80}}>
+        <ScrollView
+          style={{ flex: 1, backgroundColor: SECONDARY_BACKGROUND_COLOR }}
+          contentContainerStyle={{ padding: 10, paddingBottom: 80 }}
+        >
             <Text style={{ fontSize: 22, color: ORANGE_COLOR, fontWeight:'800',}}>Add a Trip</Text>
-            <Text style={{ fontSize:14, color: "white", paddingVertical: 20, fontWeight:'400'
+            <Text style={{ fontSize:14, color: WHITE_TEXT_COLOR, paddingVertical: 20, fontWeight:'400'
              }}>Plan out your new trip by building an Itinerary</Text>
             {/* Destination Box/Input */}
-            <Text style={{fontSize: 16, marginBottom: 10, fontWeight: '400', color: '#3CB371'}}>Destination</Text>
+            <Text style={{fontSize: 16, marginBottom: 10, fontWeight: '500', color: ORANGE_COLOR}}>Destination</Text>
             <View style={{flex:1, width:'100%', marginBottom: 20, zIndex:1 }}>
                 <GooglePlacesInputTrip 
                 onSelect={(data) => setDestination(data.description)}
@@ -56,7 +64,7 @@ export default function TripForm({onClose, userId}) {
                 </GooglePlacesInputTrip>
             </View>
 
-            <Text style={{ fontSize: 16, paddingBottom: 20, fontWeight: '400', color: '#3CB371'}}>Select Dates</Text>
+            <Text style={{ fontSize: 16, paddingBottom: 20, fontWeight: '500', color: ORANGE_COLOR}}>Select Dates</Text>
             <View style={{flex:1}}>
                 {/* Add borders or a symbol to make the buttons better for user experience*/}
                 {/* Also might need to add a drop down menu, to navigate to further months easier*/}
@@ -65,15 +73,16 @@ export default function TripForm({onClose, userId}) {
                     padding: 10,
                     borderRadius:10,
                     borderWidth:1,
-                    borderColor: '#d8d8d8'
+                    borderColor: "#4c5158",
+                    backgroundColor: BACKGROUND_COLOR,
                 }}>
             <View style={{flexDirection: "row", paddingBottom:12, justifyContent: 'space-between' }}>
                 <TouchableOpacity onPress={() => setCurrentMonth(goToPreviousMonth(currentMonth))}>
-                <Text style={{fontSize: 12, color: 'white'}}>Previous</Text>
+                <Text style={{fontSize: 12, color: "#96a0ad"}}>Previous</Text>
                 </TouchableOpacity>
                 <Text style={{fontSize:14, fontWeight: 'bold', color: ORANGE_COLOR}}>{currentMonthTitle}</Text>
                 <TouchableOpacity onPress={() => setCurrentMonth(goToNextMonth(currentMonth))}>
-                <Text style={{fontSize: 12, color: 'white'}}>Next</Text>
+                <Text style={{fontSize: 12, color: "#96a0ad"}}>Next</Text>
                 </TouchableOpacity>
             </View>
             
@@ -86,7 +95,35 @@ export default function TripForm({onClose, userId}) {
                 theme={{
                     itemWeekName:{
                         content: {color: ORANGE_COLOR}
-                    }
+                    },
+                    itemDayContainer: {
+                      activeDayFiller: { backgroundColor: "#1a2f4e" },
+                    },
+                    itemDay: {
+                      base: () => ({
+                        content: { color: WHITE_TEXT_COLOR },
+                      }),
+                      idle: () => ({
+                        container: { backgroundColor: "transparent" },
+                        content: { color: WHITE_TEXT_COLOR },
+                      }),
+                      today: () => ({
+                        container: {
+                          backgroundColor: "transparent",
+                          borderColor: ORANGE_COLOR,
+                          borderWidth: 1,
+                        },
+                        content: { color: WHITE_TEXT_COLOR, fontWeight: "700" },
+                      }),
+                      active: () => ({
+                        container: { backgroundColor: ORANGE_COLOR },
+                        content: { color: BACKGROUND_COLOR, fontWeight: "700" },
+                      }),
+                      disabled: () => ({
+                        container: { backgroundColor: "transparent" },
+                        content: { color: "#667085" },
+                      }),
+                    },
                 }}
                            
             /></View></View>
@@ -96,7 +133,8 @@ export default function TripForm({onClose, userId}) {
                     padding: 10,
                     borderRadius:10,
                     borderWidth:1,
-                    borderColor: '#d8d8d8'
+                    borderColor: "#4c5158",
+                    backgroundColor: BACKGROUND_COLOR,
                 }}>
                 <Text style={{fontSize:12, color: ORANGE_COLOR, }}>
                     Start
@@ -111,7 +149,8 @@ export default function TripForm({onClose, userId}) {
                     padding: 10,
                     borderRadius:10,
                     borderWidth:1,
-                    borderColor: '#d8d8d8'
+                    borderColor: "#4c5158",
+                    backgroundColor: BACKGROUND_COLOR,
                 }}>
                 <Text style={{fontSize:12, color: ORANGE_COLOR, }}>
                     End
@@ -130,7 +169,7 @@ export default function TripForm({onClose, userId}) {
                 top:0,
                 right:0,
                 padding:10,
-                backgroundColor: '#e7e7e7',
+                backgroundColor: "#2c4eb5",
                 borderRadius:10,
                 marginTop: 3,
                 width: '30%',
@@ -139,7 +178,7 @@ export default function TripForm({onClose, userId}) {
             }}
             onPress={handleCreate}
             >
-                <Text>Create Trip</Text>
+                <Text style={{ color: WHITE_TEXT_COLOR, fontWeight: "700" }}>Create Trip</Text>
             </TouchableOpacity>
             </View>
              

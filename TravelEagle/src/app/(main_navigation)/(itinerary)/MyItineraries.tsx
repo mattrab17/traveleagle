@@ -166,11 +166,11 @@ export default function ItineraryPage() {
               color: WHITE_TEXT_COLOR,
             }}
           >
-            My Itineraries
+            Trip Creation
           </Text>
         </View>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
         onPress={() => router.push("/(main_navigation)/(itinerary)/AiItineraryMaker")}
           style={{
             backgroundColor: SECONDARY_BACKGROUND_COLOR,
@@ -180,7 +180,7 @@ export default function ItineraryPage() {
           }}
         >
           <AntDesign name="plus" size={36} color="white" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Main Content */}
@@ -487,7 +487,7 @@ export default function ItineraryPage() {
                   color: SEARCH_BACKGROUND_COLOR,
                 }}
               >
-                No itineraries yet
+                No trips yet
               </Text>
             </TouchableOpacity>
 
@@ -507,12 +507,19 @@ export default function ItineraryPage() {
               <Text
                 style={{ fontSize: 14.5, fontWeight: "900", color: "white" }}
               >
-                Create Itinerary with AI
+                Create Trip with AI
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => setShowNameItin(!showNameItin)}
+              onPress={() => {
+                router.push({
+                  pathname: "/(main_navigation)/TripList",
+                  params: { openCreate: "1" },
+                });
+                // setShowNameItin(true);
+                // setShowNameItin(!showNameItin);
+              }}
               style={{
                 backgroundColor: "#2c4eb5",
                 width: "100%",
@@ -524,7 +531,7 @@ export default function ItineraryPage() {
               <Text
                 style={{ fontSize: 14.5, fontWeight: "900", color: "white" }}
               >
-                Create Manually
+                Create Trip Manually
               </Text>
             </TouchableOpacity>
           </>
@@ -575,8 +582,12 @@ export default function ItineraryPage() {
             
             <TouchableOpacity
               onPress={() => {
-                setShowNameItin(false);
-                setShowItin(true); // transition to third page after saving
+                router.push({
+                  pathname: "/(main_navigation)/TripList",
+                  params: { openCreate: "1" },
+                });
+                // setShowNameItin(false);
+                // setShowItin(true); // transition to third page after saving
                 // you can also do something with itinName here
               }}
               style={{
@@ -588,7 +599,7 @@ export default function ItineraryPage() {
               }}
             >
               <Text style={{ fontWeight: "500", color: "white", fontSize: 16 }}>
-                Save Itinerary
+                Create Itinerary
               </Text>
             </TouchableOpacity>
 
