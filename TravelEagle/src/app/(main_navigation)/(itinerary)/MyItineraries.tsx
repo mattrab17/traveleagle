@@ -40,6 +40,8 @@ export default function ItineraryPage() {
   const [showItin, setShowItin] = useState(false); 
   const [showActivityCreation, setShowActivityCreation] = useState(false);
   const [showAddedActivity, setShowAddedActivity] = useState(false); 
+  const [showAiItinerary, setShowAiItinerary] = useState(false); 
+
 
   const sanitizeNumber = (text: string) => text.replace(/[^0-9]/g, "");
 
@@ -492,9 +494,7 @@ export default function ItineraryPage() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() =>
-                router.push("/(main_navigation)/(itinerary)/AiItineraryMaker")
-              }
+              onPress={() => router.push("/(main_navigation)/(itinerary)/AiItineraryMaker")}
               style={{
                 backgroundColor: ORANGE_COLOR,
                 width: "100%",
