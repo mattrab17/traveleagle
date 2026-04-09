@@ -33,10 +33,11 @@ export default function ItineraryScreen(){
     const bottomSheetRef = useRef<BottomSheet>(null);
     const [editItem, setEditItem] = useState<any>(null);
     const [editTime, setEditTime] = useState<Date | null>(null);
+    const [addTime, setAddTime] = useState<Date>(new Date());
     const [editDay, setEditDay] = useState<number>(1);
     const [editNotes, setEditNotes] = useState<string>('');
-    const [time, setTime] = useState(new Date()); 
-    const [showTimePicker, setShowTimePicker] = useState(false);
+    const [showAddTimePicker, setShowAddTimePicker] = useState(false);
+    const [showEditTimePicker, setShowEditTimePicker] = useState(false);
 
     async function loadItinerary(){
             const {data} = await itineraryController.loadAllItems(Number(id));
@@ -51,6 +52,23 @@ export default function ItineraryScreen(){
         
     loadItinerary();}, [id]);
 
+    // Converts "HH:MM:SS" into total minutes so we can sort times reliably.
+    function timeSlotToMinutes(timeSlot?: string | null){
+        if (!timeSlot) return Number.POSITIVE_INFINITY;
+        const [hours = "0", minutes = "0"] = timeSlot.split(":");
+        return Number(hours) * 60 + Number(minutes);
+    }
+
+    // Earlier times go first. If times are equal, keep insertion order_index.
+    const sortedItineraryForCurrentDay = [...itineraryForCurrentDay].sort((a, b) => {
+        const timeDiff = timeSlotToMinutes(a.time_slot) - timeSlotToMinutes(b.time_slot);
+        if (timeDiff !== 0) return timeDiff;
+
+        const orderA = typeof a.order_index === "number" ? a.order_index : Number.POSITIVE_INFINITY;
+        const orderB = typeof b.order_index === "number" ? b.order_index : Number.POSITIVE_INFINITY;
+        return orderA - orderB;
+    });
+
 
     async function handleAddPlace(){
         if (!selectedPlace){
@@ -58,11 +76,18 @@ export default function ItineraryScreen(){
             return;
         }
 
+        const formattedTime = addTime.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            hour12: false,
+        });
+
         const {data, error} = await itineraryController.addPlaceFromGoogle(
             Number(id),
             selectedPlace,
             selectedDay,
-            notes
+            notes,
+            formattedTime
         );
         if (error){
             Alert.alert('Error', 'Failed to add to itinerary');
@@ -73,6 +98,8 @@ export default function ItineraryScreen(){
             setSelectedPlace(null);
             setSelectedDay(1);
             setNotes('');
+            setAddTime(new Date());
+            setShowAddTimePicker(false);
             
     }
 
@@ -107,7 +134,7 @@ export default function ItineraryScreen(){
         else{
             setEditTime(null);
         }
-        setShowTimePicker(false);
+        setShowEditTimePicker(false);
         bottomSheetRef.current?.snapToIndex(1);
     }
     async function handleSaveEdits(){
@@ -140,9 +167,24 @@ const formatTime = (date: Date) => {
   };
 
 const onTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (selectedDate) { //sets the date
-        console.log('Time changed:', selectedDate);
-      setEditTime(selectedDate);
+    // On Android, close picker after user action (set or cancel).
+    if (Platform.OS === 'android') {
+        setShowEditTimePicker(false);
+    }
+    if (event.type === 'dismissed') return;
+    if (selectedDate) {
+        setEditTime(selectedDate);
+    }
+  };
+
+const onAddTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    // On Android, close picker after user action (set or cancel).
+    if (Platform.OS === 'android') {
+        setShowAddTimePicker(false);
+    }
+    if (event.type === 'dismissed') return;
+    if (selectedDate) {
+        setAddTime(selectedDate);
     }
   };
 
@@ -157,7 +199,7 @@ const formatTimeSlot = (timeSlot) => {
 
     return(
         <GestureHandlerRootView style={{flex:1}}>
-        <ScrollView>
+        <ScrollView keyboardShouldPersistTaps="handled">
         <View style={{padding: 20, marginTop:20, flex:1,}}>
             <TouchableOpacity onPress={() => router.back()} style={{marginTop:20}}><Ionicons name='arrow-back' size={16} color="white"/></TouchableOpacity>
         <View style={{paddingTop: 60, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -189,18 +231,22 @@ const formatTimeSlot = (timeSlot) => {
                     setSelectedPlace(null);
                     setSelectedDay(1);
                     setNotes('');
+                    setAddTime(new Date());
+                    setShowAddTimePicker(false);
                 }}>
                 <Ionicons name="close-circle" size={20} color="red" />
                 </TouchableOpacity>
                 </View>
                 {/* Update styling in Search bar later */}
-                <GooglePlacesInputTrip 
-                onSelect={(data, details) => {
-                   // console.log('Selected:', details);
-                    setSelectedPlace(details);
-                }}
-                placeholder="Search for a place">
-                </GooglePlacesInputTrip>
+                <View style={{zIndex: 5000, elevation: 5000}}>
+                    <GooglePlacesInputTrip 
+                    onSelect={(data, details) => {
+                       // console.log('Selected:', details);
+                        setSelectedPlace(details);
+                    }}
+                    placeholder="Search for a place">
+                    </GooglePlacesInputTrip>
+                </View>
             
 
             {/* Dropdown from searchbar*/}
@@ -237,6 +283,43 @@ const formatTimeSlot = (timeSlot) => {
                                 ))}
 
                             </Picker>    
+                        </View>
+                        <View style={{marginTop: 20, }}>
+                            <Text style={{fontSize: 14, fontFamily: 'Inter', fontWeight: '500', marginBottom: 8}}>Select Time</Text>
+                            <TouchableOpacity
+                                style={{
+                                   backgroundColor: '#f6f6f6',
+                                   borderColor: '#ddd',
+                                   borderRadius: 8,
+                                   padding: 12,
+                                   minHeight: 40,
+                                   flexDirection: 'row',
+                                   alignItems: 'center',
+                                   justifyContent: 'space-between'
+                                }}
+                                onPress={() => setShowAddTimePicker(true)}
+                            >
+                                <Text style={{color: 'black'}}>{formatTime(addTime)}</Text>
+                                <Feather name="clock" size={18} color="gray" />
+                            </TouchableOpacity>
+                            {showAddTimePicker && (
+                                <View style={{
+                                    alignItems:'center',
+                                    marginTop: 8,
+                                    backgroundColor: '#f6f6f6',
+                                    borderRadius: 8,
+                                    paddingVertical: 6
+                                }}>
+                                    <DateTimePicker
+                                        value={addTime}
+                                        mode="time"
+                                        is24Hour={false}
+                                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                        onChange={onAddTimeChange}
+                                        textColor="#111111"
+                                    />
+                                </View>
+                            )}
                         </View>
                         <View style={{marginTop: 20, }}>
                             <Text> Notes (optional) </Text>
@@ -306,11 +389,25 @@ const formatTimeSlot = (timeSlot) => {
                 </View>
             </ScrollView>
             <FlatList
-            data={itineraryForCurrentDay}
+            data={sortedItineraryForCurrentDay}
             scrollEnabled={false}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({item}) => (
-                <View style={{backgroundColor: 'white', padding:10, borderRadius: 10, marginBottom: 10, flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{marginBottom: 10, flexDirection: 'row', alignItems: 'stretch', gap: 10}}>
+                <View style={{width: 78, justifyContent: 'center', alignItems: 'flex-start', paddingTop: 8}}>
+                    <Text style={{color: '#96a0ad', fontSize: 13, fontWeight: '600'}}>
+                        {item.time_slot ? formatTimeSlot(item.time_slot) : '--:--'}
+                    </Text>
+                </View>
+                <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() =>
+                    router.push({
+                        pathname: "/trips/[id]/place/[itemId]",
+                        params: { id: String(id), itemId: String(item.id) },
+                    })
+                }
+                style={{backgroundColor: 'white', padding:10, borderRadius: 10, flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                 {item.place?.place_data?.photos && item.place.place_data.photos[0] && (
                      <Image 
                             source={{
@@ -325,10 +422,9 @@ const formatTimeSlot = (timeSlot) => {
                 <Text style={{fontSize:16, fontWeight: '500'}}>
                     {item.place.name}
                 </Text>
-                 <Text style={{fontSize:10, paddingTop: 3}}>
+                <Text style={{fontSize:10, paddingTop: 3}}>
                 {item.place.address}
                 </Text>
-                <Text style={{fontSize: 12, fontWeight: item.time_slot ? '400' : 'ultralight', color: item.time_slot ? '#000000' : '#919191', paddingTop: 10  }}>{item.time_slot ? `Time: ${formatTimeSlot(item.time_slot)}` : ''}</Text>
                 {item.notes && (
                     <Text style={{fontSize: 12, fontStyle: 'italic', paddingTop: 10, color: '#6f6e6e'}}>{item.notes}</Text>
                 )}
@@ -345,6 +441,7 @@ const formatTimeSlot = (timeSlot) => {
                     </TouchableOpacity>
                     
                 </View>
+                </TouchableOpacity>
 
                 </View>
             )}
@@ -388,14 +485,14 @@ const formatTimeSlot = (timeSlot) => {
             <Text style={styles.inputLabel}>Time</Text> 
             <TouchableOpacity 
               style={styles.itineraryInput}
-              onPress={() => setShowTimePicker(true)}
+              onPress={() => setShowEditTimePicker(true)}
             > 
               <Feather name="clock" size={20} color={'gray'} />
               <Text style={styles.inputText}>{editTime ? formatTime(editTime) : 'No time set'}</Text>
               
             </TouchableOpacity>
             {/* Time Scroller Component */}
-            {showTimePicker && (
+            {showEditTimePicker && (
                 <View style={{alignItems:'center'}}>
               <DateTimePicker
                 value={editTime || new Date()}
