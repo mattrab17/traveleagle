@@ -9,6 +9,7 @@ import Feather from '@expo/vector-icons/Feather';
 import MapViewDirections from 'react-native-maps-directions';
 
 import { PlacesAPI } from "../../../LocationServices/PointOfInterest"
+import { useRouter } from "expo-router";
 
 type SelectedPlace = {
   name: string;
@@ -63,6 +64,8 @@ export default function GoogleMapsView({
     pushes them to the places array, then array is mapped and rendered into MapView logic
   */
 
+  const router = useRouter();
+  
   const internalMapRef = useRef<MapView | null>(null);
   const [internalSelectedPlace, internalSetSelectedPlace] = useState<SelectedPlace>(null);
   const activeMapRef = mapRef ?? internalMapRef;
@@ -264,7 +267,11 @@ useEffect(() => { //useEffect -> a hook that helps render components (THE POINT 
                 </Text>
               </View>
             ) : (
-              <Text style={styles.bottomSheetDescription}>Tap a marker to see the place.</Text>
+               <TouchableOpacity onPress={() => router.push("/(community)/CreatePostPage")}>
+                <Text style={styles.bottomSheetDescription}>
+                  Create a post
+                </Text>
+              </TouchableOpacity>
             )}
           </BottomSheetView>
         </BottomSheet> */}
