@@ -16,9 +16,11 @@ import {
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { useAuth } from "../../(authentication)/Auth";
 
 
 export default function ItineraryScreen(){
+    const {user} = useAuth();
     const { id } = useLocalSearchParams();
     const [itinerary, setItinerary] = useState<any>([]);
     const router = useRouter();
@@ -446,9 +448,19 @@ const formatTimeSlot = (timeSlot) => {
                 </View>
             )}
             ListEmptyComponent={
+                <View style={{flex:1}}>
                 <Text style={{color:'white', textAlign:'center'}}>
                     No items in your Itinerary yet.
                 </Text>
+                <TouchableOpacity style={{padding:14, borderRadius:10, backgroundColor: ORANGE_COLOR}} onPress={async () => {
+                    console.log('Starting Generation');
+                    const {data, error} = await itineraryController.generateAIItinerary(trip, totalDays, user?.interests || []);
+                    if (error) console.error("error:", error);
+
+                }}>
+                    <Text style={{color: 'white'}}>Generate Itinerary with AI</Text>
+                </TouchableOpacity>
+                </View>
             }
             >
             </FlatList>

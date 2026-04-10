@@ -98,7 +98,7 @@ export default function TripForm({onClose, userId}) {
                         content: {color: ORANGE_COLOR}
                     },
                     itemDayContainer: {
-                      activeDayFiller: { backgroundColor: "#1a2f4e" },
+                      activeDayFiller: { backgroundColor: ORANGE_COLOR },
                     },
                     itemDay: {
                       base: () => ({
