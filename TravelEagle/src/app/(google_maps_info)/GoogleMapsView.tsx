@@ -10,6 +10,7 @@ import MapViewDirections from 'react-native-maps-directions';
 
 import { PlacesAPI } from "../../../LocationServices/PointOfInterest"
 import { useRouter } from "expo-router";
+import { userPostController } from "../../../controllers/userPostController"
 
 type SelectedPlace = {
   name: string;
@@ -44,6 +45,7 @@ type GoogleMapsViewProps = {
   showSearchInput?: boolean;
   showDirections?: boolean;
   activeFilterCategories?: string[];
+  activePostCategories?: string[];
   onMarkerPress: (place: SelectedPlace) => void;
   //the place variable takes any data type: ID, title, etc
   //void is used to indicate the function doesn't return any value, it updates a state
@@ -57,6 +59,7 @@ export default function GoogleMapsView({
   showSearchInput = true,
   showDirections = false,
   activeFilterCategories = [],
+  activePostCategories = [],
   onMarkerPress, //property for marker/pin event
 }: GoogleMapsViewProps) {
   /* Template for daily itinerary --> Map view with Markers
@@ -109,6 +112,7 @@ export default function GoogleMapsView({
 
 //code for the markers from GeoApify
 const [poiMarkers, setPoiMarkers] = useState<any[]>([]); //THIS CONTROLS THE STATE FOR RENDERING LISTS OF PLACES ON THE MAP
+  const [userPosts, setUserPosts] = useState<any[]>([]);//this contols the state for rendering user posts on the map
   const geo = useRef(new PlacesAPI()).current; //sets up the SearchTool PlacesAPI will use
   //useRef is the memory hook that will store search engine objects
   //      -> useRef is needed here to create a search engine object once so that this object will just rerender. Otherwise, it would create a new search engine object each time causing the app to lag and waste time on rendering
@@ -143,7 +147,41 @@ useEffect(() => { //useEffect -> a hook that helps render components (THE POINT 
   run(); //run method is called to constantly wait for search engine info
 }, [latitude, longitude, activeFilterCategories, geo]); //this code only runs when a variable changes. 
                                                         //Ex: if your location changes, then it will render different locations based on your latitude and longitude
-  
+   
+useEffect(() => {
+  const loadNearbyUserPosts = async () => {
+    //checks to see if there is a selected place first
+   if (activeSelectedPlace?.lat == null || activeSelectedPlace?.lng == null) {
+  if (userPosts.length > 0) {
+    setUserPosts([]);
+  }
+  return;
+}
+    //this is calling the controller with these conditions
+    try {
+      const { data, error } = await userPostController.loadPosts(
+        activeSelectedPlace.lat,
+        activeSelectedPlace.lng,
+        activePostCategories
+      );
+      //prevents app from crashing, given theres an error
+      if (error) {
+        console.error(error);
+        setUserPosts([]);
+        return;
+      }
+      //this saves the posts into the satate, 
+      setUserPosts(data || []);
+      //catch block to show errors
+    } catch (e) {
+      console.error(e);
+      setUserPosts([]);
+    }
+  };
+
+  loadNearbyUserPosts();
+}, [activeSelectedPlace, activePostCategories]);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
@@ -190,6 +228,32 @@ useEffect(() => { //useEffect -> a hook that helps render components (THE POINT 
             </Marker>
           ))  }
 
+          {userPosts.map((post) => (
+          <Marker
+            key={`user-post-${post.post_id}`}
+            coordinate={{
+              latitude: post.post_lat,
+              longitude: post.post_long,
+            }}
+            title={post.place_name}
+            description={post.description}
+            pinColor="red"
+            onPress={() => {
+              const userPostPlace = {
+                name: post.place_name,
+                lat: post.post_lat,
+                lng: post.post_long,
+                description: post.description,
+                address: post.address,
+              };
+
+              onMarkerPress(userPostPlace);
+              activeSetSelectedPlace(userPostPlace);
+              bottomSheetRef.current?.snapToIndex(1);
+            }}
+          />
+        ))}
+          
           {/* Draws Markers to the screen*/}
           {poiMarkers.map((p) => ( //.map function loops through the poiMarkers list. For every place, it renames the place 'p' and runs the code inside
             
