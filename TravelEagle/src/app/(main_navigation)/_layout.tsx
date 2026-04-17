@@ -3,10 +3,8 @@ import { Tabs } from "expo-router";
 import { StatusBar } from "react-native";
 import { BACKGROUND_COLOR } from "../../app/constants/colors";
 
-// Icon Libraries
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 const ACTIVE_TAB_COLOR = "#FDD084";
 const INACTIVE_TAB_COLOR = "#8F8F8F";
@@ -16,24 +14,17 @@ export default function RootLayout() {
     <>
       <StatusBar barStyle="light-content" />
 
-{/* NAVIGATION BAR START */}
-
-      <Tabs //Tabs that are displayed on the navigation bar
+      <Tabs
         screenOptions={{
           headerShown: false,
-
-          // Background
           tabBarStyle: {
             backgroundColor: BACKGROUND_COLOR,
             borderTopWidth: 0,
           },
-
-          // Automatic active/inactive coloring
           tabBarActiveTintColor: ACTIVE_TAB_COLOR,
           tabBarInactiveTintColor: INACTIVE_TAB_COLOR,
         }}
       >
-        {/* HomeScreen Tab */}
         <Tabs.Screen
           name="(interactive_map)/HomeScreen"
           options={{
@@ -44,24 +35,30 @@ export default function RootLayout() {
           }}
         />
 
-        {/* MyItineraries Tap */}
-
         <Tabs.Screen
-          name="(itinerary)/MyItineraries"
+          name="TripList"
           options={{
-            title: "Trips",
+            title: "Itinerary",
             tabBarIcon: ({ color, size }) => (
-              
               <Feather name="calendar" size={size} color={color} />
             ),
-            
           }}
-        
-        
-        
-        
         />
-        {/* AccountSettings Tab */}
+
+        <Tabs.Screen
+          name="(community)/CommunityPage"
+          options={{
+            title: "Community",
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons
+                name="account-group-outline"
+                size={size}
+                color={color}
+              />
+            ),
+          }}
+        />
+
         <Tabs.Screen
           name="(account)/AccountSettings"
           options={{
@@ -75,18 +72,20 @@ export default function RootLayout() {
             ),
           }}
         />
-        {/* Keep TripList routable but hidden from the tab bar */}
+
         <Tabs.Screen
-          name="TripList"
-          options={{
-            href: null,
-          }}
+          name="(itinerary)/MyItineraries"
+          options={{ href: null }}
         />
-
+        <Tabs.Screen
+          name="(itinerary)/AiItineraryMaker"
+          options={{ href: null }}
+        />
+        <Tabs.Screen
+          name="(itinerary)/ItineraryChoose"
+          options={{ href: null }}
+        />
       </Tabs>
-
-{/* NAVIGATION BAR END */}
-      
     </>
   );
 }
