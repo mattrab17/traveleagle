@@ -182,9 +182,10 @@ export function GooglePlacesInputTrip({ onSelect, placeholder = "Where would you
         placeholder={placeholder}
         minLength={2}
         listViewDisplayed="auto"
-        keyboardShouldPersistTaps="always"
+        keyboardShouldPersistTaps="handled"
+        keepResultsAfterBlur={true}
         fetchDetails={true}
-        disableScroll={true}
+        disableScroll={false}
         query={{
           key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "",
           language: "en",
@@ -252,6 +253,7 @@ const styles = StyleSheet.create({
   tripContainer: {
     width: '100%',
     zIndex: 1000,
+    elevation: 1000,
   },
   rowContainer: {
     flexDirection: 'row',

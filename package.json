@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@ant-design/icons": "^6.1.1",
     "expo": "^55.0.12",
     "react-native-google-places-autocomplete": "^2.6.4"
   },

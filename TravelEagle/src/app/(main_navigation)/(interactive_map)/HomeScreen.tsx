@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { useState } from "react"; //a hook that helps declare the state of a variable on a screen
 import { View,
   StyleSheet, //Style component to style objects
@@ -204,6 +204,21 @@ const openWebsite = async (website?: string) => {
     await Linking.openURL(websiteWithProtocol);
   }
 };
+
+const openHoursLines = useMemo(() => {
+  const raw = selectedPlace?.openHours;
+  if (!raw || raw === "Not available") return [];
+
+  // Supports either newline-delimited or comma-delimited "Day: hours" strings.
+  const normalized = String(raw).replace(/\r/g, "");
+  const byNewline = normalized.split("\n").map((line) => line.trim()).filter(Boolean);
+  if (byNewline.length > 1) return byNewline;
+
+  return normalized
+    .split(/,(?=\s*[A-Za-z]+:)/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}, [selectedPlace?.openHours]);
 
 
 
@@ -508,7 +523,17 @@ const openWebsite = async (website?: string) => {
               {/* LOCATION TIME */}
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Open Hours:</Text> 
-              <Text style={styles.infoValue}>{selectedPlace?.openHours || "Not available"}</Text>
+              {openHoursLines.length > 0 ? (
+                <View style={styles.openHoursList}>
+                  {openHoursLines.map((line, index) => (
+                    <Text key={`${line}-${index}`} style={styles.openHoursLine}>
+                      {line}
+                    </Text>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.infoValue}>Not available</Text>
+              )}
             </View>
 
             {/* CROWD LEVEL */}
@@ -900,6 +925,15 @@ const styles = StyleSheet.create({
   infoValue: {
     color: 'white',
     fontSize: 15,
+    lineHeight: 20,
+  },
+  openHoursList: {
+    marginTop: 2,
+  },
+  openHoursLine: {
+    color: 'white',
+    fontSize: 13,
+    lineHeight: 18,
   },
   websiteLink: {
     color: '#7FB8FF',

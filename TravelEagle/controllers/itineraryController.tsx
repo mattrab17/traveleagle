@@ -1,6 +1,7 @@
 import { itineraryQueries } from "@/models/itinerary";
 import { placeQueries } from "@/models/places";
 import { tripController } from "./tripController";
+import { generateItineraryFromGemini } from "./geminiController";
 
 
 export const itineraryController = {
@@ -16,7 +17,13 @@ export const itineraryController = {
             return { data: [], error};
         }
     },
-    async addPlaceFromGoogle(tripId: number, googlePlaceDetails: any, dayNumber: number, notes?: string){
+    async addPlaceFromGoogle(
+        tripId: number,
+        googlePlaceDetails: any,
+        dayNumber: number,
+        notes?: string,
+        timeSlot?: string
+    ){
         try{
             //Checks if place_id is in databse already, if not it will insert into place table then itinerary table
             let place = await placeQueries.getByGooglePlaceId(googlePlaceDetails.place_id);
@@ -41,7 +48,7 @@ export const itineraryController = {
             day_number: dayNumber,
             order_index: orderIndex,
             notes: notes || null,
-            //time_slot: timeSlot
+            time_slot: timeSlot || undefined
             
         });
         return {data: item, error:null};
@@ -53,7 +60,6 @@ export const itineraryController = {
         }  
         
     },
-
      async addPlaceFromGoogleMaps(tripId: number, googlePlaceDetails: any, time: any){
         try{
             //Checks if place_id is in databse already, if not it will insert into place table then itinerary table
@@ -114,9 +120,6 @@ export const itineraryController = {
             return {data: null, error}
         }
     },
-
-
-
     async deleteItemFromItinerary(itemId: number){
 
         try{
@@ -128,5 +131,23 @@ export const itineraryController = {
             return {error};
 
         }
+    },
+    async generateAIItinerary(trip: any, numDays, interests){
+        try{
+            const result = await generateItineraryFromGemini(trip, numDays, interests);
+            console.log('Gemini Result:', JSON.stringify(result, null, 2))
+            return {data: result, error: null}
+        }
+        catch (error) {
+            console.log('Failed to generate an itinerary');
+            return {data: null, error}
+        }
+    
+     
+        //get json structured output
+        //query google places with place titles + run addPlaceFromGoogle
+        //insert into itinerary items with fields
+        //
+
     }
 };
