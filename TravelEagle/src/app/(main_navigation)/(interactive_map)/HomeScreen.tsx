@@ -103,6 +103,9 @@ export default function HomeScreen()
   // State to store selected filters
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
+  // state to store selected filters for user posts
+  const [selectedPostFilters, setSelectedPostFilters] = useState<string[]>([]);
+  
   // defines filterOptions
     // defines filterOptions
  const filterOptions = [
@@ -117,6 +120,14 @@ export default function HomeScreen()
   "Coffee",
 ];
 
+  //defines filter options for user posts
+const postFilterOptions = [
+  "Restaurants",
+  "General Attractions",
+  "Coffee",
+  "Bars",
+];
+  
   // Helper function to format the Date object into a readable "12:00 AM" string
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { 
@@ -168,6 +179,13 @@ export default function HomeScreen()
     }
   };
 
+  const togglePostFilter = (filterName: string) => {
+  if (selectedPostFilters.includes(filterName)) {
+    setSelectedPostFilters(selectedPostFilters.filter((item) => item !== filterName));
+  } else {
+    setSelectedPostFilters([...selectedPostFilters, filterName]);
+  }
+};
   
   /* 1. DYNAMIC IMAGE SELECTION -> decides which picture to show for a place. 
   
@@ -299,8 +317,10 @@ const openHoursLines = useMemo(() => {
 
 
     //.filter is a shortcut for "Keep only real filters in the dictionary and don't keep null or undefined values"
-    .filter(Boolean);   
-
+    .filter(Boolean);  
+  
+    const activePostCategories = selectedPostFilters;
+  
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       {/* edges property places padding at the top edge of the screen */}
@@ -338,7 +358,7 @@ const openHoursLines = useMemo(() => {
           </View>
 
           {/* Selected Filters Preview */}
-          {selectedFilters.length > 0 && (
+         {(selectedFilters.length > 0 || selectedPostFilters.length > 0)&& (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -349,6 +369,12 @@ const openHoursLines = useMemo(() => {
                   <Text style={styles.filterChipText}>{filter}</Text>
                 </View>
               ))}
+
+              {selectedPostFilters.map((filter, index) => (
+              <View key={`post-${index}`} style={styles.filterChip}>
+                <Text style={styles.filterChipText}>{filter}</Text>
+              </View>
+            ))}
             </ScrollView>
           )}
         </View>
@@ -474,12 +500,46 @@ const openHoursLines = useMemo(() => {
               })}
             </View>
 
+            
+              <Text style={[styles.filterModalTitle, { marginTop: 12, fontSize: 18 }]}>
+          User Post Filters
+        </Text>
+
+        <View style={styles.filtersWrap}>
+          {postFilterOptions.map((filter, index) => {
+            const isSelected = selectedPostFilters.includes(filter);
+
+            return (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.filterOptionBtn,
+                  isSelected && styles.filterOptionBtnSelected,
+                ]}
+                onPress={() => togglePostFilter(filter)}
+              >
+                <Text
+                  style={[
+                    styles.filterOptionText,
+                    isSelected && styles.filterOptionTextSelected,
+                  ]}
+                >
+                  {filter}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+            
             <View style={styles.filterButtonsRow}>
               <TouchableOpacity
                 style={styles.clearFilterBtn}
-                onPress={() => setSelectedFilters([])}
-              >
-                <Text style={styles.clearFilterBtnText}>Clear</Text>
+                onPress={() => {
+                setSelectedFilters([]);
+                setSelectedPostFilters([]);//resets filters for both API and users
+              }}
+            >
+              <Text style={styles.clearFilterBtnText}>Clear</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
