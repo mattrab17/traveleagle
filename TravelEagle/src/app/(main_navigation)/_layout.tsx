@@ -49,7 +49,7 @@ export default function RootLayout() {
         <Tabs.Screen
           name="(itinerary)/MyItineraries"
           options={{
-            title: "Itinerary",
+            title: "Trips",
             tabBarIcon: ({ color, size }) => (
               
               <Feather name="calendar" size={size} color={color} />
@@ -73,6 +73,13 @@ export default function RootLayout() {
                 color={color}
               />
             ),
+          }}
+        />
+        {/* Keep TripList routable but hidden from the tab bar */}
+        <Tabs.Screen
+          name="TripList"
+          options={{
+            href: null,
           }}
         />
 

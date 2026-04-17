@@ -100,6 +100,23 @@ export const itineraryController = {
         }  
         
     },
+   async updateItem(itemId: number, updates:{
+        time_slot?: string | null;
+        day_number: number;
+        notes?: string | null;
+    }) {
+        try {
+            const data = await itineraryQueries.updateItem(itemId, updates);
+            return{data, error:null};
+        }
+        catch (error) {
+            console.error('Error updating itinerary item:', error);
+            return {data: null, error}
+        }
+    },
+
+
+
     async deleteItemFromItinerary(itemId: number){
 
         try{

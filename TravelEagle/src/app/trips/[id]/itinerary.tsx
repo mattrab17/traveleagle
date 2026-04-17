@@ -1,10 +1,10 @@
 import { itineraryController } from "@/controllers/itineraryController";
 import { tripController } from "@/controllers/tripController";
 import {GooglePlacesInput, GooglePlacesInputTrip } from "@/src/app/(google_maps_info)/GooglePlacesAutocomplete";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, Feather} from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { View, Text, FlatList, Image, TouchableOpacity, ScrollView, Alert, TextInput } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { View, Text, FlatList, Image, TouchableOpacity, ScrollView, Alert, TextInput, StyleSheet, Platform } from "react-native";
 import { Picker } from '@react-native-picker/picker'
 import {
   BACKGROUND_COLOR,
@@ -13,6 +13,9 @@ import {
   SECONDARY_BACKGROUND_COLOR,
   SEARCH_BACKGROUND_COLOR,
 } from "../../constants/colors"
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
 
 export default function ItineraryScreen(){
@@ -27,14 +30,21 @@ export default function ItineraryScreen(){
     const [currentDay, setCurrentDay] = useState<number>(0);
     const itineraryForCurrentDay = currentDay === 0 ? itinerary : itinerary.filter(item => item.day_number === currentDay);
     const [searchBarVisible, setSearchBarVisible] = useState<boolean>(false);
+    const bottomSheetRef = useRef<BottomSheet>(null);
+    const [editItem, setEditItem] = useState<any>(null);
+    const [editTime, setEditTime] = useState<Date | null>(null);
+    const [editDay, setEditDay] = useState<number>(1);
+    const [editNotes, setEditNotes] = useState<string>('');
+    const [time, setTime] = useState(new Date()); 
+    const [showTimePicker, setShowTimePicker] = useState(false);
 
     async function loadItinerary(){
             const {data} = await itineraryController.loadAllItems(Number(id));
             setItinerary(data)
             const {data: tripData } = await tripController.loadTrip(Number(id));
             setTrip(tripData);
-            console.log(tripData)
-            console.log(tripController.getTotalDays(tripData))
+            /* console.log(tripData)
+            console.log(tripController.getTotalDays(tripData)) */
         }
 
     useEffect(() => {
@@ -84,12 +94,69 @@ export default function ItineraryScreen(){
         )
     }
 
+    function handleEdit(item: any){
+        setEditItem(item);
+        setEditDay(item.day_number);
+        setEditNotes(item.notes || '');
+        if (item.time_slot){
+            const [hours, minutes] = item.time_slot.split(':');
+            const date = new Date();
+            date.setHours(Number(hours), Number(minutes));
+            setEditTime(date);
+        }
+        else{
+            setEditTime(null);
+        }
+        setShowTimePicker(false);
+        bottomSheetRef.current?.snapToIndex(1);
+    }
+    async function handleSaveEdits(){
+        if (!editItem) return;
+
+        const formattedTime = editTime.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: false,
+    });
+    const {error} = await itineraryController.updateItem(editItem.id, {
+        time_slot: formattedTime,
+        day_number: editDay,
+        notes: editNotes || null,
+    })
+    if (error) {
+        Alert.alert('Error', 'failed to update item');
+        return;
+    }
+    bottomSheetRef.current?.close();
+    setEditItem(null);
+    loadItinerary();
+};
+const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: true 
+    });
+  };
+
+const onTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (selectedDate) { //sets the date
+        console.log('Time changed:', selectedDate);
+      setEditTime(selectedDate);
+    }
+  };
+
+const formatTimeSlot = (timeSlot) => {
+    const date = new Date(`2026-07-27T${timeSlot}`);
+    return formatTime(date);
+
+}
 
     // Itinerary would be better suited with a calender styling that displays the time with the items placed
     //between their specific selected time slots.
 
-
     return(
+        <GestureHandlerRootView style={{flex:1}}>
         <ScrollView>
         <View style={{padding: 20, marginTop:20, flex:1,}}>
             <TouchableOpacity onPress={() => router.back()} style={{marginTop:20}}><Ionicons name='arrow-back' size={16} color="white"/></TouchableOpacity>
@@ -197,7 +264,7 @@ export default function ItineraryScreen(){
                         {/*Also add text box for any notes the user wants to leave on the itinerary item*/}
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'green',
+                                backgroundColor: ORANGE_COLOR,
                                 padding:12,
                                 borderRadius:8,
                                 marginTop: 10,
@@ -261,10 +328,7 @@ export default function ItineraryScreen(){
                  <Text style={{fontSize:10, paddingTop: 3}}>
                 {item.place.address}
                 </Text>
-                <Text style={{fontSize: 12, fontWeight: item.time_slot ? '200' : 'ultralight', color: item.time_slot ? '#000000' : '#919191', paddingTop: 10  }}>
-                    Time: {item.time_slot}
-                </Text>
-
+                <Text style={{fontSize: 12, fontWeight: item.time_slot ? '400' : 'ultralight', color: item.time_slot ? '#000000' : '#919191', paddingTop: 10  }}>{item.time_slot ? `Time: ${formatTimeSlot(item.time_slot)}` : ''}</Text>
                 {item.notes && (
                     <Text style={{fontSize: 12, fontStyle: 'italic', paddingTop: 10, color: '#6f6e6e'}}>{item.notes}</Text>
                 )}
@@ -273,7 +337,7 @@ export default function ItineraryScreen(){
                     flexDirection:'row', position:'absolute', top:8, right: 8, gap: 4
                 }
                 }>
-                    <TouchableOpacity onPress={()=> {}}>
+                    <TouchableOpacity onPress={()=> {handleEdit(item)}}>
                         <Ionicons name='settings-outline' size={15}></Ionicons>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={()=> handleDelete(item.id)}>
@@ -294,5 +358,114 @@ export default function ItineraryScreen(){
         </View>
         </View>
         </ScrollView>
+        <BottomSheet
+        ref={bottomSheetRef}
+        snapPoints={['50%']}
+        index={-1}
+        enablePanDownToClose={true}
+        backgroundStyle={{backgroundColor: SECONDARY_BACKGROUND_COLOR}}>
+        <BottomSheetView style={{padding:20,  flex:1}}>
+        <Text style={{ fontSize: 22, color: ORANGE_COLOR, fontWeight:'800',}}>Edit Item</Text>
+        <Text style={{ fontSize:14, color: "white", paddingVertical: 10, paddingBottom: 5, fontWeight:'400'
+                     }}>{editItem?.place?.name}</Text>
+                    <Text style={{fontSize: 12, marginBottom: 10, fontWeight: '400', color: 'gray'}}>{editItem?.place?.address}</Text>
+                   
+                    
+        <ScrollView horizontal style={{marginBottom:20, marginTop: 20,}} showsHorizontalScrollIndicator={false}>
+                <View style={{flexDirection: 'row', gap: 7}}>
+                    {Array.from({length: totalDays}, (_, i) => i+1).map((day) => (
+                        <TouchableOpacity 
+                        style={{borderRadius: 20, backgroundColor: editDay === day ? ORANGE_COLOR : '#ffffff', paddingVertical: 10, paddingHorizontal:20, }}
+                        key={day}
+                        onPress={()=>setEditDay(day)}
+                        >
+                            <Text style={{color:  editDay === day ? 'white' : 'black', fontWeight: '600'}}>Day {day}</Text>
+                        </TouchableOpacity>
+                                   
+                                ))}
+                </View>
+            </ScrollView>
+            <Text style={styles.inputLabel}>Time</Text> 
+            <TouchableOpacity 
+              style={styles.itineraryInput}
+              onPress={() => setShowTimePicker(true)}
+            > 
+              <Feather name="clock" size={20} color={'gray'} />
+              <Text style={styles.inputText}>{editTime ? formatTime(editTime) : 'No time set'}</Text>
+              
+            </TouchableOpacity>
+            {/* Time Scroller Component */}
+            {showTimePicker && (
+                <View style={{alignItems:'center'}}>
+              <DateTimePicker
+                value={editTime || new Date()}
+                mode="time"
+                is24Hour={false}
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={onTimeChange}
+                textColor="white"
+              />
+                </View>
+            )}
+        <View style={{marginTop: 10, }}>
+                                    <Text style={{color: '#3CB371', fontWeight: '400' }}> Notes (optional) </Text>
+                                    <TextInput
+                                    style={{
+                                       backgroundColor: '#f6f6f6',
+                                       borderColor: '#ddd',
+                                       borderRadius: 8,
+                                       padding: 12,
+                                       marginTop: 8,
+                                       minHeight: 40,
+                                       textAlignVertical: 'top'
+        
+                                    }}
+                                    placeholder="Add any notes for this place"
+                                    value={editNotes}
+                                    onChangeText={setEditNotes}
+                                    multiline={true}
+                                    placeholderTextColor={'black'}
+                                    
+                                    />
+    <TouchableOpacity
+             style={{
+                padding:10,
+                backgroundColor: ORANGE_COLOR,
+                borderRadius:8,
+                alignContent: 'center',
+                alignItems: 'center',
+                marginTop:15,
+            }}
+            onPress={handleSaveEdits}
+            >
+                <Text style={{color: 'white', fontWeight: '600'}}>Save</Text>
+            </TouchableOpacity>
+    </View>
+        </BottomSheetView>
+        </BottomSheet>
+        </GestureHandlerRootView>
+        
     );
 }
+
+const styles = StyleSheet.create({ 
+    inputLabel: { //input subheadings: "Select Itinerary:" & "Select Time"
+    color: '#3CB371',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+   itineraryInput: { //input box styling
+    backgroundColor: '#f6f6f6', 
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal:20,
+    flexDirection: 'row',
+    gap:10,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  inputText: { //inside input boxes: "Example Trip" & "12:00 AM"
+    color: 'black',
+    fontSize: 16,
+  },
+});
