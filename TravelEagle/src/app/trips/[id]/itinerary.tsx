@@ -1,7 +1,7 @@
 import { itineraryController } from "@/controllers/itineraryController";
 import { tripController } from "@/controllers/tripController";
 import {GooglePlacesInput, GooglePlacesInputTrip } from "@/src/app/(google_maps_info)/GooglePlacesAutocomplete";
-import { Ionicons, Feather} from "@expo/vector-icons";
+import { Ionicons, Feather, AntDesign} from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { View, Text, FlatList, Image, TouchableOpacity, ScrollView, Alert, TextInput, StyleSheet, Platform } from "react-native";
@@ -40,6 +40,8 @@ export default function ItineraryScreen(){
     const [editNotes, setEditNotes] = useState<string>('');
     const [showAddTimePicker, setShowAddTimePicker] = useState(false);
     const [showEditTimePicker, setShowEditTimePicker] = useState(false);
+    const [isGenerating, setisGenerating] = useState<boolean>(false);
+    const [status, setStatus] = useState<string>('');
 
     async function loadItinerary(){
             const {data} = await itineraryController.loadAllItems(Number(id));
@@ -195,6 +197,34 @@ const formatTimeSlot = (timeSlot) => {
     return formatTime(date);
 
 }
+
+async function handleGenerateItinerary(){
+    Alert.alert('Generate AI Itinerary', 
+        `Generate a full itinerary for your trip to ${trip?.destination}? This will generate activities for all days of the trip.`,
+        [
+            {text: 'Cancel', style: 'cancel'},
+            {text: 'Generate', onPress: async () => {
+                setisGenerating(true);
+                setStatus('Starting...');
+                const {data, error} = await itineraryController.generateAIItinerary(trip, totalDays, user?.interests || [], (s) => setStatus(s));
+
+                setisGenerating(false);
+                setStatus('');
+
+                if(error) {
+                    Alert.alert('Error', "Failed to generate itinerary. Please try again.");
+                    console.error(error);
+                    return;
+                }
+                Alert.alert('Success', `Successfully generated a full itinerary for your ${trip.destination} trip.`);
+                loadItinerary();
+            }}
+            
+
+        ]
+    )
+}
+
 
     // Itinerary would be better suited with a calender styling that displays the time with the items placed
     //between their specific selected time slots.
@@ -410,7 +440,15 @@ const formatTimeSlot = (timeSlot) => {
                     })
                 }
                 style={{backgroundColor: 'white', padding:10, borderRadius: 10, flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                {item.place?.place_data?.photos && item.place.place_data.photos[0] && (
+                {item.place?.place_data?.photo_url ? (
+                    <Image
+                    source={{
+                        uri: item.place.place_data.photo_url,
+
+                    }}
+                    style={{width:120, height: 80}}>   
+                    </Image>
+                ): item.place?.place_data?.photos[0]?.photo_reference ? (
                      <Image 
                             source={{
                                 uri: `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${item.place.place_data.photos[0].photo_reference}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`
@@ -418,7 +456,7 @@ const formatTimeSlot = (timeSlot) => {
                             }}
                             style={{width:120, height: 80}}>
                             </Image>
-                )
+                ) : null
             }
                 <View style={{flex: 1, paddingLeft: 15}}>
                 <Text style={{fontSize:16, fontWeight: '500'}}>
@@ -448,18 +486,46 @@ const formatTimeSlot = (timeSlot) => {
                 </View>
             )}
             ListEmptyComponent={
-                <View style={{flex:1}}>
-                <Text style={{color:'white', textAlign:'center'}}>
+                <View style={{flex:1, paddingVertical: 20,
+                borderRadius: 15,
+                alignItems: "center",
+                marginBottom: 15,}}>
+                <AntDesign
+                name="calendar"
+                size={74}
+                color={SEARCH_BACKGROUND_COLOR}
+                style={{
+                paddingVertical: 20,
+                borderRadius: 15,
+                alignItems: "center",
+                marginBottom: 15,
+              }}/>
+                <Text style={{fontSize: 18.5,
+                  fontWeight: "700",
+                  color: SEARCH_BACKGROUND_COLOR,}}>
                     No items in your Itinerary yet.
                 </Text>
-                <TouchableOpacity style={{padding:14, borderRadius:10, backgroundColor: ORANGE_COLOR}} onPress={async () => {
-                    console.log('Starting Generation');
-                    const {data, error} = await itineraryController.generateAIItinerary(trip, totalDays, user?.interests || []);
-                    if (error) console.error("error:", error);
 
-                }}>
-                    <Text style={{color: 'white'}}>Generate Itinerary with AI</Text>
-                </TouchableOpacity>
+
+                <TouchableOpacity
+              onPress={handleGenerateItinerary}
+              disabled={isGenerating}
+              style={{
+                backgroundColor: ORANGE_COLOR,
+                width: "100%",
+                paddingVertical: 20,
+                borderRadius: 15,
+                marginTop: 15,
+                alignItems: "center",
+                marginBottom: 15,
+              }}
+            >
+              <Text
+                style={{ fontSize: 14.5, fontWeight: "900", color: "white" }}
+              >
+                {isGenerating ? status : "Create Itinerary with AI"}
+              </Text>
+            </TouchableOpacity>
                 </View>
             }
             >

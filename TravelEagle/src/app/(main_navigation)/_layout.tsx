@@ -47,7 +47,7 @@ export default function RootLayout() {
         {/* MyItineraries Tap */}
 
         <Tabs.Screen
-          name="(itinerary)/MyItineraries"
+          name="TripList"
           options={{
             title: "Trips",
             tabBarIcon: ({ color, size }) => (
@@ -56,9 +56,6 @@ export default function RootLayout() {
             ),
             
           }}
-        
-        
-        
         
         />
         {/* AccountSettings Tab */}
@@ -77,7 +74,7 @@ export default function RootLayout() {
         />
         {/* Keep TripList routable but hidden from the tab bar */}
         <Tabs.Screen
-          name="TripList"
+          name="(itinerary)/MyItineraries"
           options={{
             href: null,
           }}

@@ -132,11 +132,60 @@ export const itineraryController = {
 
         }
     },
-    async generateAIItinerary(trip: any, numDays, interests){
+    async generateAIItinerary(trip: any, numDays, interests, onStatus?){
         try{
+            onStatus?.("Generating Itinerary...")
             const result = await generateItineraryFromGemini(trip, numDays, interests);
-            console.log('Gemini Result:', JSON.stringify(result, null, 2))
-            return {data: result, error: null}
+            
+            // console.log('Gemini Result:', JSON.stringify(result, null, 2))
+            onStatus?.("Getting activities...")
+            for(const day of result.itinerary){
+            for(const activity of day.activities){
+                try{
+                    /* console.log('Searching place on api'); */
+                    const placeDetails = await searchPlacesAPI(
+                            activity.place_name,
+                            activity.place_address,
+                        );
+                        if(placeDetails){
+                            console.log(placeDetails?.id);
+                            console.log(placeDetails.location);
+                            let place = await placeQueries.getByGooglePlaceId(placeDetails.id);
+                            
+                            if (!place) {
+                                place = await placeQueries.create({
+                                google_place_id: placeDetails.id,
+                                name: activity.place_name,
+                                address:activity.place_address,
+                                lat: placeDetails.location.latitude,
+                                lng: placeDetails.location.longitude,
+                                place_data: {photo_url: placeDetails?.photos[0] ?
+                                    `https://places.googleapis.com/v1/${placeDetails.photos[0].name}/media?maxHeightPx=400&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}` 
+                                    : null}
+                });
+            }
+                                await itineraryQueries.addItem({
+                                trip_id: trip.trip_id,
+                                place_id: place.places_id,
+                                day_number: day.day_number,
+                                order_index: activity.order_index,
+                                notes: activity.notes,
+                                time_slot: activity.start_time
+                                
+                            });
+                            onStatus?.('Saving Activities...');
+                    
+                
+                        }
+
+                }
+                catch(error){
+                    console.warn("Failed to search places API", error)
+                }
+            }
+        }
+        onStatus?.("Finished Building Itinerary");   
+        return {error: null}
         }
         catch (error) {
             console.log('Failed to generate an itinerary');
@@ -144,10 +193,41 @@ export const itineraryController = {
         }
     
      
-        //get json structured output
-        //query google places with place titles + run addPlaceFromGoogle
-        //insert into itinerary items with fields
-        //
+     
 
+    }
+};
+async function searchPlacesAPI(
+    placeName, placeAddress
+): Promise<any | null>{
+
+
+    try{
+        const response = await fetch(
+           "https://places.googleapis.com/v1/places:searchText",
+           {
+            method: "POST",
+            headers:{
+                "Content-Type": "applications/json",
+                "X-Goog-API-KEY": process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY!,
+                "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.photos",
+            },
+            body: JSON.stringify({
+                textQuery: `${placeName} ${placeAddress}`,
+                maxResultCount: 1,
+            }),
+           }
+        );
+        if(!response.ok){
+                console.warn(`Places API error for "${placeName}"`);
+                return null;
+        }
+        const data = await response.json();
+        return data.places?.[0] || null;
+
+    }
+    catch(error){
+        console.warn(`Places search failed for ${placeName}`, error);
+        return null;
     }
 };
