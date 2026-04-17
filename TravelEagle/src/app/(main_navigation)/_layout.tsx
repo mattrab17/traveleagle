@@ -43,10 +43,6 @@ export default function RootLayout() {
               <Feather name="calendar" size={size} color={color} />
             ),
           }}
-<<<<<<< HEAD
-        
-=======
->>>>>>> 4622baee (Fixed routing names and paths to match the app flow, created an account settings page UI with basic sign out, edit password functionality, removed unused code and backed it up to an "old files" folder)
         />
 
         <Tabs.Screen
@@ -79,11 +75,11 @@ export default function RootLayout() {
 
         <Tabs.Screen
           name="(itinerary)/MyItineraries"
-<<<<<<< HEAD
+
           options={{
             href: null,
           }}
-=======
+
           options={{ href: null }}
         />
         <Tabs.Screen
@@ -93,7 +89,6 @@ export default function RootLayout() {
         <Tabs.Screen
           name="(itinerary)/ItineraryChoose"
           options={{ href: null }}
->>>>>>> 4622baee (Fixed routing names and paths to match the app flow, created an account settings page UI with basic sign out, edit password functionality, removed unused code and backed it up to an "old files" folder)
         />
       </Tabs>
     </>
