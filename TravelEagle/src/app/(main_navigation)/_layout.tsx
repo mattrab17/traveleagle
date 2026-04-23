@@ -20,6 +20,7 @@ export default function RootLayout() {
           tabBarStyle: {
             backgroundColor: BACKGROUND_COLOR,
             borderTopWidth: 0,
+            marginTop: -15
           },
           tabBarActiveTintColor: ACTIVE_TAB_COLOR,
           tabBarInactiveTintColor: INACTIVE_TAB_COLOR,
