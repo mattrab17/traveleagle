@@ -215,9 +215,21 @@ export default function AIDiscoveryScreen()
                     )) }
                 </MapView>
                 {selectedPlace && (
+                                <>
+                                 <TouchableOpacity style={{
+                                    position: "absolute", bottom: 390, right: 20, zIndex: 1,
+                                  }}
+                                  onPress={() => {
+                                    setSelectedPlace(null);
+                                    bottomSheetRef.current?.snapToIndex(1);
+                                  }}
+                                  >
+                                    <Ionicons name="close-circle" size={35} color="#3858D6"></Ionicons>
+                                  </TouchableOpacity>
                                 <View style={styles.popUpCard}>
                                   {/* Card Info */}
-                                  <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, marginBottom: 10}}>
+                                 
+                                  <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 5, marginBottom: 12}}>
                                     <TouchableOpacity
                                     onPress={() => {
                                         const newIndex = selectedIndex > 0 ? selectedIndex - 1 : suggestions.length - 1;
@@ -283,7 +295,7 @@ export default function AIDiscoveryScreen()
                                     </TouchableOpacity>
                                   </View>
                                 </View>
-                              )}
+                              </>)}
         <View>
         
         

@@ -250,27 +250,7 @@ async function handleGenerateItinerary(){
                     onPress={()=>setSearchBarVisible(true)}>
                         <Text>+ Add to Itinerary</Text>
                     </TouchableOpacity>
-                     <TouchableOpacity
-               onPress={() => router.push({
-                pathname: "/trips/[id]/AiDiscovery",
-                params: {id: String(id), destination: trip?.destination, lat: String(trip?.lat), lng: String(trip?.lng)}
-               })}
-              style={{
-                backgroundColor: ORANGE_COLOR,
-                width: "100%",
-                paddingVertical: 20,
-                borderRadius: 15,
-                marginTop: 15,
-                alignItems: "center",
-                marginBottom: 15,
-              }}
-            >
-              <Text
-                style={{ fontSize: 14.5, fontWeight: "900", color: "white" }}
-              >
-                {isGenerating ? status : "Create Itinerary with AI"}
-              </Text>
-            </TouchableOpacity>
+                    
             </View>
                 )
                 }
@@ -557,7 +537,27 @@ async function handleGenerateItinerary(){
             </FlatList>
         </View>
         </View>
-        </ScrollView>
+        </ScrollView> 
+        <TouchableOpacity
+               onPress={() => router.push({
+                pathname: "/trips/[id]/AiDiscovery",
+                params: {id: String(id), destination: trip?.destination, lat: String(trip?.lat), lng: String(trip?.lng)}
+               })}
+              style={{
+                backgroundColor: ORANGE_COLOR,
+                position:"absolute",
+                bottom:50,
+                right: 20,
+                width: 50,
+                height:50,
+                paddingLeft: 4,
+                borderRadius: 30,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons name="sparkles" color="white" size={27}></Ionicons>
+            </TouchableOpacity>
         <BottomSheet
         ref={bottomSheetRef}
         snapPoints={['50%']}
