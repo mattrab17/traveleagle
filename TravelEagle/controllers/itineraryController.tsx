@@ -1,7 +1,7 @@
 import { itineraryQueries } from "@/models/itinerary";
 import { placeQueries } from "@/models/places";
 import { tripController } from "./tripController";
-import { generateItineraryFromGemini } from "./geminiController";
+import { generateDiscoverySuggestionsGemini, generateItineraryFromGemini } from "./geminiController";
 
 
 export const itineraryController = {
@@ -159,7 +159,7 @@ export const itineraryController = {
                                 address:activity.place_address,
                                 lat: placeDetails.location.latitude,
                                 lng: placeDetails.location.longitude,
-                                place_data: {photo_url: placeDetails?.photos[0] ?
+                                place_data: {photo_url: placeDetails?.photos?.[0] ?
                                     `https://places.googleapis.com/v1/${placeDetails.photos[0].name}/media?maxHeightPx=400&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}` 
                                     : null}
                 });
@@ -195,6 +195,71 @@ export const itineraryController = {
      
      
 
+    },
+    async smartDiscovery(query, destination){
+        try{
+            const result = await generateDiscoverySuggestionsGemini(query, destination);
+            const suggestionList = [];
+
+            for (const suggestion of result.suggestions){
+                const placeDetails = await searchPlacesAPI(
+                            suggestion.place_name,
+                            suggestion.place_address,
+                        );
+                
+                suggestionList.push({
+                    ...suggestion,
+                    google_place_id: placeDetails?.id,
+                    lat: placeDetails?.location.latitude,
+                    lng: placeDetails?.location.longitude,
+                    rating: placeDetails?.rating,
+                    place_data: {photo_url: placeDetails?.photos?.[0] 
+                        ? `https://places.googleapis.com/v1/${placeDetails.photos[0].name}/media?maxHeightPx=400&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}` 
+                        : null}
+                });
+            }
+            return {data: suggestionList, error:null};
+            
+        }
+        catch(error){
+            console.error("Disovery failed", error);
+            return{data: null, error};
+        }
+
+    },
+    async addDiscoveryPlace(tripId, suggestion, dayNumber, timeSlot){
+        try{
+            let place = await placeQueries.getByGooglePlaceId(suggestion.google_place_id)
+            if (!place) {
+                place = await placeQueries.create({
+                    google_place_id: suggestion.google_place_id,
+                    name: suggestion.place_name,
+                    address:suggestion.place_address,
+                    lat: suggestion.lat,
+                    lng: suggestion.lng,
+                    place_data: suggestion.place_data
+                });
+            }
+            const itemsOnDay = await itineraryQueries.getByDay(tripId, dayNumber);
+            const formattedTime = timeSlot.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                hour12: false
+                });
+            await itineraryQueries.addItem({
+                                trip_id: tripId,
+                                place_id: place.places_id,
+                                day_number: dayNumber,
+                                // notes: suggestion.notes,
+                                order_index: itemsOnDay.length,
+                            });
+                            return{error:null}
+        }
+        catch(error){
+            console.log("Failed to add discovery suggestion to itinerary:", error)
+            return {error}
+
+        }
     }
 };
 async function searchPlacesAPI(
@@ -208,7 +273,7 @@ async function searchPlacesAPI(
            {
             method: "POST",
             headers:{
-                "Content-Type": "applications/json",
+                "Content-Type": "application/json",
                 "X-Goog-API-KEY": process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY!,
                 "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.photos",
             },

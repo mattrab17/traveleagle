@@ -31,7 +31,10 @@ export const tripQueries = {
         user_id: string;
         destination: string;
         start_date: string;
-        end_date:string;}):
+        end_date:string;
+        lat: number;
+        lng: number
+    }):
         Promise<Trip>{
             const { data, error } = await supabase 
             .from('trips')

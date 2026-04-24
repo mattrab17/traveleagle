@@ -133,37 +133,6 @@ export default function TripsScreen() {
               >
                 No trips yet
               </Text>
-
-              <TouchableOpacity
-                onPress={() => router.push("/(main_navigation)/(itinerary)/AiItineraryMaker")}
-                style={{
-                  backgroundColor: ORANGE_COLOR,
-                  width: "100%",
-                  paddingVertical: 16,
-                  borderRadius: 14,
-                  alignItems: "center",
-                  marginBottom: 12,
-                }}
-              >
-                <Text style={{ fontSize: 14.5, fontWeight: "900", color: "white" }}>
-                  Create with AI
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => bottomSheetRef.current?.snapToIndex(3)}
-                style={{
-                  backgroundColor: "#2c4eb5",
-                  width: "100%",
-                  paddingVertical: 16,
-                  borderRadius: 14,
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ fontSize: 14.5, fontWeight: "900", color: "white" }}>
-                  Create Manually
-                </Text>
-              </TouchableOpacity>
             </View>
           ) : (
             <SectionList
@@ -212,32 +181,7 @@ export default function TripsScreen() {
           )}
         </View>
 
-        {sections.length > 0 ? (
-          <View
-            pointerEvents="box-none"
-            style={{
-              position: "absolute",
-              left: 20,
-              right: 20,
-              bottom: insets.bottom + 70,
-            }}
-          >
-            <TouchableOpacity
-              onPress={() => router.push("/(main_navigation)/(itinerary)/AiItineraryMaker")}
-              style={{
-                backgroundColor: ORANGE_COLOR,
-                width: "100%",
-                paddingVertical: 16,
-                borderRadius: 14,
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ fontSize: 14.5, fontWeight: "900", color: "white" }}>
-                Create with AI
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
+        
 
         <BottomSheet
           ref={bottomSheetRef}

@@ -2,8 +2,8 @@ import { itineraryController } from "@/controllers/itineraryController";
 import { tripController } from "@/controllers/tripController";
 import {GooglePlacesInput, GooglePlacesInputTrip } from "@/src/app/(google_maps_info)/GooglePlacesAutocomplete";
 import { Ionicons, Feather, AntDesign} from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, FlatList, Image, TouchableOpacity, ScrollView, Alert, TextInput, StyleSheet, Platform } from "react-native";
 import { Picker } from '@react-native-picker/picker'
 import {
@@ -52,9 +52,9 @@ export default function ItineraryScreen(){
             console.log(tripController.getTotalDays(tripData)) */
         }
 
-    useEffect(() => {
+    useFocusEffect(useCallback(() => {
         
-    loadItinerary();}, [id]);
+    loadItinerary();}, [id]));
 
     // Converts "HH:MM:SS" into total minutes so we can sort times reliably.
     function timeSlotToMinutes(timeSlot?: string | null){
@@ -239,6 +239,7 @@ async function handleGenerateItinerary(){
             <Text style={{color: 'white', fontSize: 36, fontFamily:'Inter', fontWeight: 800}}>Itinerary</Text>
          
             {!searchBarVisible && (
+                <View>
                     <TouchableOpacity 
                     style={{
                         backgroundColor: 'white',
@@ -249,6 +250,28 @@ async function handleGenerateItinerary(){
                     onPress={()=>setSearchBarVisible(true)}>
                         <Text>+ Add to Itinerary</Text>
                     </TouchableOpacity>
+                     <TouchableOpacity
+               onPress={() => router.push({
+                pathname: "/trips/[id]/AiDiscovery",
+                params: {id: String(id), destination: trip?.destination, lat: String(trip?.lat), lng: String(trip?.lng)}
+               })}
+              style={{
+                backgroundColor: ORANGE_COLOR,
+                width: "100%",
+                paddingVertical: 20,
+                borderRadius: 15,
+                marginTop: 15,
+                alignItems: "center",
+                marginBottom: 15,
+              }}
+            >
+              <Text
+                style={{ fontSize: 14.5, fontWeight: "900", color: "white" }}
+              >
+                {isGenerating ? status : "Create Itinerary with AI"}
+              </Text>
+            </TouchableOpacity>
+            </View>
                 )
                 }
             </View>
@@ -449,7 +472,9 @@ async function handleGenerateItinerary(){
                     style={{width:120, height: 80}}>   
                     </Image>
                 ): item.place?.place_data?.photos[0]?.photo_reference ? (
+                    
                      <Image 
+                     
                             source={{
                                 uri: `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${item.place.place_data.photos[0].photo_reference}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`
 

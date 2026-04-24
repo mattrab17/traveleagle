@@ -17,6 +17,8 @@ import { validateTripForm } from "../utils/validation";
 export default function TripForm({onClose, userId}) {
 
     const [destination, setDestination] = useState('')
+    const [destinationLatitude, setDestinationLatitude] = useState<number | null>(null);
+    const [destinationLongitude, setDestinationLongitude] = useState<number | null>(null);
     const { calendarActiveDateRanges, onCalendarDayPress, dateRange, onClearDateRange} = useDateRange();
 
     const today = toDateId(new Date()); 
@@ -35,6 +37,8 @@ export default function TripForm({onClose, userId}) {
       destination: destination,
       start_date: dateRange.startId,
       end_date: dateRange.endId,
+      lat: destinationLatitude,
+      lng: destinationLongitude
     });
     console.log('Trip created:', data);
     onClearDateRange();
@@ -59,7 +63,12 @@ export default function TripForm({onClose, userId}) {
             <Text style={{fontSize: 16, marginBottom: 10, fontWeight: '500', color: ORANGE_COLOR}}>Destination</Text>
             <View style={{flex:1, width:'100%', marginBottom: 20, zIndex: 2000, elevation: 2000 }}>
                 <GooglePlacesInputTrip 
-                onSelect={(data) => setDestination(data.description)}
+                onSelect={(data, details) => {
+                  setDestination(data.description)
+                  setDestinationLatitude(details?.geometry?.location?.lat);
+                  setDestinationLongitude(details?.geometry?.location?.lng);
+                }
+                }
                 placeholder="Where would you like to go?"
                 >
                 </GooglePlacesInputTrip>
