@@ -20,6 +20,7 @@ export default function RootLayout() {
           tabBarStyle: {
             backgroundColor: BACKGROUND_COLOR,
             borderTopWidth: 0,
+            marginTop: -15
           },
           tabBarActiveTintColor: ACTIVE_TAB_COLOR,
           tabBarInactiveTintColor: INACTIVE_TAB_COLOR,
@@ -75,6 +76,14 @@ export default function RootLayout() {
 
         <Tabs.Screen
           name="(itinerary)/MyItineraries"
+<<<<<<< HEAD
+=======
+
+          options={{
+            href: null,
+          }}
+
+>>>>>>> 53431663731eb6c81915ae785d2eb9c9dc48d392
           options={{ href: null }}
         />
         <Tabs.Screen

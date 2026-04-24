@@ -253,7 +253,7 @@ useEffect(() => { //useEffect -> a hook that helps render components (THE POINT 
             <Feather name="navigation" size={24} color="#3858D6" /> 
           </TouchableOpacity>
         </View>
-
+{/* 
         <BottomSheet ref={bottomSheetRef} snapPoints={snapPoints} index={2}>
           <BottomSheetView style={styles.contentContainer}>
             {activeSelectedPlace ? (
@@ -267,7 +267,7 @@ useEffect(() => { //useEffect -> a hook that helps render components (THE POINT 
               <Text style={styles.bottomSheetDescription}>Tap a marker to see the place.</Text>
             )}
           </BottomSheetView>
-        </BottomSheet>
+        </BottomSheet> */}
       </View>
     </GestureHandlerRootView>
   );
