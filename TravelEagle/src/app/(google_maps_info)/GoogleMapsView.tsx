@@ -72,10 +72,10 @@ export default function GoogleMapsView({
   const bottomSheetRef = useRef<BottomSheet>(null); //constant that aids in controlling the rendering for the bottom sheet
   const snapPoints = ["12%", "25%", "4%"];
 
-  const places: Place[] = [
+/*   const places: Place[] = [
     { id: 1, name: "Times Square", lat: 40.758, lng: -73.9855, emoji: "🏙️", description: "Busy city lights and entertainment." },
     { id: 2, name: "Central Park", lat: 40.7826, lng: -73.9656, emoji: "🌳", description: "A peaceful green space in the city." },
-  ];
+  ]; */
 
   const { latitude, longitude } = useLocation();
   
@@ -167,7 +167,7 @@ useEffect(() => { //useEffect -> a hook that helps render components (THE POINT 
           }}
           style={{ flex: 1 }}
         >
-          {places.map((place) => (
+         {/* /* places.map((place) => (
             <Marker
               coordinate={{ latitude: place.lat, longitude: place.lng }}
               title={place.name}
@@ -185,7 +185,7 @@ useEffect(() => { //useEffect -> a hook that helps render components (THE POINT 
                 <Text>{place.emoji}</Text>
               </View>
             </Marker>
-          ))}
+          )) */ }
 
           {/* Draws Markers to the screen*/}
           {poiMarkers.map((p) => ( //.map function loops through the poiMarkers list. For every place, it renames the place 'p' and runs the code inside

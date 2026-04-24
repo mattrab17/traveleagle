@@ -9,6 +9,7 @@ import {
   Platform,
   Modal,
   Alert,
+  KeyboardAvoidingView,
 } from "react-native";
 
 import { Feather, Ionicons } from "@expo/vector-icons";
@@ -217,7 +218,7 @@ export default function AIDiscoveryScreen()
                 {selectedPlace && (
                                 <>
                                  <TouchableOpacity style={{
-                                    position: "absolute", bottom: 390, right: 20, zIndex: 1,
+                                    position: "absolute", bottom: 375, right: 20, zIndex: 1,
                                   }}
                                   onPress={() => {
                                     setSelectedPlace(null);
@@ -331,7 +332,7 @@ export default function AIDiscoveryScreen()
         <BottomSheet
         ref={bottomSheetRef}
           snapPoints={["10%", "50%", "89%"]}
-          index={2}
+          index={3}
           onChange={handleSheetChange}
           
           backgroundStyle={{ backgroundColor: SECONDARY_BACKGROUND_COLOR }}>
@@ -373,6 +374,10 @@ export default function AIDiscoveryScreen()
         </View>
     </BottomSheet> 
     {isSheetOpen && !selectedPlace && (
+    <KeyboardAvoidingView
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+    keyboardVerticalOffset={133}
+    >
     <View
             style={{position: "relative",flexDirection: "row", justifyContent: "center", height: 60, marginBottom:20, }}>
             <TextInput
@@ -381,7 +386,7 @@ export default function AIDiscoveryScreen()
                 value={inputText}
                 onChangeText={setInputText}
                 multiline={true}
-                style={{ flex: 1, backgroundColor: SEARCH_BACKGROUND_COLOR, color: WHITE_TEXT_COLOR, paddingHorizontal: 15, margin: 10, borderRadius: 5, }}>
+                style={{ flex: 1, backgroundColor: SEARCH_BACKGROUND_COLOR, color: WHITE_TEXT_COLOR, paddingHorizontal: 15, margin: 10, borderRadius: 10, }}>
             </TextInput>
 
             <TouchableOpacity
@@ -389,7 +394,7 @@ export default function AIDiscoveryScreen()
                 style={{ backgroundColor: "#2c4eb5", paddingHorizontal: 15, margin: 10, borderRadius: 5, justifyContent: 'center' }}>
                 <Text style={{ color: WHITE_TEXT_COLOR, fontWeight: "900", fontSize: 16 }}>Send</Text>
             </TouchableOpacity>
-        </View>)}
+        </View></KeyboardAvoidingView>)}
     </View>
      {/* Add Trip Button Modal =============================================================================================*/}
       <Modal
@@ -497,7 +502,9 @@ const styles = StyleSheet.create({
     padding: 15,
     borderWidth: 1,
     borderColor: '#ffffff30',
-    zIndex: 100,          
+    zIndex: 100,
+    maxHeight: 400,
+    minHeight: 350,          
   },
   cardHeader: {
     flexDirection: 'row',
