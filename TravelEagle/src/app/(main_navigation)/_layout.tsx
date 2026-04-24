@@ -76,14 +76,6 @@ export default function RootLayout() {
 
         <Tabs.Screen
           name="(itinerary)/MyItineraries"
-<<<<<<< HEAD
-=======
-
-          options={{
-            href: null,
-          }}
-
->>>>>>> 53431663731eb6c81915ae785d2eb9c9dc48d392
           options={{ href: null }}
         />
         <Tabs.Screen
