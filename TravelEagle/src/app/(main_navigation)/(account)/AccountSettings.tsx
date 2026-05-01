@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Alert,
   ScrollView,
@@ -27,7 +27,7 @@ export default function AccountSettings() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
+  const [userPosts, setUserPosts] = useState<any[]>([]);
   const username = useMemo(() => {
     return (
       user?.user_metadata?.username ||
@@ -73,6 +73,29 @@ export default function AccountSettings() {
     Alert.alert("Success", "Password updated.");
   }
 
+  
+//loads user's previous posts in
+  useEffect(() => {
+  async function loadUserPosts() {
+    if (!user?.id) return;
+
+    const { data, error } = await supabase
+      .from("user_posts")
+      .select("*")
+      .eq("created_by", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setUserPosts(data || []);
+  }
+
+  loadUserPosts();
+}, [user]);
+  
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.page} contentContainerStyle={styles.content}>
@@ -117,7 +140,33 @@ export default function AccountSettings() {
             <Text style={styles.infoValue}>1.0.0</Text>
           </View>
         </View>
+         <View style={styles.card}>
+          <Text style={styles.cardTitle}>Previous Posts</Text>
 
+          {userPosts.length === 0 ? (
+            <Text style={styles.infoKey}>You have not created any posts yet.</Text>
+          ) : (
+            userPosts.map((post) => (
+              <View key={post.id} style={styles.postBox}>
+                <Text style={styles.postTitle}>
+                  {post.place_name || "Unnamed Place"}
+                </Text>
+
+                <Text style={styles.postText}>
+                  {post.address || "No address"}
+                </Text>
+
+                <Text style={styles.postText}>
+                  {post.description || "No description"}
+                </Text>
+
+                <Text style={styles.postCategory}>
+                  {post.category || "No category"}
+                </Text>
+              </View>
+            ))
+          )}
+        </View>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Security</Text>
 
@@ -306,4 +355,26 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: "700",
   },
+  postBox: {
+  backgroundColor: "#1f3f6b",
+  borderRadius: 8,
+  padding: 10,
+  marginTop: 10,
+},
+postTitle: {
+  color: WHITE_TEXT_COLOR,
+  fontSize: 17,
+  fontWeight: "700",
+},
+postText: {
+  color: "#9DB4D8",
+  fontSize: 14,
+  marginTop: 4,
+},
+postCategory: {
+  color: ORANGE_COLOR,
+  fontSize: 13,
+  fontWeight: "700",
+  marginTop: 6,
+}
 });
