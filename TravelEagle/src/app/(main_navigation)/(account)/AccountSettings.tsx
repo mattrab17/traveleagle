@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -24,9 +26,17 @@ import { supabase } from "@/lib/supabase";
 export default function AccountSettings() {
   const { user, logOut } = useAuth();
   const router = useRouter();
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [editUsername, setEditUsername] = useState("");
+  const [editPassword, setEditPassword] = useState("");
+  const [editConfirmPassword, setEditConfirmPassword] = useState("");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [usernameOverride, setUsernameOverride] = useState<string | null>(null);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+
 
   const username = useMemo(() => {
     return (
@@ -38,7 +48,11 @@ export default function AccountSettings() {
     );
   }, [user]);
 
-  const avatarLetter = username?.trim()?.[0]?.toUpperCase() || "T";
+  const displayUsername = usernameOverride ?? username;
+
+
+
+  const avatarLetter = displayUsername?.trim()?.[0]?.toUpperCase() || "T";
 
   async function handleSignOut() {
     await logOut();
@@ -73,6 +87,58 @@ export default function AccountSettings() {
     Alert.alert("Success", "Password updated.");
   }
 
+  function openEditModal() {
+    setEditUsername(displayUsername);
+    setEditPassword("");
+    setEditConfirmPassword("");
+    setIsEditModalVisible(true);
+  }
+
+  function closeEditModal() {
+    if (isSavingEdit)
+    {
+      return;
+    }
+    setIsEditModalVisible(false);
+  }
+
+  async function handleSaveProfileEdits() {
+    const trimmedUsername = editUsername.trim();
+    if (!trimmedUsername) {
+      Alert.alert("Invalid username", "Username cannot be empty.");
+      return;
+    }
+
+    if (editPassword) {
+      if (editPassword.length < 6) {
+        Alert.alert("Weak password", "Password must be at least 6 characters.");
+        return;
+      }
+      if (editPassword !== editConfirmPassword) {
+        Alert.alert("Mismatch", "Password and confirmation do not match.");
+        return;
+      }
+    }
+
+    setIsSavingEdit(true);
+    const updatePayload: { data: { username: string }; password?: string } = {
+      data: { username: trimmedUsername },
+    };
+    if (editPassword) updatePayload.password = editPassword;
+
+    const { error } = await supabase.auth.updateUser(updatePayload);
+    setIsSavingEdit(false);
+
+    if (error) {
+      Alert.alert("Update failed", error.message);
+      return;
+    }
+
+    setUsernameOverride(trimmedUsername);
+    setIsEditModalVisible(false);
+    Alert.alert("Success", "Account details saved.");
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.page} contentContainerStyle={styles.content}>
@@ -84,7 +150,7 @@ export default function AccountSettings() {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>Profile Information</Text>
-            <TouchableOpacity style={styles.editAction}>
+            <TouchableOpacity style={styles.editAction} onPress={openEditModal}>
               <Feather name="edit-2" size={13} color={ORANGE_COLOR} />
               <Text style={styles.editText}>Edit</Text>
             </TouchableOpacity>
@@ -94,11 +160,11 @@ export default function AccountSettings() {
             <View style={styles.avatarCircle}>
               <Text style={styles.avatarText}>{avatarLetter}</Text>
             </View>
-            <Text style={styles.avatarName}>{username}</Text>
+            <Text style={styles.avatarName}>{displayUsername}</Text>
           </View>
 
           <Text style={styles.fieldLabel}>Username</Text>
-          <TextInput value={username} editable={false} style={styles.readonlyInput} placeholderTextColor="#7D97BC" />
+          <TextInput value={displayUsername} editable={false} style={styles.readonlyInput} placeholderTextColor="#7D97BC" />
 
           <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Email Address</Text>
           <TextInput
@@ -161,6 +227,57 @@ export default function AccountSettings() {
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal visible={isEditModalVisible} transparent animationType="fade" onRequestClose={closeEditModal}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Edit Account</Text>
+
+            <Text style={styles.fieldLabel}>Username</Text>
+            <TextInput
+              value={editUsername}
+              onChangeText={setEditUsername}
+              style={styles.editableInput}
+              placeholder="Enter username"
+              placeholderTextColor="#7D97BC"
+              autoCapitalize="none"
+            />
+
+            <Text style={[styles.fieldLabel, { marginTop: 12 }]}>New Password</Text>
+            <TextInput
+              value={editPassword}
+              onChangeText={setEditPassword}
+              style={styles.editableInput}
+              placeholder="Leave blank to keep current password"
+              placeholderTextColor="#7D97BC"
+              secureTextEntry
+            />
+
+            <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Confirm New Password</Text>
+            <TextInput
+              value={editConfirmPassword}
+              onChangeText={setEditConfirmPassword}
+              style={styles.editableInput}
+              placeholder="Re-enter new password"
+              placeholderTextColor="#7D97BC"
+              secureTextEntry
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.cancelButton} onPress={closeEditModal} disabled={isSavingEdit}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.saveButton} onPress={handleSaveProfileEdits} disabled={isSavingEdit}>
+                {isSavingEdit ? (
+                  <ActivityIndicator color={WHITE_TEXT_COLOR} />
+                ) : (
+                  <Text style={styles.saveButtonText}>Save</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -305,5 +422,56 @@ const styles = StyleSheet.create({
     color: WHITE_TEXT_COLOR,
     fontSize: 21,
     fontWeight: "700",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(2, 12, 30, 0.72)",
+    justifyContent: "center",
+    paddingHorizontal: 18,
+  },
+  modalCard: {
+    backgroundColor: "#0f2c58",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#1c4a83",
+    padding: 16,
+  },
+  modalTitle: {
+    color: WHITE_TEXT_COLOR,
+    fontWeight: "700",
+    fontSize: 22,
+    marginBottom: 10,
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 10,
+    marginTop: 16,
+  },
+  cancelButton: {
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: "#6e8ab4",
+  },
+  cancelButtonText: {
+    color: "#bcd1ee",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  saveButton: {
+    borderRadius: 10,
+    backgroundColor: "#2f57d0",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    minWidth: 84,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  saveButtonText: {
+    color: WHITE_TEXT_COLOR,
+    fontWeight: "700",
+    fontSize: 14,
   },
 });
