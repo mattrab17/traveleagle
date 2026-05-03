@@ -104,8 +104,8 @@ export default function WelcomePage() {
 
 
 
-            <TouchableOpacity
-          onPress={() => router.push("/(main_navigation)/(itinerary)/MyItineraries")}
+        <TouchableOpacity
+          onPress={() => router.push("/(main_navigation)/TripList")}
           style={{ marginTop: 10 }}
         >
           <Text

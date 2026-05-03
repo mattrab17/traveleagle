@@ -78,7 +78,7 @@ export default function GoogleMapsView({
   const bottomSheetRef = useRef<BottomSheet>(null); //constant that aids in controlling the rendering for the bottom sheet
   const snapPoints = ["12%", "25%", "4%"];
 
-  const places: Place[] = [
+   const places: Place[] = [
     { id: 1, name: "Times Square", lat: 40.758, lng: -73.9855, emoji: "🏙️", description: "Busy city lights and entertainment." },
     { id: 2, name: "Central Park", lat: 40.7826, lng: -73.9656, emoji: "🌳", description: "A peaceful green space in the city." },
   ];
@@ -208,7 +208,7 @@ useEffect(() => {
           }}
           style={{ flex: 1 }}
         >
-          {places.map((place) => (
+         {places.map((place) => (
             <Marker
               coordinate={{ latitude: place.lat, longitude: place.lng }}
               title={place.name}
@@ -226,7 +226,7 @@ useEffect(() => {
                 <Text>{place.emoji}</Text>
               </View>
             </Marker>
-          ))}
+          ))  }
 
           {userPosts.map((post) => (
           <Marker
@@ -320,7 +320,7 @@ useEffect(() => {
             <Feather name="navigation" size={24} color="#3858D6" /> 
           </TouchableOpacity>
         </View>
-
+{/* 
         <BottomSheet ref={bottomSheetRef} snapPoints={snapPoints} index={2}>
           <BottomSheetView style={styles.contentContainer}>
             {activeSelectedPlace ? (
@@ -338,7 +338,7 @@ useEffect(() => {
               </TouchableOpacity>
             )}
           </BottomSheetView>
-        </BottomSheet>
+        </BottomSheet> */}
       </View>
     </GestureHandlerRootView>
   );
