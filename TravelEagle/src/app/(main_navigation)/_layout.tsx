@@ -86,6 +86,10 @@ export default function RootLayout() {
           name="(itinerary)/ItineraryChoose"
           options={{ href: null }}
         />
+        <Tabs.Screen
+          name="(account)/MyPostHistory"
+          options={{ href: null }}
+        />
       </Tabs>
     </>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -35,8 +35,6 @@ export default function AccountSettings() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-const [userPosts, setUserPosts] = useState<any[]>([]);
-const [isLoadingPosts, setIsLoadingPosts] = useState(false);
 
 
   const username = useMemo(() => {
@@ -140,65 +138,6 @@ const [isLoadingPosts, setIsLoadingPosts] = useState(false);
     Alert.alert("Success", "Account details saved.");
   }
 
-  async function loadPreviousPosts() {
-  if (!user?.id) {
-    setUserPosts([]);
-    return;
-  }
-
-  setIsLoadingPosts(true);
-
-  const { data, error } = await supabase
-    .from("user_posts")
-    .select("*")
-    .eq("created_by", user.id)
-    .order("created_at", { ascending: false });
-
-  setIsLoadingPosts(false);
-
-  if (error) {
-    Alert.alert("Error", "Could not load previous posts.");
-    console.error(error);
-    return;
-  }
-
-  setUserPosts(data || []);
-}
-
-useEffect(() => {
-  loadPreviousPosts();
-}, [user?.id]);
-
-async function deletePost(postId: string) {
-  Alert.alert(
-    "Delete Post",
-    "Are you sure you want to delete this post?",
-    [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          const { error } = await supabase
-            .from("user_posts")
-            .delete()
-            .eq("id", postId)
-            .eq("created_by", user?.id);
-
-          if (error) {
-            Alert.alert("Error", "Could not delete post.");
-            console.error(error);
-            return;
-          }
-
-          setUserPosts((prevPosts) =>
-            prevPosts.filter((post) => post.id !== postId)
-          );
-        },
-      },
-    ]
-  );
-}
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.page} contentContainerStyle={styles.content}>
@@ -243,40 +182,15 @@ async function deletePost(postId: string) {
             <Text style={styles.infoValue}>1.0.0</Text>
           </View>
         </View>
-                <View style={styles.card}>
-          <Text style={styles.cardTitle}>Previous Posts</Text>
-
-          {isLoadingPosts ? (
-            <ActivityIndicator color={WHITE_TEXT_COLOR} />
-          ) : userPosts.length === 0 ? (
-            <Text style={styles.infoKey}>You have not created any posts yet.</Text>
-          ) : (
-            userPosts.map((post) => (
-              <View key={post.id} style={styles.postBox}>
-                <Text style={styles.postTitle}>
-                  {post.place_name || "Unnamed Place"}
-                </Text>
-
-                <Text style={styles.postText}>
-                  {post.address || "No address"}
-                </Text>
-
-                <Text style={styles.postText}>
-                  {post.description || "No description"}
-                </Text>
-
-                <Text style={styles.postCategory}>
-                  {post.category || "No category"}
-                </Text>
-                <TouchableOpacity
-                style={styles.deletePostButton}
-                onPress={() => deletePost(post.id)}
-              >
-                <Text style={styles.deletePostText}>Delete Post</Text>
-              </TouchableOpacity>
-              </View>
-            ))
-          )}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>My Posts</Text>
+          <Text style={styles.infoKey}>View, edit, and delete your post history.</Text>
+          <TouchableOpacity
+            style={styles.updateButton}
+            onPress={() => router.push("/(main_navigation)/(account)/MyPostHistory")}
+          >
+            <Text style={styles.updateButtonText}>My Post History</Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Security</Text>
@@ -568,43 +482,4 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 14,
   },
-  postBox: {
-  backgroundColor: "#1f3f6b",
-  borderRadius: 10,
-  padding: 12,
-  marginTop: 10,
-},
-
-postTitle: {
-  color: WHITE_TEXT_COLOR,
-  fontSize: 17,
-  fontWeight: "700",
-  marginBottom: 4,
-},
-
-postText: {
-  color: "#bcd1ee",
-  fontSize: 14,
-  marginBottom: 4,
-},
-
-postCategory: {
-  color: ORANGE_COLOR,
-  fontSize: 13,
-  fontWeight: "700",
-  marginTop: 4,
-},
-deletePostButton: {
-  marginTop: 10,
-  backgroundColor: "#ff0d1f",
-  borderRadius: 8,
-  paddingVertical: 9,
-  alignItems: "center",
-},
-
-deletePostText: {
-  color: WHITE_TEXT_COLOR,
-  fontWeight: "700",
-  fontSize: 14,
-},
 });

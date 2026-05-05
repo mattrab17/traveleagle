@@ -4,12 +4,12 @@ import { BACKGROUND_COLOR, WHITE_TEXT_COLOR, ORANGE_COLOR } from "./constants/co
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function WelcomePage() {
+  // Router handles navigation to full auth pages.
   const router = useRouter();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: BACKGROUND_COLOR }}>
-      
-      {/* Main Centered Content */}
+      {/* Brand section (logo + app title + subtitle) */}
       <View
         style={{
           flex: 1,
@@ -18,17 +18,15 @@ export default function WelcomePage() {
           paddingTop: 40,
         }}
       >
-        {/* Logo */}
         <Image
           source={require("../../assets/images/traveleaglelogo.png")}
           style={{
             width: 310,
             height: 310,
-            marginBottom: 0, // adjust if needed
+            marginBottom: 0,
           }}
         />
 
-        {/* Title */}
         <Text
           style={{
             fontSize: 67,
@@ -40,24 +38,23 @@ export default function WelcomePage() {
           <Text style={{ color: ORANGE_COLOR }}>Eagle</Text>
         </Text>
 
-        {/* Subtext */}
         <Text
           style={{
             fontSize: 26,
             color: WHITE_TEXT_COLOR,
             fontWeight: "200",
             marginTop: 10,
-            marginBottom: 100
+            marginBottom: 100,
           }}
         >
           Your smart travel companion
         </Text>
       </View>
 
-      {/* Buttons */}
+      {/* Primary auth actions */}
       <View style={{ alignItems: "center", paddingBottom: 40 }}>
-        
         <TouchableOpacity
+          // Navigate to dedicated Sign Up screen.
           onPress={() => router.push("/(authentication)/SignUpScreen")}
           style={{
             backgroundColor: "white",
@@ -72,6 +69,7 @@ export default function WelcomePage() {
         </TouchableOpacity>
 
         <TouchableOpacity
+          // Navigate to dedicated Sign In screen.
           onPress={() => router.push("/(authentication)/LogInScreen")}
           style={{
             width: "85%",
@@ -84,49 +82,7 @@ export default function WelcomePage() {
         >
           <Text style={{ fontSize: 20, color: "white" }}>Sign In</Text>
         </TouchableOpacity>
-
-        {/* Temporary Navigation */}
-        <TouchableOpacity
-          onPress={() => router.push("/(main_navigation)/(interactive_map)/HomeScreen")}
-          style={{ marginTop: 10 }}
-        >
-          <Text
-            style={{
-              textDecorationLine: "underline",
-              color: WHITE_TEXT_COLOR,
-              fontSize: 16,
-            }}
-          >
-            To Home Page
-          </Text>
-        </TouchableOpacity>
-
-
-
-
-        <TouchableOpacity
-          onPress={() => router.push("/(main_navigation)/TripList")}
-          style={{ marginTop: 10 }}
-        >
-          <Text
-            style={{
-              textDecorationLine: "underline",
-              color: WHITE_TEXT_COLOR,
-              fontSize: 16,
-            }}
-          >
-            To Itinerary Page
-          </Text>
-        </TouchableOpacity>
-
-
-
-
-
-
-
       </View>
-      
     </SafeAreaView>
   );
 }
