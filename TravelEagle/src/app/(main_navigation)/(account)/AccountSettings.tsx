@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -38,7 +38,6 @@ export default function AccountSettings() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [profileImageUrl, setProfileImageUrl] = useState("");
 
   const username = useMemo(() => {
     return (
@@ -152,78 +151,6 @@ export default function AccountSettings() {
       .eq("id", user.id)
       .single();
 
-    if (error) {
-      console.log("Avatar load error:", error.message);
-      return;
-    }
-    // If an avatar URL exists, set it to state
-    if (data?.avatar_url) {
-      setProfileImageUrl(data.avatar_url);
-    }
-  }
-  
-  loadProfileImage();
-}, [user?.id]);
-// Handle profile photo change
-  async function handleChangeProfilePhoto() {
-    // Request permission to access media library
-  const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-  if (!permissionResult.granted) {
-    Alert.alert("Permission required", "Photo access is required.");
-    return;
-  }
-  // Open image picker
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ["images"],
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 1,
-  });
-
-  if (result.canceled) {
-    return;
-  }
-
-  const imageUri = result.assets[0].uri;
-  //changed to array buffer due to blob causing empty image to upload
-  const response = await fetch(imageUri);
-  const arrayBuffer = await response.arrayBuffer();
-
-  const filePath = `profile-pictures/${user.id}-${Date.now()}.jpg`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("avatars")
-    .upload(filePath, arrayBuffer, {
-      contentType: "image/jpeg",
-      upsert: true,
-    });
-
-  if (uploadError) {
-    Alert.alert("Upload failed", uploadError.message);
-    return;
-  }
-
-  const { data } = supabase.storage
-    .from("avatars")
-    .getPublicUrl(filePath);
-
-  const publicUrl = data.publicUrl;
-
-  const { error: tableUpdateError } = await supabase
-    .from("users")
-    .update({ avatar_url: publicUrl })
-    .eq("id", user.id);
-
-  if (tableUpdateError) {
-    Alert.alert("Profile update failed", tableUpdateError.message);
-    return;
-  }
-
-  setProfileImageUrl(publicUrl);
-  Alert.alert("Success", "Profile photo updated.");
-}
-  
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.page} contentContainerStyle={styles.content}>
@@ -590,9 +517,4 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 14,
   },
-  profileImage: {
-  width: 58,
-  height: 58,
-  borderRadius: 29,
-},
 });

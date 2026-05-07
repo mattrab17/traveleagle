@@ -17,6 +17,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useAuth } from "../../(authentication)/Auth";
+import MapView, { PROVIDER_GOOGLE, Marker } from "react-native-maps";
 
 
 export default function ItineraryScreen(){
@@ -206,7 +207,7 @@ async function handleGenerateItinerary(){
             {text: 'Generate', onPress: async () => {
                 setisGenerating(true);
                 setStatus('Starting...');
-                const {data, error} = await itineraryController.generateAIItinerary(trip, totalDays, user?.interests || [], (s) => setStatus(s));
+                const {data, error} = await itineraryController.generateAIItinerary(trip, totalDays, user?.interests || [], user?.pace, (s) => setStatus(s));
 
                 setisGenerating(false);
                 setStatus('');
@@ -535,6 +536,7 @@ async function handleGenerateItinerary(){
             }
             >
             </FlatList>
+           
         </View>
         </View>
         </ScrollView> 
@@ -550,14 +552,15 @@ async function handleGenerateItinerary(){
                 right: 20,
                 width: 50,
                 height:50,
-                paddingLeft: 4,
+                paddingLeft: 2,
                 borderRadius: 30,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Ionicons name="sparkles" color="white" size={27}></Ionicons>
+              <Ionicons name="map" color="white" size={25}></Ionicons>
             </TouchableOpacity>
+            
         <BottomSheet
         ref={bottomSheetRef}
         snapPoints={['50%']}

@@ -18,7 +18,7 @@ import {
   ORANGE_COLOR,
   SECONDARY_BACKGROUND_COLOR,
   WHITE_TEXT_COLOR,
-} from  '/Users/tezbirsingh/traveleagle/traveleagle/TravelEagle/src/app/constants/colors.ts'
+} from "../constants/colors";
 
 const categories = ["Festival", "Carnival", "Sports", "Holiday"];
 

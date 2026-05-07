@@ -27,7 +27,7 @@ import { tripController } from "@/controllers/tripController";
 import { itineraryController } from "@/controllers/itineraryController";
 import DropDownPicker from 'react-native-dropdown-picker'; 
 import { useAuth } from "../../(authentication)/Auth";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 
 type SelectedPlaceType = { //describes the structure of a Place object
   name?: string; 
@@ -68,6 +68,13 @@ const FILTER_CATEGORY_MAP: Record<string, string> = {
 export default function HomeScreen()
 {
   const {user} = useAuth();
+  const params = useLocalSearchParams<{
+    name?: string;
+    lat?: string;
+    lng?: string;
+    description?: string;
+    address?: string;
+  }>();
   
   const mapRef = useRef<any>(null);
   //mapRef -> references the Google maps map. Null means it doesn't load immediately
@@ -180,13 +187,6 @@ const postFilterOptions = [
     }
   };
 
-  const togglePostFilter = (filterName: string) => {
-  if (selectedPostFilters.includes(filterName)) {
-    setSelectedPostFilters(selectedPostFilters.filter((item) => item !== filterName));
-  } else {
-    setSelectedPostFilters([...selectedPostFilters, filterName]);
-  }
-};
   
   /* 1. DYNAMIC IMAGE SELECTION -> decides which picture to show for a place. 
   
@@ -264,9 +264,25 @@ const openHoursLines = useMemo(() => {
 /*   useEffect(() => {
     loadTrips();}, []); */
 
-     useFocusEffect(useCallback(() => {
+useFocusEffect(useCallback(() => {
       if(user?.id){
       loadTrips();}}, [user]));
+
+  useEffect(() => {
+    // When coming from Community "View Location", params include lat/lng.
+    // This creates a selected place so the map marker and info card show instantly.
+    const lat = params.lat ? Number(params.lat) : NaN;
+    const lng = params.lng ? Number(params.lng) : NaN;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+    handleSetSelectedPlace({
+      name: params.name || "Selected Event",
+      lat,
+      lng,
+      description: params.description || "No description provided.",
+      address: params.address || "No address provided",
+    });
+  }, [params.lat, params.lng, params.name, params.description, params.address]);
 
       async function loadTrips(){
       const {data} = await tripController.loadAllTrips(user.id);
@@ -323,8 +339,6 @@ const openHoursLines = useMemo(() => {
     //.filter is a shortcut for "Keep only real filters in the dictionary and don't keep null or undefined values"
     .filter(Boolean);  
   
-    const activePostCategories = selectedPostFilters;
-  
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       {/* edges property places padding at the top edge of the screen */}
@@ -362,7 +376,7 @@ const openHoursLines = useMemo(() => {
           </View>
 
           {/* Selected Filters Preview */}
-         {(selectedFilters.length > 0 || selectedPostFilters.length > 0)&& (
+         {(selectedFilters.length > 0)&& (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -503,44 +517,11 @@ const openHoursLines = useMemo(() => {
                 );
               })}
             </View>
-
-            
-              <Text style={[styles.filterModalTitle, { marginTop: 12, fontSize: 18 }]}>
-          User Post Filters
-        </Text>
-
-        <View style={styles.filtersWrap}>
-          {postFilterOptions.map((filter, index) => {
-            const isSelected = selectedPostFilters.includes(filter);
-
-            return (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.filterOptionBtn,
-                  isSelected && styles.filterOptionBtnSelected,
-                ]}
-                onPress={() => togglePostFilter(filter)}
-              >
-                <Text
-                  style={[
-                    styles.filterOptionText,
-                    isSelected && styles.filterOptionTextSelected,
-                  ]}
-                >
-                  {filter}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-            
             <View style={styles.filterButtonsRow}>
               <TouchableOpacity
                 style={styles.clearFilterBtn}
                 onPress={() => {
                 setSelectedFilters([]);
-                setSelectedPostFilters([]);//resets filters for both API and users
               }}
             >
               <Text style={styles.clearFilterBtnText}>Clear</Text>

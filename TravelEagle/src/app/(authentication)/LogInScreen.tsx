@@ -5,6 +5,7 @@ import { BACKGROUND_COLOR, WHITE_TEXT_COLOR, ORANGE_COLOR, SECONDARY_BACKGROUND_
 import { Keyboard, TouchableWithoutFeedback } from "react-native"; // Utils to hide keyboard on tap
 import React, { useState } from "react";
 import { supabase } from "../../../lib/supabase"; // Import initialized Supabase client
+import Feather from "@expo/vector-icons/Feather";
 
 export default function Login() {
   const router = useRouter(); // Hook to handle navigation actions
@@ -50,9 +51,12 @@ export default function Login() {
                 alignItems: "center",
               }}
             >
-                {/* Back Button: Useful for testing or returning to a landing page */}
-                <TouchableOpacity onPress={ () => router.back()}>
-                    <Text style={{color: "white", fontSize: 20}}>Go Back</Text>
+                {/* Back Arrow: Always returns directly to WelcomePage (no stacked back loop) */}
+                <TouchableOpacity
+                  onPress={() => router.replace("/WelcomePage")}
+                  style={{ position: "absolute", top: 70, left: 20, zIndex: 20 }}
+                >
+                    <Feather name="arrow-left" size={28} color="white" />
                 </TouchableOpacity>
 
               {/* Sign-In Card Container */}

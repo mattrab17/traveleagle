@@ -5,6 +5,7 @@ import { BACKGROUND_COLOR, WHITE_TEXT_COLOR, ORANGE_COLOR, SECONDARY_BACKGROUND_
 import { Keyboard, TouchableWithoutFeedback } from "react-native"; // Utils to handle keyboard behavior
 import React, { useState } from "react"; // React hooks for state management
 import { supabase } from "../../../lib/supabase"; // Your Supabase client instance
+import Feather from "@expo/vector-icons/Feather";
 
 export default function Register() {
   const router = useRouter(); // Initialize the router for navigation (back/push)
@@ -69,9 +70,12 @@ export default function Register() {
                 alignItems: "center",
               }}
             >
-                {/* Back Button: Uses router to go to previous screen */}
-                <TouchableOpacity onPress={ () => router.back()}>
-                    <Text style={{color: "white", fontSize: 20}}>Go Back</Text>
+                {/* Back Arrow: Always returns directly to WelcomePage (no stacked back loop) */}
+                <TouchableOpacity
+                  onPress={() => router.replace("/WelcomePage")}
+                  style={{ position: "absolute", top: 70, left: 20, zIndex: 20 }}
+                >
+                    <Feather name="arrow-left" size={28} color="white" />
                 </TouchableOpacity>
 
               {/* The "Card" UI that holds the form */}
@@ -202,7 +206,7 @@ export default function Register() {
                 {/* FOOTER: Navigation to Sign In screen */}
                 <Text style={{ color: "#B0C4DE", fontSize: 15 }}>
                   Already have an account?{" "}
-                  <TouchableOpacity onPress={() => router.push("../(authentication)/SignUpScreen")}>
+                  <TouchableOpacity onPress={() => router.push("/(authentication)/LogInScreen")}>
                     <Text style={{ color: ORANGE_COLOR, fontWeight: "600", textDecorationLine: "underline"}}>
                     Sign In
                   </Text>

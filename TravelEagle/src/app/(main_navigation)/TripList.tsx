@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   SectionList,
+  Alert,
 } from "react-native";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -21,7 +22,7 @@ import {
   SEARCH_BACKGROUND_COLOR,
 } from "../constants/colors";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 
 export default function TripsScreen() {
   const { user } = useAuth();
@@ -63,6 +64,24 @@ export default function TripsScreen() {
     if (!user?.id) return;
     const { data } = await tripController.loadAllTrips(user.id);
     setSections(tripController.getSortedTripList(data));
+  }
+
+  async function handleDeleteTrip(tripId, destination){
+    Alert.alert(
+      "Delete Trip",
+      `Delete your trip to ${destination}? This will also delete all itinerary items within the trip.`,
+      [
+        {text: "Cancel", style: "cancel"},
+        {text: "Delete", style: "destructive", onPress: async () => {
+          const {error} = await tripController.deleteTrip(tripId);
+          if (error){
+            Alert.alert("Error", "Failed to delete trip");
+            return;
+          }
+          loadTrips();
+        } }
+      ]
+    )
   }
 
   return (
@@ -171,10 +190,19 @@ export default function TripsScreen() {
                     <Text style={{ fontSize: 14, color: ORANGE_COLOR }}>
                       {tripController.getTotalDays(item)} Days
                     </Text>
+                    
                   </View>
                   <Text style={{ color: WHITE_TEXT_COLOR, fontSize: 14, marginTop: 5 }}>
                     {formatDate(item.start_date)} - {formatDate(item.end_date)}
                   </Text>
+                     <TouchableOpacity
+                    onPress={() => {
+                      handleDeleteTrip(item.trip_id, item.destination)
+                    }}
+                    style={{position: "absolute", bottom:10, right: 10}}
+                    >
+                      <Ionicons size={20} name="trash-outline" color="red"></Ionicons>
+                    </TouchableOpacity>
                 </TouchableOpacity>
               )}
             />

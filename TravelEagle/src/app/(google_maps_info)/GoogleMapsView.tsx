@@ -10,7 +10,6 @@ import MapViewDirections from 'react-native-maps-directions';
 
 import { PlacesAPI } from "../../../LocationServices/PointOfInterest"
 import { useRouter } from "expo-router";
-import { userPostController } from "../../../controllers/userPostController"
 
 type SelectedPlace = {
   name: string;
@@ -85,6 +84,7 @@ export default function GoogleMapsView({
 
   const { latitude, longitude } = useLocation();
   
+  // Keep the map centered on the user's live location when available.
   useEffect(() => {
     if (latitude != null && longitude != null && activeMapRef.current) {
       animateToRegion(activeMapRef, latitude, longitude);
@@ -117,6 +117,7 @@ const [poiMarkers, setPoiMarkers] = useState<any[]>([]); //THIS CONTROLS THE STA
   //useRef is the memory hook that will store search engine objects
   //      -> useRef is needed here to create a search engine object once so that this object will just rerender. Otherwise, it would create a new search engine object each time causing the app to lag and waste time on rendering
 
+// Load nearby places whenever location or selected filters change.
 useEffect(() => { //useEffect -> a hook that helps render components (THE POINT OF THE CODE IS TO AUTOMATICALLY UPDATE LOCATIONS WHEN DIFFERENT FILTERS ARE ACTIVATED)
   
   const run = async () => { //run function
@@ -146,40 +147,14 @@ useEffect(() => { //useEffect -> a hook that helps render components (THE POINT 
   run(); //run method is called to constantly wait for search engine info
 }, [latitude, longitude, activeFilterCategories, geo]); //this code only runs when a variable changes. 
                                                         //Ex: if your location changes, then it will render different locations based on your latitude and longitude
-   
-useEffect(() => {
-  const loadNearbyUserPosts = async () => {
-    //checks to see if there is a selected place first
-   if (activeSelectedPlace?.lat == null || activeSelectedPlace?.lng == null) {
-  if (userPosts.length > 0) {
-    setUserPosts([]);
-  }
-  return;
-}
-    //this is calling the controller with these conditions
-    try {
-      const { data, error } = await userPostController.loadPosts(
-        activeSelectedPlace.lat,
-        activeSelectedPlace.lng,
-        activePostCategories
-      );
-      //prevents app from crashing, given theres an error
-      if (error) {
-        console.error(error);
-        setUserPosts([]);
-        return;
-      }
-      //this saves the posts into the satate, 
-      setUserPosts(data || []);
-      //catch block to show errors
-    } catch (e) {
-      console.error(e);
-      setUserPosts([]);
-    }
-  };
 
-  loadNearbyUserPosts();
-}, [activeSelectedPlace, activePostCategories]);
+// If a place was selected by another screen (like Community -> View Location),
+// animate the map to that location so the marker is visible immediately.
+useEffect(() => {
+  if (activeSelectedPlace?.lat != null && activeSelectedPlace?.lng != null && activeMapRef.current) {
+    animateToRegion(activeMapRef, activeSelectedPlace.lat, activeSelectedPlace.lng);
+  }
+}, [activeSelectedPlace, activeMapRef]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -275,7 +250,7 @@ useEffect(() => {
                 animateToRegion(activeMapRef, p.latitude, p.longitude); //populates the map with markers
                 const enrichedPoi = await enrichPlaceFromMapPin({ //holds information such as: photos, reviews, open hours
                   //NOTE: The application does not need to receive location information unless a user presses on a specific marker
-                  ...poiPlace,
+                  poiPlace,
                   address: p.address,
                   popularity: p.original?.properties?.rank?.popularity,
                 });
@@ -286,6 +261,7 @@ useEffect(() => {
             />
           ))}
           
+          {/* This marker is used for places selected from search/community params. */}
           {activeSelectedPlace && !isSelectedPlaceFromPresetMarkers && (
             <Marker 
               coordinate={{
@@ -293,6 +269,12 @@ useEffect(() => {
                 longitude: activeSelectedPlace.lng,
               }}
               title={activeSelectedPlace.name}
+              description={activeSelectedPlace.description}
+              onPress={() => {
+                // Re-open the same place info in the parent screen card.
+                onMarkerPress(activeSelectedPlace);
+                activeSetSelectedPlace(activeSelectedPlace);
+              }}
             />
           )}
 

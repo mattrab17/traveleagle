@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react";
-import {Image,Modal, ScrollView,StyleSheet,Text,TouchableOpacity,View,
-} from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { ActivityIndicator, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Feather from "@expo/vector-icons/Feather";
+import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
+import { supabase } from "@/lib/supabase";
 import {
   BACKGROUND_COLOR,
   ORANGE_COLOR,
@@ -10,59 +12,163 @@ import {
   WHITE_TEXT_COLOR,
 } from "../../constants/colors";
 
-type EventItem = { //contains properties of an event
+// Unified model for both source types shown in Community:
+// 1) TravelEagle events from CommunityEvents
+// 2) User-created posts from user_posts
+type EventItem = {
   id: string;
   title: string;
   category: string;
   date: string;
   location: string;
-  attending: string;
   description: string;
-  image?: any;
+  lat?: number | null;
+  lng?: number | null;
+  imageUri?: string | null;
+  createdBy?: string | null;
+  source: "TravelEagle" | "Users";
 };
 
-//hard coded filters
-const categories = ["All", "Festival", "Carnival", "Sports", "Holiday"];
-
-//example event
-const events: EventItem[] = [
-  {
-    id: "1",
-    title: "NYIT Movie Night",
-    category: "Holiday",
-    date: "July 1st, 2026",
-    location: "Central Park, New York",
-    attending: "280 attending",
-    description:
-      "Join us for a movie night!",
-    image: { uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyma3eKhr2aLKUgxDTlgMhYYJw3N1O9RRfRg&s" },
-  },
- 
-];
-
 export default function CommunityPage() {
-  const [selectedCategory, setSelectedCategory] = useState("All"); //sets the visibility of a category
-  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null); //sets the visiblity of an event card
+  const router = useRouter();
+  // Top-level source filters: show all content, only TravelEagle events, or only user posts.
+  const sourceFilters: Array<"All" | "TravelEagle" | "Users"> = ["All", "TravelEagle", "Users"];
+  const [selectedSource, setSelectedSource] = useState<"All" | "TravelEagle" | "Users">("All");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
+  const [posts, setPosts] = useState<EventItem[]>([]);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(false);
 
-  const filteredEvents = useMemo(() => {
-    if (selectedCategory === "All") return events; //if All is selected, show all the events
-    return events.filter((event) => event.category === selectedCategory); //otherwise, filter based on a specific category
-  }, [selectedCategory]);
+  // Convert a user_posts row into the UI shape used by this screen.
+  const mapUserPostToEventItem = (post: any): EventItem => ({
+    id: String(post.id ?? post.post_id ?? Math.random()),
+    title: post.place_name || "Untitled Post",
+    category: post.category || "Uncategorized",
+    date: post.created_at ? new Date(post.created_at).toLocaleDateString() : "Unknown date",
+    location: post.address || "No address provided",
+    description: post.description || "No description provided.",
+    lat: typeof post.post_lat === "number" ? post.post_lat : null,
+    lng: typeof post.post_long === "number" ? post.post_long : null,
+    imageUri: post.image_url || null,
+    createdBy: post.created_by || null,
+    source: "Users",
+  });
+
+  // Convert a CommunityEvents row into the same UI shape.
+  const mapCommunityEventToEventItem = (event: any): EventItem => ({
+    id: `event-${String(event.id ?? Math.random())}`,
+    title: event.event_name || "Untitled Event",
+    category: event.event_category || "Uncategorized",
+    date: event.event_date ? new Date(event.event_date).toLocaleDateString() : "Unknown date",
+    location: event.event_address || "No address provided",
+    description: event.event_description || "No description provided.",
+    lat: typeof event.event_lat === "number" ? event.event_lat : null,
+    lng: typeof event.event_lng === "number" ? event.event_lng : null,
+    imageUri: event.event_image_url || null,
+    createdBy: event.created_by || null,
+    source: "TravelEagle",
+  });
+
+  // Load both data sources from Supabase and combine them into one list for rendering.
+  // We keep a shared shape to simplify filtering and card rendering.
+  const loadPosts = useCallback(async () => {
+    setIsLoadingPosts(true);
+    const [userPostsResult, communityEventsResult] = await Promise.all([
+      supabase.from("user_posts").select("*").order("created_at", { ascending: false }),
+      supabase.from("CommunityEvents").select("*").order("event_date", { ascending: false }),
+    ]);
+    setIsLoadingPosts(false);
+    if (userPostsResult.error || communityEventsResult.error) {
+      console.error("Failed to load community content:", {
+        userPostsError: userPostsResult.error,
+        communityEventsError: communityEventsResult.error,
+      });
+    }
+
+    const normalizedUserPosts: EventItem[] = (userPostsResult.data || []).map(mapUserPostToEventItem);
+    const normalizedEvents: EventItem[] = (communityEventsResult.data || []).map(mapCommunityEventToEventItem);
+
+    setPosts([...normalizedEvents, ...normalizedUserPosts]);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadPosts();
+    }, [loadPosts])
+  );
+
+  // Step 1: Filter content by source (All / TravelEagle / Users).
+  const sourceScopedPosts = useMemo(() => {
+    if (selectedSource === "All") return posts;
+    return posts.filter((post) => post.source === selectedSource);
+  }, [posts, selectedSource]);
+
+  // Step 2: Build category pills from the currently visible source data.
+  const categories = useMemo(() => {
+    const dynamicCategories = Array.from(new Set(sourceScopedPosts.map((post) => post.category).filter(Boolean)));
+    return ["All", ...dynamicCategories];
+  }, [sourceScopedPosts]);
+
+  // Step 3: Filter by category inside the selected source.
+  const displayedPosts = useMemo(() => {
+    if (selectedCategory === "All") return sourceScopedPosts;
+    return sourceScopedPosts.filter((event) => event.category === selectedCategory);
+  }, [selectedCategory, sourceScopedPosts]);
+
+  const onSourceChange = (source: "All" | "TravelEagle" | "Users") => {
+    setSelectedSource(source);
+    setSelectedCategory("All");
+  };
+
+  // Send selected event coordinates to the interactive map screen.
+  // HomeScreen reads these params and centers a marker on that location.
+  const openEventOnMap = (event: EventItem) => {
+    if (event.lat == null || event.lng == null) return;
+    setSelectedEvent(null);
+    router.push({
+      pathname: "/(main_navigation)/(interactive_map)/HomeScreen",
+      params: {
+        name: event.title,
+        lat: String(event.lat),
+        lng: String(event.lng),
+        description: event.description,
+        address: event.location,
+      },
+    });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.page}>
         <View style={styles.headerRow}>
           <Feather name="users" size={20} color={WHITE_TEXT_COLOR} />
-          <Text style={styles.headerTitle}>Community Events</Text>
+          <Text style={styles.headerTitle}>Community Posts</Text>
+        </View>
+
+        <TouchableOpacity style={styles.createPostButton} onPress={() => router.push("/(community)/CreatePostPage")}>
+          <Feather name="plus-circle" size={16} color={WHITE_TEXT_COLOR} />
+          <Text style={styles.createPostButtonText}>Create Post</Text>
+        </TouchableOpacity>
+
+        <View style={styles.categoryBar}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
+            {sourceFilters.map((source) => {
+              const active = source === selectedSource;
+              return (
+                <TouchableOpacity
+                  key={source}
+                  style={[styles.categoryPill, active && styles.categoryPillActive]}
+                  onPress={() => onSourceChange(source)}
+                >
+                  <Text style={[styles.categoryText, active && styles.categoryTextActive]}>{source}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
 
         <View style={styles.categoryBar}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryRow}
-          >
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
             {categories.map((category) => {
               const active = category === selectedCategory;
               return (
@@ -71,9 +177,7 @@ export default function CommunityPage() {
                   style={[styles.categoryPill, active && styles.categoryPillActive]}
                   onPress={() => setSelectedCategory(category)}
                 >
-                  <Text style={[styles.categoryText, active && styles.categoryTextActive]}>
-                    {category}
-                  </Text>
+                  <Text style={[styles.categoryText, active && styles.categoryTextActive]}>{category}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -81,9 +185,17 @@ export default function CommunityPage() {
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
-          {filteredEvents.map((event) => (
+          {isLoadingPosts ? (
+            <ActivityIndicator color={WHITE_TEXT_COLOR} style={{ marginTop: 30 }} />
+          ) : null}
+
+          {!isLoadingPosts && displayedPosts.length === 0 ? (
+            <Text style={styles.emptyText}>No posts found for this category.</Text>
+          ) : null}
+
+          {displayedPosts.map((event) => (
             <TouchableOpacity key={event.id} style={styles.card} onPress={() => setSelectedEvent(event)}>
-              {event.image ? <Image source={event.image} style={styles.cardImage} /> : null}
+              {event.imageUri ? <Image source={{ uri: event.imageUri }} style={styles.cardImage} /> : null}
 
               <View style={styles.cardBody}>
                 <Text style={styles.cardTitle}>{event.title}</Text>
@@ -91,6 +203,9 @@ export default function CommunityPage() {
                 <View style={styles.metaRow}>
                   <View style={styles.tag}>
                     <Text style={styles.tagText}>{event.category}</Text>
+                  </View>
+                  <View style={styles.sourceTag}>
+                    <Text style={styles.sourceTagText}>{event.source}</Text>
                   </View>
                 </View>
 
@@ -102,11 +217,6 @@ export default function CommunityPage() {
                 <View style={styles.infoRow}>
                   <Feather name="map-pin" size={14} color="#9DB4D8" />
                   <Text style={styles.infoText}>{event.location}</Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <Feather name="users" size={14} color="#9DB4D8" />
-                  <Text style={styles.infoText}>{event.attending}</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -122,8 +232,8 @@ export default function CommunityPage() {
                 <Feather name="x" size={18} color={WHITE_TEXT_COLOR} />
               </TouchableOpacity>
 
-              {selectedEvent.image ? (
-                <Image source={selectedEvent.image} style={styles.modalImage} />
+              {selectedEvent.imageUri ? (
+                <Image source={{ uri: selectedEvent.imageUri }} style={styles.modalImage} />
               ) : null}
 
               <View style={styles.modalBody}>
@@ -143,22 +253,14 @@ export default function CommunityPage() {
                   <Text style={styles.modalInfoText}>{selectedEvent.location}</Text>
                 </View>
 
-                <View style={styles.infoRow}>
-                  <Feather name="users" size={15} color={ORANGE_COLOR} />
-                  <Text style={styles.modalInfoText}>{selectedEvent.attending}</Text>
-                </View>
-
-                <Text style={styles.aboutTitle}>About this Event</Text>
+                <Text style={styles.aboutTitle}>About this Post</Text>
                 <Text style={styles.aboutText}>{selectedEvent.description}</Text>
 
-                <View style={styles.buttonRow}>
-                  <TouchableOpacity style={styles.primaryButton}>
+                {selectedEvent.lat != null && selectedEvent.lng != null ? (
+                  <TouchableOpacity style={styles.primaryButton} onPress={() => openEventOnMap(selectedEvent)}>
                     <Text style={styles.primaryButtonText}>View Location</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.secondaryButton}>
-                    <Text style={styles.secondaryButtonText}>Add to Itinerary</Text>
-                  </TouchableOpacity>
-                </View>
+                ) : null}
               </View>
             </View>
           )}
@@ -188,6 +290,22 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: WHITE_TEXT_COLOR,
     fontSize: 29,
+    fontWeight: "700",
+  },
+  createPostButton: {
+    backgroundColor: "#2f57d0",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginBottom: 10,
+  },
+  createPostButtonText: {
+    color: WHITE_TEXT_COLOR,
+    fontSize: 15,
     fontWeight: "700",
   },
   categoryRow: {
@@ -262,6 +380,22 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
   },
+  sourceTag: {
+    alignSelf: "flex-start",
+    backgroundColor: "#18365d",
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginBottom: 6,
+    marginLeft: 6,
+    borderWidth: 1,
+    borderColor: "#2b517f",
+  },
+  sourceTagText: {
+    color: "#B9CAE4",
+    fontSize: 11,
+    fontWeight: "700",
+  },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -270,6 +404,12 @@ const styles = StyleSheet.create({
   },
   infoText: {
     color: "#9DB4D8",
+    fontSize: 15,
+  },
+  emptyText: {
+    color: "#9DB4D8",
+    textAlign: "center",
+    marginTop: 30,
     fontSize: 15,
   },
   modalOverlay: {
@@ -324,32 +464,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
   },
-  buttonRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 14,
-  },
   primaryButton: {
-    flex: 1,
+    marginTop: 14,
     backgroundColor: "#3858D6",
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: "center",
   },
   primaryButtonText: {
-    color: WHITE_TEXT_COLOR,
-    fontWeight: "700",
-  },
-  secondaryButton: {
-    flex: 1,
-    backgroundColor: "#17365f",
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#2c4b77",
-  },
-  secondaryButtonText: {
     color: WHITE_TEXT_COLOR,
     fontWeight: "700",
   },
