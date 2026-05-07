@@ -69,7 +69,6 @@ export default function AIDiscoveryScreen()
     }, []);
     //CONTROLS THE POPUP AFTER PRESSING ADD TRIP
     const [isAddTripVisible, setIsAddTripVisible] = useState(false);
-    
     //CONTROLS THE TIME PICKER AFTER PRESSING ADD TRIP
     const [showTimePicker, setShowTimePicker] = useState(false);
     // State to store the actual Date/Time object
@@ -92,9 +91,9 @@ export default function AIDiscoveryScreen()
     };
   const [trip, setTrip] = useState<any>(null);
   const [selectedDay, setSelectedDay] = useState<number>(1);
-
-      
-
+  const [mode, setMode] = useState<"itinerary" | "discovery">("itinerary");
+  const [itinerary, setItinerary] = useState<any>([]);
+  const [currentDay, setCurrentDay] = useState(0);
     async function handleSend(){
         const trimmed = inputText.trim();
                     if (trimmed.length === 0) {
@@ -121,7 +120,7 @@ export default function AIDiscoveryScreen()
                     const coords = data.map(s => ({latitude : s.lat, longitude: s.lng}));
                     if (coords.length > 0){
                         mapRef.current?.fitToCoordinates(coords, {
-                            edgePadding: {top: 50, bottom: 50, right: 50, left: 50},
+                            edgePadding: {top: 75, bottom: 75, right: 75, left: 75},
                             animated: true
                         })
                     }
@@ -151,18 +150,54 @@ export default function AIDiscoveryScreen()
     }
 
     useEffect(() => {
-        async function loadTrip() {
-            const { data } = await tripController.loadTrip(Number(id));
-            setTrip(data);
+        async function loadData() {
+            const { data: tripData } = await tripController.loadTrip(Number(id));
+            setTrip(tripData);
+            const {data: itineraryData} = await itineraryController.loadAllItems(Number(id));
+            setItinerary(itineraryData);
           }
-          loadTrip();
+          loadData();
     }, [id]);
 
-    const totalDays = tripController.getTotalDays(trip);
+    useEffect(() => {
+      if (mode === "itinerary"){
+        const coords = itineraryForCurrentDay.map(item => ({latitude: item.place.lat, longitude: item.place.lng}));
+        if (itineraryForCurrentDay.length > 0){
+          
+          const item = itineraryForCurrentDay[0];
+          setSelectedIndex(0);
+          setSelectedPlace({
+            place_name: item.place.name,
+            place_address: item.place.address,
+            notes: item.notes,
+            rating: item.place.place_data?.rating || null,
+            place_data: item.place.place_data,
+            lat: item.place.lat,
+            lng: item.place.lng,
+          });
+          
+        
+        if (coords.length > 0){
+          mapRef.current?.fitToCoordinates(coords, {
+                            edgePadding: {top: 100, bottom: 400, right: 50, left: 50},
+                            animated: true
+                        });
+      }
+    }
+  }
+    }, [mode, currentDay, itinerary]);
 
+   
+
+
+    const totalDays = tripController.getTotalDays(trip);
+    const itineraryForCurrentDay = currentDay === 0 ? itinerary : itinerary.filter(item => item.day_number === currentDay);
+
+ 
    return(
     <SafeAreaView style={{ flex: 1, backgroundColor: BACKGROUND_COLOR }}>
         
+            
         {/* Header */}
         <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: '#7691bc' }}>
             <TouchableOpacity 
@@ -184,7 +219,31 @@ export default function AIDiscoveryScreen()
                 AI Discovery
             </Text>
         </View>
-        <View style={{flex:1}}>
+        {mode === "itinerary" &&
+        <View style={{}}>
+        <ScrollView horizontal style={{paddingHorizontal:20, paddingVertical: 10,}} showsHorizontalScrollIndicator={false}>
+                <View style={{flexDirection: 'row', gap: 5}}>
+                    <TouchableOpacity 
+                        style={{borderRadius: 20, backgroundColor: currentDay === 0 ? ORANGE_COLOR : '#9E9E9E', paddingVertical: 10, paddingHorizontal:20, }}
+                        onPress={()=>setCurrentDay(0)}>
+                            <Text style={{color: WHITE_TEXT_COLOR}}>All</Text>
+                        </TouchableOpacity>
+                    {Array.from({length: totalDays}, (_, i) => i+1).map((day) => (
+                        <TouchableOpacity 
+                        style={{borderRadius: 20, backgroundColor: currentDay === day ? ORANGE_COLOR : '#9E9E9E', paddingVertical: 10, paddingHorizontal:20, }}
+                        key={day}
+                        onPress={()=>setCurrentDay(day)}
+                        >
+                            <Text style={{color: WHITE_TEXT_COLOR}}>Day {day}</Text>
+                        </TouchableOpacity>
+                                   
+                                ))}
+                    
+                </View>
+            </ScrollView></View>
+}
+        <View style={{flex:1}}> 
+          
                 <MapView
                 ref={mapRef}
                 provider={PROVIDER_GOOGLE}
@@ -198,8 +257,39 @@ export default function AIDiscoveryScreen()
                     longitudeDelta: 0.1,
                 }}
                 >
-                
-                    {suggestions.map((place, index) => (
+                  {mode === "itinerary" ? (itineraryForCurrentDay.map((item,index) => (
+                    <Marker
+                    key={item.id}
+                    coordinate={{latitude: item.place.lat, longitude: item.place.lng}}
+                    onPress={() => {
+                      setSelectedPlace({
+                        place_name: item.place.name,
+                        place_address: item.place.address,
+                        notes: item.notes,
+                        rating: item.place.place_data?.rating || null,
+                        place_data: item.place.place_data,
+                        lat: item.place.lat,
+                        lng: item.place.lng,
+                      });
+                      setSelectedIndex(index);
+                      bottomSheetRef.current?.close();
+                    }}
+                    >
+                       <View style={{
+                        backgroundColor: ORANGE_COLOR,
+                        width: 30,
+                        height: 30,
+                        borderRadius: 14,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        borderWidth: 2,
+                        borderColor: "white",
+                      }}>
+                      <Text style={{fontSize:12, color:"#005eff", fontWeight: 800}}>{index +1}</Text>
+                      </View> 
+                    </Marker>
+                  ))) : (
+                    suggestions.map((place, index) => (
                         <Marker
                         key={index}
                         coordinate={{latitude: place.lat, longitude: place.lng}}
@@ -207,62 +297,127 @@ export default function AIDiscoveryScreen()
                         onPress={()=> {
                             setSelectedPlace(place)
                             bottomSheetRef.current?.close();
-                        }
-                        }
-
-                        >
-
-                        </Marker>
-                    )) }
+                        }}>
+                       </Marker>
+                    )) 
+                  )}
                 </MapView>
+                <TouchableOpacity
+               onPress={() => {
+                  setMode(mode === "itinerary" ? "discovery" : "itinerary");
+                  setSelectedPlace(null);
+               }}
+              style={{
+                backgroundColor: mode === "itinerary" ? "#7b35f5" : ORANGE_COLOR,
+                position:"absolute",
+                top:20,
+                right: 20,
+                width: 50,
+                height:50,
+                paddingLeft: 4,
+                borderRadius: 30,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >{mode === "itinerary" ? (
+              <Ionicons name="sparkles" color="white" size={27}></Ionicons>  ) : (<Ionicons name="map" color="white" size={27}></Ionicons>)}
+            </TouchableOpacity>
+
                 {selectedPlace && (
                                 <>
-                                 <TouchableOpacity style={{
-                                    position: "absolute", bottom: 375, right: 20, zIndex: 1,
-                                  }}
+                                 <TouchableOpacity style={[styles.closeButton, mode==="itinerary" ? styles.closeButtonItinerary : styles.closeButtonDiscovery]}
                                   onPress={() => {
                                     setSelectedPlace(null);
                                     bottomSheetRef.current?.snapToIndex(1);
                                   }}
                                   >
-                                    <Ionicons name="close-circle" size={35} color="#3858D6"></Ionicons>
+                                    <Ionicons name="close-circle-sharp" size={35} color="#3858D6"></Ionicons>
                                   </TouchableOpacity>
-                                <View style={styles.popUpCard}>
+                                <View style={[styles.popUpCard, mode === "itinerary" ? styles.popUpCardItinerary : styles.popUpCardDiscovery]}>
                                   {/* Card Info */}
                                  
                                   <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 5, marginBottom: 12}}>
                                     <TouchableOpacity
                                     onPress={() => {
-                                        const newIndex = selectedIndex > 0 ? selectedIndex - 1 : suggestions.length - 1;
+
+                                        const list = mode === "itinerary" ? itineraryForCurrentDay : suggestions;
+                                        const newIndex = selectedIndex > 0 ? selectedIndex - 1 : list.length - 1;
                                         setSelectedIndex(newIndex);
-                                        setSelectedPlace(suggestions[newIndex])
-                                        mapRef.current?.animateToRegion({
-                                            latitude: suggestions[newIndex].lat,
-                                            longitude: suggestions[newIndex].lng,
+                                        if (mode === "itinerary"){
+                                          const item = list[newIndex]
+                                          setSelectedPlace({
+                                              place_name: item.place.name,
+                                              place_address: item.place.address,
+                                              notes: item.notes,
+                                              rating: item.place.place_data?.rating || null,
+                                              place_data: item.place.place_data,
+                                              lat: item.place.lat,
+                                              lng: item.place.lng,
+                                            });
+                                            mapRef.current?.animateToRegion({
+                                            latitude: item.place.lat - 0.005,
+                                            longitude: item.place.lng,
+                                            latitudeDelta: 0.05,
+                                            longitudeDelta: 0.05
+                                        }, 500)
+                                    }
+                                    else{
+                                      setSelectedPlace(list[newIndex]);
+                                       mapRef.current?.animateToRegion({
+                                            latitude: list[newIndex].lat,
+                                            longitude: list[newIndex].lng,
                                             latitudeDelta: 0.15,
                                             longitudeDelta: 0.01
                                         }, 500)
-                                    }}
+                                    }
+                                  }
+                                        }
+                                        
                                     >
                                         <Ionicons name="chevron-back-sharp" color="white" size={20}></Ionicons>
                                     </TouchableOpacity>
                                     <Text style={{color: WHITE_TEXT_COLOR, alignItems: 'center', fontSize: 13}}>
-                                      {selectedIndex + 1} of 5
+                                      {selectedIndex + 1} of {mode === "itinerary" ? itineraryForCurrentDay.length : suggestions.length}
                                     </Text>
                                     <TouchableOpacity
                                     onPress={() => {
-                                        const newIndex = selectedIndex < suggestions.length - 1 ? selectedIndex + 1 : 0;
+
+                                        const list = mode === "itinerary" ? itineraryForCurrentDay : suggestions;
+                                        const newIndex = selectedIndex < list.length - 1 ? selectedIndex + 1 : 0;
                                         setSelectedIndex(newIndex);
-                                        setSelectedPlace(suggestions[newIndex])
-                                        mapRef.current?.animateToRegion({
-                                            latitude: suggestions[newIndex].lat,
-                                            longitude: suggestions[newIndex].lng,
+                                        if (mode === "itinerary"){
+                                          const item = list[newIndex]
+                                          setSelectedPlace({
+                                              place_name: item.place.name,
+                                              place_address: item.place.address,
+                                              notes: item.notes,
+                                              rating: item.place.place_data?.rating || null,
+                                              place_data: item.place.place_data,
+                                              lat: item.place.lat,
+                                              lng: item.place.lng,
+                                            });
+                                            mapRef.current?.animateToRegion({
+                                            latitude: item.place.lat - 0.005,
+                                            longitude: item.place.lng,
+                                            latitudeDelta: 0.05,
+                                            longitudeDelta: 0.05
+                                        }, 500)
+                                    }
+                                    else{
+                                      setSelectedPlace(list[newIndex]);
+                                       mapRef.current?.animateToRegion({
+                                            latitude: list[newIndex].lat,
+                                            longitude: list[newIndex].lng,
                                             latitudeDelta: 0.15,
                                             longitudeDelta: 0.01
                                         }, 500)
-                                    }}>
-                                        <Ionicons name="chevron-forward-sharp" color="white" size={20}></Ionicons>
-                                    </TouchableOpacity>
+                                    }
+                                  }
+                                        }
+                                        
+                                    >
+                                      <Ionicons name="chevron-forward-sharp" color="white" size={20}/>
+                                      </TouchableOpacity>
                                   </View>
                                   <View style={styles.cardHeader}>
                                     {/* SET THE PLACE NAME HERE */}
@@ -284,17 +439,18 @@ export default function AIDiscoveryScreen()
                                   {/* Interactive Button Row */}
                                   
                                   <Text style={{color: "white", marginBottom: 10, fontSize: 13, fontStyle: "italic"}}>{selectedPlace.notes}</Text>
-                                  <View style={styles.buttonRow}>
-                                    
+                                   {mode === "discovery" && ( 
+                                    <View style={styles.buttonRow}>
                                     
                                     {/* ADD TRIP BUTTON */}
+                                   
                                     <TouchableOpacity 
                                       style={styles.addBtn}
                                       onPress={() => setIsAddTripVisible(true)}
                                     >
                                       <Text style={styles.btnText}>Add to Itinerary</Text>
                                     </TouchableOpacity>
-                                  </View>
+                                  </View> )}
                                 </View>
                               </>)}
         <View>
@@ -328,7 +484,7 @@ export default function AIDiscoveryScreen()
         </View> */}
 
         {/* Main Content */}
-
+        {mode === "discovery" && (
         <BottomSheet
         ref={bottomSheetRef}
           snapPoints={["10%", "50%", "89%"]}
@@ -373,7 +529,8 @@ export default function AIDiscoveryScreen()
 
         </View>
     </BottomSheet> 
-    {isSheetOpen && !selectedPlace && (
+        )}
+    {mode === "discovery" && isSheetOpen && !selectedPlace && (
     <KeyboardAvoidingView
     behavior={Platform.OS === "ios" ? "padding" : "height"}
     keyboardVerticalOffset={133}
@@ -502,9 +659,24 @@ const styles = StyleSheet.create({
     padding: 15,
     borderWidth: 1,
     borderColor: '#ffffff30',
-    zIndex: 100,
+    zIndex: 100,          
+  },
+  popUpCardDiscovery:{
     maxHeight: 400,
-    minHeight: 350,          
+    minHeight: 350, 
+  },
+  popUpCardItinerary:{
+    maxHeight: 350,
+    minHeight: 350,
+  },
+  closeButton:{
+    position: "absolute",  zIndex: 1,
+  },
+  closeButtonDiscovery:{
+    bottom: 390, right: 20,
+  },
+  closeButtonItinerary:{
+    bottom: 380, right: 20
   },
   cardHeader: {
     flexDirection: 'row',

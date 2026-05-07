@@ -132,10 +132,10 @@ export const itineraryController = {
 
         }
     },
-    async generateAIItinerary(trip: any, numDays, interests, onStatus?){
+    async generateAIItinerary(trip: any, numDays, interests, pace, onStatus?){
         try{
             onStatus?.("Generating Itinerary...")
-            const result = await generateItineraryFromGemini(trip, numDays, interests);
+            const result = await generateItineraryFromGemini(trip, numDays, interests, pace);
             
             // console.log('Gemini Result:', JSON.stringify(result, null, 2))
             onStatus?.("Getting activities...")
@@ -250,7 +250,7 @@ export const itineraryController = {
                                 trip_id: tripId,
                                 place_id: place.places_id,
                                 day_number: dayNumber,
-                                // notes: suggestion.notes,
+                                time_slot: formattedTime,
                                 order_index: itemsOnDay.length,
                             });
                             return{error:null}

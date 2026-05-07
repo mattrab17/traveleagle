@@ -21,28 +21,28 @@ export function AuthProvider({ children}: PropsWithChildren ){
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    async function loadUser(authUser){
+        const {data} = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", authUser.id)
+        .single();
 
+        setUser({...authUser, ...data});
+        setIsLoading(false);
+    }
     useEffect(()=>{
-        supabase.auth.getUser().then(({data: {user} }) => {
-            setUser(user)
-            if(user){
-                setIsLoggedIn(true)
-            }
-            else{
-                setIsLoggedIn(false);
-            }
-        });
         const {data: { subscription }} = supabase.auth.onAuthStateChange(
             (event, session) => {
             if (session && session.user){
-                setUser(session.user)
                 setIsLoggedIn(true);
+                loadUser(session.user)
             }
             else {
                 setUser(null)
                 setIsLoggedIn(false);
             }
-            setIsLoading(false);
+            
     })
     return () => {
       subscription.unsubscribe()

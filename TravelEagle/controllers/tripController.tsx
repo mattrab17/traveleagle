@@ -55,6 +55,30 @@ export const tripController = {
      getUpcomingTrips(trips: any[]){
         const today = new Date().toISOString().split('T')[0];
         return trips.filter(trip => trip.end_date >= today).sort((tripA, tripB) => tripA.start_date.localeCompare(tripB.start_date));
+     },
+
+     async deleteTrip(tripId){
+        try{
+            await tripQueries.deleteItineraryItems(tripId);
+            await tripQueries.deleteTrip(tripId);
+
+            return { error: null}
+        }
+        catch(error){
+            console.error("Failed to delete trip:", error)
+            return {error};
+        }
+     },
+
+     async updateTrip(tripId, updates){
+        try{
+            const data = await tripQueries.update(tripId, updates);
+            return {data, error:null};
+        }
+        catch(error){
+            console.error("Failed to update trip:", error);
+            return{data:null,error};
+        }
      }
 }
     export function goToPreviousMonth(currentMonth: Date) {

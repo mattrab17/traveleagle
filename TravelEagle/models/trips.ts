@@ -45,7 +45,13 @@ export const tripQueries = {
         if (error) throw error;
         return data;
     },
-    async update(tripId: number, updates: Partial<Trip>): Promise<Trip>{
+    async update(tripId: number, updates: {
+        destination?: string;
+        start_date?: string;
+        end_date?: string;
+        lat?: number;
+        lng?: number;
+    }){
         const { data, error } = await supabase 
         .from('trips')
         .update(updates)
@@ -56,14 +62,26 @@ export const tripQueries = {
         if (error) throw error;
         return data;
     },
-    async delete(tripId: number): Promise<void>{
+   
+    async deleteTrip(tripId: number){
         const {error} = await supabase
         .from('trips')
         .delete()
         .eq('trip_id', tripId);
 
         if (error) throw error;
+    },
+    async deleteItineraryItems(tripId: number){
+        const { error } = await supabase
+        .from("itinerary_items")
+        .delete()
+        .eq("trip_id", tripId);
+        
+        if (error) throw error;
     }
+
+
+
 
     };
 

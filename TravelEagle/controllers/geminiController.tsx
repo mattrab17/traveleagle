@@ -89,28 +89,20 @@ import {
   };
 const model = 'gemini-3-flash-preview';
 
-function buildUserPrompt(trip, numDays, interests): string{
-
-
-  const pace = trip.pace ? trip.pace : 'Moderate: (3-4) Activities Per Day'
-  const interestsString = trip.interests?.length ? trip.interests.join(", ") : "sightseeing, hiking, food, culture, landmarks, architecture";
-  
-  return `
-            Plan a ${numDays} day trip to ${trip.destination}
-
+function buildUserPrompt(trip, numDays, interests, pace): string{
+  const userPace = pace || 'Moderate: (5-6) Activities Per Day'
+  const interestsString = interests?.length ? interests.join(", ") : "sightseeing, hiking, food, culture, landmarks, architecture";
+  return `  Plan a ${numDays} day trip to ${trip.destination}
             TRIP DETAILS:
             -Dates: ${trip.start_date} & ${trip.end_date}
             -Interests: ${interestsString}
-            -Pace: ${pace}
-
-            Generate exactly ${numDays} days with the approximate nunber of activities based on the given pace.
-
-            `
+            -Pace: ${userPace}
+            Generate exactly ${numDays} days with the approximate nunber of activities based on the given pace.`
 }
 
-export async function generateItineraryFromGemini(trip: any, numDays, interests): Promise<any>{
+export async function generateItineraryFromGemini(trip: any, numDays, interests, pace): Promise<any>{
     
-    const userPrompt = buildUserPrompt(trip, numDays, interests);
+    const userPrompt = buildUserPrompt(trip, numDays, interests, pace);
 
     try{
       const response = await ai.models.generateContent({

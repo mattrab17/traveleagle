@@ -1,6 +1,6 @@
 import { Stack, useRootNavigationState, useRouter } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { View } from "react-native";
+import { View, Image} from "react-native";
 import { BACKGROUND_COLOR } from "../app/constants/colors";
 import { AuthProvider, useAuth } from "./(authentication)/Auth";
 import { useEffect } from "react";
@@ -9,7 +9,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 
 function RootNavigatior(){
-  const {isLoggedIn, isLoading} = useAuth();
+  const {isLoggedIn, isLoading, user} = useAuth();
   const router = useRouter();
 
 
@@ -18,14 +18,28 @@ function RootNavigatior(){
  useEffect(()=>{
     if (isLoading) return;
     setTimeout(()=> {
-    if(isLoggedIn){
-      router.replace('/HomeScreen')
+    if(!isLoggedIn){
+      router.replace('/WelcomePage')
+    } else if (!user?.interests || user.interests.length === 0 || !user?.pace){
+      router.replace('/components/Onboarding')
     }
     else{
-      router.replace('/WelcomePage')
+      router.replace('/HomeScreen')
     } }, 0);
-}, [isLoggedIn, isLoading,]);
+}, [isLoggedIn, isLoading, user]);
 
+/* if(isLoading){
+  return(
+    <View style={{flex:1, backgroundColor: BACKGROUND_COLOR, justifyContent: 'center', alignItems: 'center'}}>
+      <Image
+      source={require("../../assets/images/traveleaglelogo.png")}
+      style={{width: 100, height: 100}}>
+
+
+      </Image>
+    </View>
+  )
+} */
   return (
     <Stack
           screenOptions={{
