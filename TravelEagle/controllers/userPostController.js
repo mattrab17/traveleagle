@@ -29,6 +29,3 @@ async function loadPosts(lat, lng, categories = []){
 export const userPostController = {
   loadPosts
 }
-
-
-

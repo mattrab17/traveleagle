@@ -34,6 +34,18 @@ export default {
           "locationAlwaysAndWhenInUsePermission": "Allow TravelEagle to use your location."
         }
       ],
+      [ "expo-image-picker", 
+        {
+          "photosPermission": "Allow TravelEagle to access your camera roll",
+          "colors": {
+            "cropToolbarColor": "#000000"
+          },
+          "dark": {
+            "colors": {
+              "cropToolbarColor": "#000000"
+            }
+          }
+        }],
       [
         "expo-splash-screen",
         {

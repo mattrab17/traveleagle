@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -9,6 +9,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Image
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Feather from "@expo/vector-icons/Feather";
@@ -23,6 +24,8 @@ import { useAuth } from "../../(authentication)/Auth";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 
+import * as ImagePicker from "expo-image-picker";
+
 export default function AccountSettings() {
   const { user, logOut } = useAuth();
   const router = useRouter();
@@ -35,9 +38,7 @@ export default function AccountSettings() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-const [userPosts, setUserPosts] = useState<any[]>([]);
-const [isLoadingPosts, setIsLoadingPosts] = useState(false);
-
+  const [profileImageUrl, setProfileImageUrl] = useState("");
 
   const username = useMemo(() => {
     return (
@@ -139,66 +140,90 @@ const [isLoadingPosts, setIsLoadingPosts] = useState(false);
     setIsEditModalVisible(false);
     Alert.alert("Success", "Account details saved.");
   }
+  // Load profile image URL 
+  useEffect(() => {
+  async function loadProfileImage() {
+    // If user or user ID is not available, skip loading
+    if (!user?.id) return;
+    // Fetch the avatar URL from the users table based on the user ID
+    const { data, error } = await supabase
+      .from("users")
+      .select("avatar_url")
+      .eq("id", user.id)
+      .single();
 
-  async function loadPreviousPosts() {
-  if (!user?.id) {
-    setUserPosts([]);
-    return;
+    if (error) {
+      console.log("Avatar load error:", error.message);
+      return;
+    }
+    // If an avatar URL exists, set it to state
+    if (data?.avatar_url) {
+      setProfileImageUrl(data.avatar_url);
+    }
   }
-
-  setIsLoadingPosts(true);
-
-  const { data, error } = await supabase
-    .from("user_posts")
-    .select("*")
-    .eq("created_by", user.id)
-    .order("created_at", { ascending: false });
-
-  setIsLoadingPosts(false);
-
-  if (error) {
-    Alert.alert("Error", "Could not load previous posts.");
-    console.error(error);
-    return;
-  }
-
-  setUserPosts(data || []);
-}
-
-useEffect(() => {
-  loadPreviousPosts();
+  
+  loadProfileImage();
 }, [user?.id]);
+// Handle profile photo change
+  async function handleChangeProfilePhoto() {
+    // Request permission to access media library
+  const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-async function deletePost(postId: string) {
-  Alert.alert(
-    "Delete Post",
-    "Are you sure you want to delete this post?",
-    [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          const { error } = await supabase
-            .from("user_posts")
-            .delete()
-            .eq("id", postId)
-            .eq("created_by", user?.id);
+  if (!permissionResult.granted) {
+    Alert.alert("Permission required", "Photo access is required.");
+    return;
+  }
+  // Open image picker
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ["images"],
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 1,
+  });
 
-          if (error) {
-            Alert.alert("Error", "Could not delete post.");
-            console.error(error);
-            return;
-          }
+  if (result.canceled) {
+    return;
+  }
 
-          setUserPosts((prevPosts) =>
-            prevPosts.filter((post) => post.id !== postId)
-          );
-        },
-      },
-    ]
-  );
+  const imageUri = result.assets[0].uri;
+  //changed to array buffer due to blob causing empty image to upload
+  const response = await fetch(imageUri);
+  const arrayBuffer = await response.arrayBuffer();
+
+  const filePath = `profile-pictures/${user.id}-${Date.now()}.jpg`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("avatars")
+    .upload(filePath, arrayBuffer, {
+      contentType: "image/jpeg",
+      upsert: true,
+    });
+
+  if (uploadError) {
+    Alert.alert("Upload failed", uploadError.message);
+    return;
+  }
+
+  const { data } = supabase.storage
+    .from("avatars")
+    .getPublicUrl(filePath);
+
+  const publicUrl = data.publicUrl;
+
+  const { error: tableUpdateError } = await supabase
+    .from("users")
+    .update({ avatar_url: publicUrl })
+    .eq("id", user.id);
+
+  if (tableUpdateError) {
+    Alert.alert("Profile update failed", tableUpdateError.message);
+    return;
+  }
+
+  setProfileImageUrl(publicUrl);
+  Alert.alert("Success", "Profile photo updated.");
 }
+  
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.page} contentContainerStyle={styles.content}>
@@ -216,12 +241,20 @@ async function deletePost(postId: string) {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.avatarWrap}>
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarText}>{avatarLetter}</Text>
-            </View>
-            <Text style={styles.avatarName}>{displayUsername}</Text>
-          </View>
+                  <View style={styles.avatarWrap}>
+          <View style={styles.avatarCircle}>
+          {profileImageUrl ? (
+            <Image source={{ uri: profileImageUrl }} style={styles.profileImage} />
+          ) : (
+            <Text style={styles.avatarText}>{avatarLetter}</Text>
+          )}
+        </View>
+
+         <TouchableOpacity style={styles.changePhotoBtn} onPress={handleChangeProfilePhoto}>
+            <Text style={styles.changePhotoText}>Change Photo</Text>
+          </TouchableOpacity>
+
+        </View>
 
           <Text style={styles.fieldLabel}>Username</Text>
           <TextInput value={displayUsername} editable={false} style={styles.readonlyInput} placeholderTextColor="#7D97BC" />
@@ -243,40 +276,15 @@ async function deletePost(postId: string) {
             <Text style={styles.infoValue}>1.0.0</Text>
           </View>
         </View>
-                <View style={styles.card}>
-          <Text style={styles.cardTitle}>Previous Posts</Text>
-
-          {isLoadingPosts ? (
-            <ActivityIndicator color={WHITE_TEXT_COLOR} />
-          ) : userPosts.length === 0 ? (
-            <Text style={styles.infoKey}>You have not created any posts yet.</Text>
-          ) : (
-            userPosts.map((post) => (
-              <View key={post.id} style={styles.postBox}>
-                <Text style={styles.postTitle}>
-                  {post.place_name || "Unnamed Place"}
-                </Text>
-
-                <Text style={styles.postText}>
-                  {post.address || "No address"}
-                </Text>
-
-                <Text style={styles.postText}>
-                  {post.description || "No description"}
-                </Text>
-
-                <Text style={styles.postCategory}>
-                  {post.category || "No category"}
-                </Text>
-                <TouchableOpacity
-                style={styles.deletePostButton}
-                onPress={() => deletePost(post.id)}
-              >
-                <Text style={styles.deletePostText}>Delete Post</Text>
-              </TouchableOpacity>
-              </View>
-            ))
-          )}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>My Posts</Text>
+          <Text style={styles.infoKey}>View, edit, and delete your post history.</Text>
+          <TouchableOpacity
+            style={styles.updateButton}
+            onPress={() => router.push("/(main_navigation)/(account)/MyPostHistory")}
+          >
+            <Text style={styles.updateButtonText}>My Post History</Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Security</Text>
@@ -336,7 +344,7 @@ async function deletePost(postId: string) {
               placeholderTextColor="#7D97BC"
               autoCapitalize="none"
             />
-
+            
             <Text style={[styles.fieldLabel, { marginTop: 12 }]}>New Password</Text>
             <TextInput
               value={editPassword}
@@ -443,6 +451,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
+     overflow: "hidden",
   },
   avatarText: {
     color: WHITE_TEXT_COLOR,
@@ -453,6 +462,19 @@ const styles = StyleSheet.create({
     color: WHITE_TEXT_COLOR,
     fontWeight: "700",
     fontSize: 17,
+  },
+    changePhotoBtn: {
+    marginTop: 10,
+    backgroundColor: "#2f57d0",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+
+  changePhotoText: {
+    color: WHITE_TEXT_COLOR,
+    fontWeight: "700",
+    fontSize: 13,
   },
   fieldLabel: {
     color: "#9DB4D8",
@@ -568,43 +590,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 14,
   },
-  postBox: {
-  backgroundColor: "#1f3f6b",
-  borderRadius: 10,
-  padding: 12,
-  marginTop: 10,
-},
-
-postTitle: {
-  color: WHITE_TEXT_COLOR,
-  fontSize: 17,
-  fontWeight: "700",
-  marginBottom: 4,
-},
-
-postText: {
-  color: "#bcd1ee",
-  fontSize: 14,
-  marginBottom: 4,
-},
-
-postCategory: {
-  color: ORANGE_COLOR,
-  fontSize: 13,
-  fontWeight: "700",
-  marginTop: 4,
-},
-deletePostButton: {
-  marginTop: 10,
-  backgroundColor: "#ff0d1f",
-  borderRadius: 8,
-  paddingVertical: 9,
-  alignItems: "center",
-},
-
-deletePostText: {
-  color: WHITE_TEXT_COLOR,
-  fontWeight: "700",
-  fontSize: 14,
+  profileImage: {
+  width: 58,
+  height: 58,
+  borderRadius: 29,
 },
 });
