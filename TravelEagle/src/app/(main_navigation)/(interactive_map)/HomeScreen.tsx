@@ -45,7 +45,7 @@ type SelectedPlaceType = { //describes the structure of a Place object
   formatted_address?: string;
   place_data?: any;
   geometry?: any;
-
+   image_url?: string; //stores the user uploaded image
 } | null;
 
 //Defines the UI labels for filters.
