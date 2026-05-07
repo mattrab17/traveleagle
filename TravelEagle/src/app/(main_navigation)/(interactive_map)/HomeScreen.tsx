@@ -45,6 +45,7 @@ type SelectedPlaceType = { //describes the structure of a Place object
   formatted_address?: string;
   place_data?: any;
   geometry?: any;
+  image_url?: string; //stores the user uploaded image
 
 } | null;
 
@@ -192,7 +193,10 @@ const postFilterOptions = [
 */
 const selectedPlaceImage = selectedPlace?.photoUrl 
     // IF we have a photo URL from Google...
-    ? { uri: selectedPlace.photoUrl } 
+    ? { uri: selectedPlace.photoUrl }
+    //if we have an image that a user uploaded we will use user uploaded image 
+    : selectedPlace?.image_url
+      ? { uri: selectedPlace.image_url }
     // otherwise...  use our local 'house.png' as a placeholder.
     : require("../../../../assets/images/house.png"); //in the assets/image folder
 

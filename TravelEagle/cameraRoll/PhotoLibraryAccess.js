@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Alert, Button, Image, View, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { supabase } from '@/lib/supabase';
 //Expo ImagePicker: A library that provides access to the system's UI for 
 // selecting images and videos from the phone's library or taking a photo with the camera.
-
 export default function CameraRoll({ onImageSelected }) {
   const [image, setImage] = useState(null);
 
@@ -32,11 +32,45 @@ export default function CameraRoll({ onImageSelected }) {
   const imageUri = result.assets[0].uri;
 
   setImage(imageUri);
+    //blob is needed because it allows
+    // it converts the image into a format that can be uploaded
+    const response = await fetch(imageUri);
+    const blob = await response.blob();
+    // Extract the file extension from the image URI
+    const fileExt = imageUri.split('.').pop();
+    // Generate a unique file name using the current timestamp and the file extension
+    const fileName = `${Date.now()}.${fileExt}`
+     const { error } = await supabase.storage
+          //the bucket we will upload to 
+          .from('traveleagle-images')
 
+          .upload(`posts/${fileName}`, blob, {
+
+            contentType: 'image/jpeg',
+
+            upsert: true,
+          });
+
+
+        if (error) {
+
+          console.log(error);
+          Alert.alert(
+            'Upload failed',
+            error.message
+          );
+          return
+        }
+         const { data } = supabase.storage
+  .from('traveleagle-images')
+  .getPublicUrl(`posts/${fileName}`);
+
+        }
   if (onImageSelected) {
-    onImageSelected(imageUri);
+    onImageSelected(data.publicUrl)
   }
-}}
+}
+
 
   return (
     <View style={styles.container}>
@@ -44,7 +78,7 @@ export default function CameraRoll({ onImageSelected }) {
       {image && <Image source={{ uri: image }} style={styles.image} />}
     </View>
   );
-}
+
 
 const styles = StyleSheet.create({
   container: {
@@ -57,3 +91,4 @@ const styles = StyleSheet.create({
     height: 200,
   },
 })
+}
