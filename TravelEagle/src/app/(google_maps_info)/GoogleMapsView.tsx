@@ -245,6 +245,7 @@ useEffect(() => {
                 lng: post.post_long,
                 description: post.description,
                 address: post.address,
+                image_url: post.image_url,
               };
 
               onMarkerPress(userPostPlace);
