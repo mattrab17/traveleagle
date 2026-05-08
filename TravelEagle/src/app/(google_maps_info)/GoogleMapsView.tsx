@@ -11,6 +11,8 @@ import MapViewDirections from 'react-native-maps-directions';
 import { PlacesAPI } from "../../../LocationServices/PointOfInterest"
 import { useRouter } from "expo-router";
 
+import { supabase } from "@/lib/supabase";
+
 type SelectedPlace = {
   name: string;
   lng: number;
@@ -156,6 +158,36 @@ useEffect(() => {
   }
 }, [activeSelectedPlace, activeMapRef]);
 
+    // Load user posts with location data
+    useEffect(() => {
+      const loadUserPosts = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("user_posts")
+            .select("*");
+
+          if (error) {
+            return;
+          }
+          
+          const validPosts = (data || []).filter((post) => {
+            return (
+              post.post_lat !== null &&
+              post.post_long !== null &&
+              //Check if lat and long are valid numbers to avoid the previous rendering issues
+              !isNaN(Number(post.post_lat)) &&
+              !isNaN(Number(post.post_long))
+            );
+          });
+          //this code filters out any posts that are not within the our differential of .0055 value for lat and long. 
+          setUserPosts(validPosts);
+        } catch (error) {
+          console.log("User post load error:", error);
+        }
+      };
+
+      loadUserPosts();
+    }, []);
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>

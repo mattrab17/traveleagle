@@ -32,22 +32,23 @@ export default function CameraRoll({ onImageSelected }) {
   const imageUri = result.assets[0].uri;
 
   setImage(imageUri);
-    //blob is needed because it allows
-    // it converts the image into a format that can be uploaded
+    //array buffer is used due blob causing issues where files would not show up 
+    //in the storage bucket it converts the image into a format that can be uploaded
     const response = await fetch(imageUri);
-    const blob = await response.blob();
-    // Extract the file extension from the image URI
-    const fileExt = imageUri.split('.').pop();
+    const arrayBuffer = await response.arrayBuffer();
+    // Extract the file extension from the image URI, defaulting to 'jpg' if it cannot be determined
+    const fileExt = imageUri.split('.').pop()?.split('?')[0] || 'jpg';
     // Generate a unique file name using the current timestamp and the file extension
-    const fileName = `${Date.now()}.${fileExt}`
+    const fileName = `${Date.now()}.${fileExt}`;
+    // Define the file path in the storage bucket where the image will be uploaded
+    const filePath = `posts/${fileName}`;
      const { error } = await supabase.storage
           //the bucket we will upload to 
           .from('traveleagle-images')
 
-          .upload(`posts/${fileName}`, blob, {
+          .upload(filePath, arrayBuffer, {
 
             contentType: 'image/jpeg',
-
             upsert: true,
           });
 
@@ -62,23 +63,21 @@ export default function CameraRoll({ onImageSelected }) {
           return
         }
          const { data } = supabase.storage
-  .from('traveleagle-images')
-  .getPublicUrl(`posts/${fileName}`);
+        .from('traveleagle-images')
+        .getPublicUrl(filePath);
 
+              if (onImageSelected) {
+        onImageSelected(data.publicUrl);
+      }
         }
-  if (onImageSelected) {
-    onImageSelected(data.publicUrl)
-  }
 }
-
 
   return (
     <View style={styles.container}>
       <Button title="Pick an image from camera roll" onPress={pickImage} />
-      {image && <Image source={{ uri: image }} style={styles.image} />}
     </View>
   );
-
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -91,4 +90,3 @@ const styles = StyleSheet.create({
     height: 200,
   },
 })
-}

@@ -49,6 +49,7 @@ type SelectedPlaceType = { //describes the structure of a Place object
 
 } | null;
 
+
 //Defines the UI labels for filters.
 //Every UI label is mapped to GeoapifyAPI string in a dictionary data structure
 
@@ -186,7 +187,15 @@ const postFilterOptions = [
       setSelectedFilters([...selectedFilters, filterName]);
     }
   };
-
+//togglePostFilter does the same thing as toggleFilter but for user post filters
+  const togglePostFilter = (filterName: string) => {
+  if (selectedPostFilters.includes(filterName)) {
+    setSelectedPostFilters(selectedPostFilters.filter((item) => item !== filterName));
+  } else {
+    setSelectedPostFilters([...selectedPostFilters, filterName]);
+  }
+};
+  
   
   /* 1. DYNAMIC IMAGE SELECTION -> decides which picture to show for a place. 
   
@@ -408,6 +417,7 @@ useFocusEffect(useCallback(() => {
             activeFilterCategories={activeFilterCategories}
             selectedPlace={selectedPlace}
             setSelectedPlace={handleSetSelectedPlace}
+            activePostCategories={selectedPostFilters}
             //When marker is pressed, retrieve placeData, then set placeData to the selected place
             onMarkerPress={(placeData: SelectedPlaceType) => handleSetSelectedPlace(placeData)}
           />
@@ -509,6 +519,40 @@ useFocusEffect(useCallback(() => {
                       style={[
                         styles.filterOptionText,
                         isSelected && styles.filterOptionTextSelected, //activate style when a filter option is pressed
+                                  ]}
+                                >
+                                  {filter}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                        <Text
+              style={[
+                styles.filterModalTitle,
+                { marginTop: 12, fontSize: 18 },
+              ]}
+            >
+              User Post Filters
+            </Text>
+
+            <View style={styles.filtersWrap}>
+              {postFilterOptions.map((filter, index) => {
+                const isSelected = selectedPostFilters.includes(filter);
+
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.filterOptionBtn,
+                      isSelected && styles.filterOptionBtnSelected,
+                    ]}
+                    onPress={() => togglePostFilter(filter)}
+                  >
+                    <Text
+                      style={[
+                        styles.filterOptionText,
+                        isSelected && styles.filterOptionTextSelected,
                       ]}
                     >
                       {filter}
