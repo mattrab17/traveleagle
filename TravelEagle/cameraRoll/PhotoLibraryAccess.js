@@ -32,6 +32,7 @@ export default function CameraRoll({ onImageSelected }) {
     const imageUri = result.assets[0].uri;
     setImage(imageUri);
 
+<<<<<<< HEAD
     // Blob is needed because it converts the image into uploadable binary data.
     const response = await fetch(imageUri);
     const blob = await response.blob();
@@ -61,15 +62,59 @@ export default function CameraRoll({ onImageSelected }) {
       onImageSelected(data.publicUrl);
     }
   };
+=======
+  setImage(imageUri);
+    //array buffer is used due blob causing issues where files would not show up 
+    //in the storage bucket it converts the image into a format that can be uploaded
+    const response = await fetch(imageUri);
+    const arrayBuffer = await response.arrayBuffer();
+    // Extract the file extension from the image URI, defaulting to 'jpg' if it cannot be determined
+    const fileExt = imageUri.split('.').pop()?.split('?')[0] || 'jpg';
+    // Generate a unique file name using the current timestamp and the file extension
+    const fileName = `${Date.now()}.${fileExt}`;
+    // Define the file path in the storage bucket where the image will be uploaded
+    const filePath = `posts/${fileName}`;
+     const { error } = await supabase.storage
+          //the bucket we will upload to 
+          .from('traveleagle-images')
 
+          .upload(filePath, arrayBuffer, {
+
+            contentType: 'image/jpeg',
+            upsert: true,
+          });
+
+
+        if (error) {
+
+          console.log(error);
+          Alert.alert(
+            'Upload failed',
+            error.message
+          );
+          return
+        }
+         const { data } = supabase.storage
+        .from('traveleagle-images')
+        .getPublicUrl(filePath);
+
+              if (onImageSelected) {
+        onImageSelected(data.publicUrl);
+      }
+        }
+}
+>>>>>>> 5cf4487e89fc5418136554a2075619aad571f202
 
   return (
     <View style={styles.container}>
       <Button title="Pick an image from camera roll" onPress={pickImage} />
-      {image && <Image source={{ uri: image }} style={styles.image} />}
     </View>
   );
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 5cf4487e89fc5418136554a2075619aad571f202
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -80,4 +125,8 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
   },
+<<<<<<< HEAD
 });
+=======
+})
+>>>>>>> 5cf4487e89fc5418136554a2075619aad571f202

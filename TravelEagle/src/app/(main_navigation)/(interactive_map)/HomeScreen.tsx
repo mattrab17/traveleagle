@@ -47,6 +47,7 @@ type SelectedPlaceType = { //describes the structure of a Place object
 
 } | null;
 
+
 //Defines the UI labels for filters.
 //Every UI label is mapped to GeoapifyAPI string in a dictionary data structure
 
@@ -172,7 +173,15 @@ export default function HomeScreen()
       setSelectedFilters([...selectedFilters, filterName]);
     }
   };
-
+//togglePostFilter does the same thing as toggleFilter but for user post filters
+  const togglePostFilter = (filterName: string) => {
+  if (selectedPostFilters.includes(filterName)) {
+    setSelectedPostFilters(selectedPostFilters.filter((item) => item !== filterName));
+  } else {
+    setSelectedPostFilters([...selectedPostFilters, filterName]);
+  }
+};
+  
   
   /* 1. DYNAMIC IMAGE SELECTION -> decides which picture to show for a place. 
   
@@ -415,6 +424,7 @@ useFocusEffect(useCallback(() => {
             activeFilterCategories={activeFilterCategories}
             selectedPlace={selectedPlace}
             setSelectedPlace={handleSetSelectedPlace}
+            activePostCategories={selectedPostFilters}
             //When marker is pressed, retrieve placeData, then set placeData to the selected place
             onMarkerPress={(placeData: SelectedPlaceType) => handleSetSelectedPlace(placeData)}
           />
@@ -490,6 +500,71 @@ useFocusEffect(useCallback(() => {
         </View>
       </View>
       {/* Travel Eagle Bottom Sheet Marker Card / Pop up end ========================================================================= */}
+
+      {/* FILTER MODAL =============================================================================================*/}
+      <Modal
+        animationType="fade" //Fade in when pressed
+        transparent={true} //keep it transparent
+        visible={isFilterVisible} //stores whether the filter is visible or not
+        onRequestClose={() => setIsFilterVisible(false)} //when closed, render the screen without the filter modal
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.filterModalContainer}>
+            <View style={styles.modalTopRow}>
+              <Text style={styles.filterModalTitle}>Filters</Text>
+              <TouchableOpacity onPress={() => setIsFilterVisible(false)}>
+                <Feather name="x" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.filtersWrap}>
+              {filterOptions.map((filter, index) => {
+                const isSelected = selectedFilters.includes(filter);
+
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.filterOptionBtn,
+                      isSelected && styles.filterOptionBtnSelected, //activates style for filter option
+                    ]}
+                    onPress={() => toggleFilter(filter)}
+                  >
+                    <Text
+                      style={[
+                        styles.filterOptionText,
+                        isSelected && styles.filterOptionTextSelected, //activate style when a filter option is pressed
+                      ]}
+                    >
+                      {filter}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <View style={styles.filterButtonsRow}>
+              <TouchableOpacity
+                style={styles.clearFilterBtn}
+                onPress={() => {
+                setSelectedFilters([]);
+              }}
+            >
+              <Text style={styles.clearFilterBtnText}>Clear</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.applyFilterBtn}
+                onPress={() => setIsFilterVisible(false)}
+              >
+                <Text style={styles.applyFilterBtnText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      {/* FILTER MODAL END =============================================================================================*/}
 
       {/* MORE INFO MODAL =============================================================================================*/}
       <Modal
