@@ -24,12 +24,11 @@ import {
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
-import DropDownPicker from "react-native-dropdown-picker";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import MapView, { PROVIDER_GOOGLE, Marker } from "react-native-maps";
-import React from "react";
+
 import { itineraryController } from "../../../../controllers/itineraryController";
-import BottomSheet, { BottomSheetScrollView, BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'; // Import for Data and Time picking
 import { Picker } from "@react-native-picker/picker";
 import { tripController } from "@/controllers/tripController";
@@ -38,16 +37,6 @@ export default function AIDiscoveryScreen()
 {
     const { id, destination, lat, lng } = useLocalSearchParams();
     const mapRef = useRef<MapView>(null);
-    const [value, setValue] = useState([]);
-    const [open, setOpen] = useState(false);
-    const [items, setItems] = useState([
-        { label: "Exciting", value: "exciting" },
-        { label: "Relaxing", value: "relaxing" },
-        { label: "Nature", value: "nature" },
-        { label: "Romatic", value: "romantic" },
-        { label: "Food", value: "food" },
-        { label: "Culture", value: "culture" },
-    ]);
     const [inputText, setInputText] = useState("");
     const [messages, setMessages] = useState<any[]>([]);
     const router = useRouter();
@@ -94,6 +83,7 @@ export default function AIDiscoveryScreen()
   const [mode, setMode] = useState<"itinerary" | "discovery">("itinerary");
   const [itinerary, setItinerary] = useState<any>([]);
   const [currentDay, setCurrentDay] = useState(0);
+  const itineraryForCurrentDay = currentDay === 0 ? itinerary : itinerary.filter(item => item.day_number === currentDay);
     async function handleSend(){
         const trimmed = inputText.trim();
                     if (trimmed.length === 0) {
@@ -185,13 +175,12 @@ export default function AIDiscoveryScreen()
       }
     }
   }
-    }, [mode, currentDay, itinerary]);
+    }, [mode, currentDay, itinerary, itineraryForCurrentDay]);
 
    
 
 
     const totalDays = tripController.getTotalDays(trip);
-    const itineraryForCurrentDay = currentDay === 0 ? itinerary : itinerary.filter(item => item.day_number === currentDay);
 
  
    return(
@@ -498,13 +487,13 @@ export default function AIDiscoveryScreen()
             >
         {messages.length === 0 && (
             <View style={{alignSelf: "flex-start", padding: 10}}>
-                <Text style={{color: WHITE_TEXT_COLOR, marginBottom: 20, fontWeight: 700 }}>Don't know what to ask? Try asking:</Text>
+                <Text style={{color: WHITE_TEXT_COLOR, marginBottom: 20, fontWeight: 700 }}>{"Don't know what to ask? Try asking:"}</Text>
                 {sampleMessages.map((query,index)=>(
                             <TouchableOpacity 
                             style={{borderRadius:16, backgroundColor: '#616161', padding: 10, marginBottom: 12}}
                             key={index}
                             onPress={() => setInputText(query)}>
-                                <Text style={{fontStyle: "italic", color: WHITE_TEXT_COLOR}}>"{query}"</Text>
+                                <Text style={{fontStyle: "italic", color: WHITE_TEXT_COLOR}}>{`"${query}"`}</Text>
                             </TouchableOpacity>
                         ))}
             </View>

@@ -1,6 +1,6 @@
-import { Stack, useRootNavigationState, useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { View, Image} from "react-native";
+import { View } from "react-native";
 import { BACKGROUND_COLOR } from "../app/constants/colors";
 import { AuthProvider, useAuth } from "./(authentication)/Auth";
 import { useEffect } from "react";
@@ -26,7 +26,7 @@ function RootNavigatior(){
     else{
       router.replace('/HomeScreen')
     } }, 0);
-}, [isLoggedIn, isLoading, user]);
+}, [isLoggedIn, isLoading, user, router]);
 
 /* if(isLoading){
   return(

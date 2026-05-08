@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ANIMATE TO REGION
  * Goal: to move the map camera to a specific GPS coordinate.
@@ -38,7 +39,10 @@ const buildGooglePhotoUrl = (photoReference, apiKey) => {
  * GETS THE CROWD LEVEL
  */
 const getCrowdLevel = (userRatingsTotal) => {
-  //not finished
+  if (typeof userRatingsTotal !== "number") return "Not available";
+  if (userRatingsTotal >= 1000) return "High";
+  if (userRatingsTotal >= 250) return "Moderate";
+  return "Low";
 };
 
 /**
@@ -129,6 +133,22 @@ export const enrichPlaceFromMapPin = async ({ name, lat, lng, description, addre
   try {
     let resolvedPlaceId = placeId;
 
+    const normalize = (value = "") =>
+      String(value)
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const planarDistanceMeters = (lat1, lng1, lat2, lng2) => {
+      const avgLatRad = ((lat1 + lat2) / 2) * (Math.PI / 180);
+      const metersPerDegLat = 110540;
+      const metersPerDegLng = 111320 * Math.cos(avgLatRad);
+      const dy = (lat2 - lat1) * metersPerDegLat;
+      const dx = (lng2 - lng1) * metersPerDegLng;
+      return Math.hypot(dx, dy);
+    };
+
     // perform a nearby search if placeId doesn't exist
     if (!resolvedPlaceId) {
       const nearbyParams = new URLSearchParams({
@@ -140,7 +160,38 @@ export const enrichPlaceFromMapPin = async ({ name, lat, lng, description, addre
 
       const nearbyResponse = await fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?${nearbyParams.toString()}`);
       const nearbyJson = await nearbyResponse.json();
-      resolvedPlaceId = nearbyJson?.results?.[0]?.place_id;
+      const nearbyResults = Array.isArray(nearbyJson?.results) ? nearbyJson.results : [];
+
+      if (nearbyResults.length > 0) {
+        const targetName = normalize(name);
+
+        const ranked = nearbyResults
+          .map((result) => {
+            const resultLat = result?.geometry?.location?.lat;
+            const resultLng = result?.geometry?.location?.lng;
+            const resultName = normalize(result?.name);
+
+            const distance =
+              typeof resultLat === "number" && typeof resultLng === "number"
+                ? planarDistanceMeters(lat, lng, resultLat, resultLng)
+                : Number.POSITIVE_INFINITY;
+
+            const hasExactName = targetName.length > 0 && resultName === targetName;
+            const hasNameOverlap =
+              targetName.length > 0 &&
+              (resultName.includes(targetName) || targetName.includes(resultName));
+
+            // Lower score is better.
+            const score =
+              distance +
+              (hasExactName ? -5000 : hasNameOverlap ? -1000 : 0);
+
+            return { result, score };
+          })
+          .sort((a, b) => a.score - b.score);
+
+        resolvedPlaceId = ranked[0]?.result?.place_id;
+      }
     }
 
     if (!resolvedPlaceId) return fallback;

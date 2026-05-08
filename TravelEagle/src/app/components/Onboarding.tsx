@@ -1,4 +1,4 @@
-import { SafeAreaView, View, Image, Text, TouchableOpacity, StyleSheet, Alert} from "react-native";
+import { SafeAreaView, View, Text, TouchableOpacity, StyleSheet, Alert} from "react-native";
 import { BACKGROUND_COLOR, ORANGE_COLOR, WHITE_TEXT_COLOR } from "../constants/colors";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -38,9 +38,9 @@ export default function Onboarding(){
         {label: "🚶‍♂️ Moderate (5-6 activities per day)", value: "Moderate (5-6 activities per day)"},
         {label: "🏃‍♂️ Packed (7-8 activities per day)", value: "Packed (7-8 activities per day)" },
     ]); 
-    const [selectedInterests, setSelectedInterests] = useState([]);
+    const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
     const [selectedPace, setSelectedPace] = useState("Moderate (5-6 activities per day)");
-    const handleInterests = (value) => {
+    const handleInterests = (value: string) => {
         if (selectedInterests.includes(value)){
             setSelectedInterests(selectedInterests.filter(i => i !== value));
         }

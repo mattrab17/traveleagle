@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { useState } from "react"; //a hook that helps declare the state of a variable on a screen
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View,
   StyleSheet, //Style component to style objects
   Image, //Image component to render Travel Eagle image
@@ -13,7 +12,6 @@ import { View,
   Alert, //A tap handler that allows Strings to be pressed and used as links
 } from "react-native";
 import { Feather } from "@expo/vector-icons"; //Vector icon family import
-import MaterialIcons from '@expo/vector-icons/MaterialIcons'; //Vector icon family import
 import { SafeAreaView } from "react-native-safe-area-context"; //Provides a safe area so objects fall within a device's screen dimensions
 import {
   BACKGROUND_COLOR,
@@ -25,7 +23,7 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import GooglePlacesInput from "../../(google_maps_info)/GooglePlacesAutocomplete"; //Import to connect Travel Eagle Search bar with Google Maps Search
 import { tripController } from "@/controllers/tripController";
 import { itineraryController } from "@/controllers/itineraryController";
-import DropDownPicker from 'react-native-dropdown-picker'; 
+import DropDownPicker from "react-native-dropdown-picker";
 import { useAuth } from "../../(authentication)/Auth";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 
@@ -96,9 +94,6 @@ export default function HomeScreen()
   //CONTROLS THE TIME PICKER AFTER PRESSING ADD TRIP
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  //CONTROLS THE FILTER MODAL
-  const [isFilterVisible, setIsFilterVisible] = useState(false);
-
   //CONTROLS THE MORE INFO MODAL
   const [isMoreInfoVisible, setIsMoreInfoVisible] = useState(false);
 
@@ -107,13 +102,11 @@ export default function HomeScreen()
 
   // State to store the selected trip name from the dropdown in "Add Trip"
   const [selectedTrip, setSelectedTrip] = useState(null);
+  const [open, setOpen] = useState(false);
 
   // State to store selected filters
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
-  // state to store selected filters for user posts
-  const [selectedPostFilters, setSelectedPostFilters] = useState<string[]>([]);
-  
   // defines filterOptions
     // defines filterOptions
  const filterOptions = [
@@ -129,13 +122,6 @@ export default function HomeScreen()
 ];
 
   //defines filter options for user posts
-const postFilterOptions = [
-  "Restaurants",
-  "General Attractions",
-  "Coffee",
-  "Bars",
-];
-  
   // Helper function to format the Date object into a readable "12:00 AM" string
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { 
@@ -245,7 +231,7 @@ const openHoursLines = useMemo(() => {
 
 
     //Updates the place when a user clicks on it
-  const handleSetSelectedPlace = (place: SelectedPlaceType) =>
+const handleSetSelectedPlace = (place: SelectedPlaceType) =>
   {
   
     // Save the new place data into our state variable.
@@ -256,17 +242,26 @@ const openHoursLines = useMemo(() => {
     setShowDirections(false);
 };
 
+const handleSetSelectedPlaceFromSearch: React.Dispatch<React.SetStateAction<SelectedPlaceType>> = (value) => {
+  const nextValue = typeof value === "function" ? value(selectedPlace) : value;
+  handleSetSelectedPlace(nextValue);
+};
 
-  const [open, setOpen] = useState(false);
-  const [items, setItems] = useState([]); 
+
   const [trips, setTrips] = useState<any[]>([]);
 
 /*   useEffect(() => {
     loadTrips();}, []); */
 
+const loadTrips = useCallback(async () => {
+  if (!user?.id) return;
+  const {data} = await tripController.loadAllTrips(user.id);
+  setTrips(tripController.getUpcomingTrips(data));
+}, [user?.id]);
+
 useFocusEffect(useCallback(() => {
       if(user?.id){
-      loadTrips();}}, [user]));
+      loadTrips();}}, [user?.id, loadTrips]));
 
   useEffect(() => {
     // When coming from Community "View Location", params include lat/lng.
@@ -284,11 +279,6 @@ useFocusEffect(useCallback(() => {
     });
   }, [params.lat, params.lng, params.name, params.description, params.address]);
 
-      async function loadTrips(){
-      const {data} = await tripController.loadAllTrips(user.id);
-      setTrips(tripController.getUpcomingTrips(data));
-    }
-
    /*  const  userID = 'bde439b9-f312-45af-81b2-f07e1ee74648';
     async function loadTrips(){
       const {data} = await tripController.loadAllTrips(userID);
@@ -302,7 +292,7 @@ useFocusEffect(useCallback(() => {
           console.log('place_data:', selectedPlace?.place_data);
           console.log('placeId:', selectedPlace?.placeId);
           console.log('time:', time); */
-        const {data, error} = await itineraryController.addPlaceFromGoogleMaps(
+        const {error} = await itineraryController.addPlaceFromGoogleMaps(
             Number(selectedTrip),
             selectedPlace,
             time,
@@ -357,45 +347,62 @@ useFocusEffect(useCallback(() => {
             <Text style={styles.headerTitle}>Explore</Text>
           </View>
 
-          {/* Search + Filter */}
+          {/* Search */}
           <View style={styles.searchRow}>
             <View style={styles.searchContainer}>
               <Feather name="search" size={18} color="#8F8F8F" style={styles.searchIcon} />
               <GooglePlacesInput
                 mapRef={mapRef}
-                setSelectedPlace={handleSetSelectedPlace}
+                setSelectedPlace={handleSetSelectedPlaceFromSearch}
               />
             </View>
-
-            <TouchableOpacity
-              style={styles.filterBtn}
-              onPress={() => setIsFilterVisible(true)}
-            >
-              <MaterialIcons name="filter-list" size={24} color="#8F8F8F" />
-            </TouchableOpacity>
           </View>
 
-          {/* Selected Filters Preview */}
-         {(selectedFilters.length > 0)&& (
+          <View style={styles.filterHeaderRow}>
+            <Text style={styles.filterHeaderText}>Filters</Text>
+          </View>
+
+          {/* Scrollable Filter Chips */}
+          <View style={styles.filterArea}>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterChipsRow}
               style={styles.filterPreviewRow}
             >
-              {selectedFilters.map((filter, index) => (
-                <View key={index} style={styles.filterChip}>
-                  <Text style={styles.filterChipText}>{filter}</Text>
-                </View>
-              ))}
-
-              {selectedPostFilters.map((filter, index) => (
-              <View key={`post-${index}`} style={styles.filterChip}>
-                <Text style={styles.filterChipText}>{filter}</Text>
-              </View>
-            ))}
+              {filterOptions.map((filter) => {
+                const selected = selectedFilters.includes(filter);
+                return (
+                  <TouchableOpacity
+                    key={filter}
+                    style={[
+                      styles.filterChip,
+                      selected && styles.filterChipSelected,
+                    ]}
+                    onPress={() => toggleFilter(filter)}
+                  >
+                    <Text
+                      style={[
+                        styles.filterChipText,
+                        selected && styles.filterChipTextSelected,
+                      ]}
+                    >
+                      {filter}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
-          )}
-        </View>
+            {selectedFilters.length > 0 ? (
+              <TouchableOpacity
+                style={styles.filterClearBtn}
+                onPress={() => setSelectedFilters([])}
+              >
+                <Text style={styles.filterClearText}>Clear</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+         </View>
 
         {/* MIDDLE CONTENT AREA FOR MAP */}
         <View style={styles.contentArea}>
@@ -415,6 +422,16 @@ useFocusEffect(useCallback(() => {
           {/* Travel Eagle Bottom Sheet Marker Card / Pop up =========================================================================*/}
           {selectedPlace && (
             <View style={styles.popUpCard}>
+              <TouchableOpacity
+                style={styles.cardCloseButton}
+                onPress={() => {
+                  setSelectedPlace(null);
+                  setShowDirections(false);
+                }}
+              >
+                <Feather name="x" size={15} color="#FFFFFF" />
+              </TouchableOpacity>
+
               {/* Card Info */}
               <View style={styles.cardHeader}>
                 {/* SET THE PLACE NAME HERE */}
@@ -473,71 +490,6 @@ useFocusEffect(useCallback(() => {
         </View>
       </View>
       {/* Travel Eagle Bottom Sheet Marker Card / Pop up end ========================================================================= */}
-
-      {/* FILTER MODAL =============================================================================================*/}
-      <Modal
-        animationType="fade" //Fade in when pressed
-        transparent={true} //keep it transparent
-        visible={isFilterVisible} //stores whether the filter is visible or not
-        onRequestClose={() => setIsFilterVisible(false)} //when closed, render the screen without the filter modal
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.filterModalContainer}>
-            <View style={styles.modalTopRow}>
-              <Text style={styles.filterModalTitle}>Filters</Text>
-              <TouchableOpacity onPress={() => setIsFilterVisible(false)}>
-                <Feather name="x" size={24} color="white" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.filtersWrap}>
-              {filterOptions.map((filter, index) => {
-                const isSelected = selectedFilters.includes(filter);
-
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    style={[
-                      styles.filterOptionBtn,
-                      isSelected && styles.filterOptionBtnSelected, //activates style for filter option
-                    ]}
-                    onPress={() => toggleFilter(filter)}
-                  >
-                    <Text
-                      style={[
-                        styles.filterOptionText,
-                        isSelected && styles.filterOptionTextSelected, //activate style when a filter option is pressed
-                      ]}
-                    >
-                      {filter}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            <View style={styles.filterButtonsRow}>
-              <TouchableOpacity
-                style={styles.clearFilterBtn}
-                onPress={() => {
-                setSelectedFilters([]);
-              }}
-            >
-              <Text style={styles.clearFilterBtnText}>Clear</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.applyFilterBtn}
-                onPress={() => setIsFilterVisible(false)}
-              >
-                <Text style={styles.applyFilterBtnText}>Done</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-      {/* FILTER MODAL END =============================================================================================*/}
 
       {/* MORE INFO MODAL =============================================================================================*/}
       <Modal
@@ -759,29 +711,67 @@ const styles = StyleSheet.create({
   searchIcon: {
     marginRight: 8,
   },
-  filterBtn: {
-    marginLeft: 10,
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    backgroundColor: "#1c3252",
-    justifyContent: "center",
-    alignItems: "center",
-  },
   filterPreviewRow: {
+    marginTop: 6,
+  },
+  filterArea: {
+    position: "relative",
+    paddingBottom: 0,
+  },
+  filterHeaderRow: {
     marginTop: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  filterHeaderText: {
+    color: "#9DB4D8",
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: 0.3,
+    marginTop: 10,
+    marginBottom: -8
+  },
+  filterClearText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  filterClearBtn: {
+    position: "absolute",
+    right: -10,
+    bottom: -50,
+    backgroundColor: "#D62839",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+  },
+  filterChipsRow: {
+    paddingRight: 10,
   },
   filterChip: {
-    backgroundColor: "#3858D6",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    backgroundColor: "#1c3252",
+    borderWidth: 1,
+    borderColor: "#355782",
+    width: 96,
+    minHeight: 26,
     borderRadius: 20,
     marginRight: 8,
+    marginTop: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filterChipSelected: {
+    backgroundColor: "#3858D6",
+    borderColor: "#6e87eb",
   },
   filterChipText: {
     color: "white",
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: "500",
+  },
+  filterChipTextSelected: {
+    fontWeight: "700",
   },
   contentArea: {
     flex: 1,
@@ -801,6 +791,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ffffff30',
     zIndex: 100,          
+  },
+  cardCloseButton: {
+    position: "absolute",
+    top: -15,
+    left: -5,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "rgba(10, 25, 49, 0.88)",
+    borderWidth: 1,
+    borderColor: "#ffffff35",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 120,
+    
   },
   cardHeader: {
     flexDirection: 'row',

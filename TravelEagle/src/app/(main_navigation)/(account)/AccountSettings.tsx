@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -38,6 +38,7 @@ export default function AccountSettings() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
 
   const username = useMemo(() => {
     return (
@@ -139,17 +140,90 @@ export default function AccountSettings() {
     setIsEditModalVisible(false);
     Alert.alert("Success", "Account details saved.");
   }
-  // Load profile image URL 
-  useEffect(() => {
-  async function loadProfileImage() {
-    // If user or user ID is not available, skip loading
-    if (!user?.id) return;
-    // Fetch the avatar URL from the users table based on the user ID
-    const { data, error } = await supabase
+
+ useEffect(() => {
+    async function loadProfileImage() {
+      if (!user?.id) return;
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("avatar_url")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        console.log("Error loading profile image:", error.message);
+        return;
+      }
+
+      setProfileImageUrl(data?.avatar_url ?? null);
+    }
+
+    loadProfileImage();
+  }, [user?.id]);
+
+  // CHANGED: added profile photo picker/upload function
+  async function handleChangeProfilePhoto() {
+    if (!user?.id) {
+      Alert.alert("Not signed in", "You must be signed in to change your photo.");
+      return;
+    }
+
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      Alert.alert("Permission required", "Photo access is required.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (result.canceled) {
+      return;
+    }
+
+    const imageUri = result.assets[0].uri;
+
+    const response = await fetch(imageUri);
+    const arrayBuffer = await response.arrayBuffer();
+
+    const filePath = `avatars/${user.id}-${Date.now()}.jpg`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("traveleagle-images")
+      .upload(filePath, arrayBuffer, {
+        contentType: "image/jpeg",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      Alert.alert("Upload failed", uploadError.message);
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("traveleagle-images")
+      .getPublicUrl(filePath);
+
+    const publicUrl = publicUrlData.publicUrl;
+
+    const { error: updateError } = await supabase
       .from("users")
-      .select("avatar_url")
-      .eq("id", user.id)
-      .single();
+      .update({ avatar_url: publicUrl })
+      .eq("id", user.id);
+
+    if (updateError) {
+      Alert.alert("Database update failed", updateError.message);
+      return;
+    }
+
+    setProfileImageUrl(publicUrl);
+    Alert.alert("Success", "Profile photo updated.");
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -371,15 +445,21 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   avatarCircle: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: "#2f57d0",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 8,
-     overflow: "hidden",
-  },
+  width: 58,
+  height: 58,
+  borderRadius: 29,
+  backgroundColor: "#2f57d0",
+  alignItems: "center",
+  justifyContent: "center",
+  marginBottom: 8,
+  overflow: "hidden",
+},
+
+profileImage: {
+  width: "100%",
+  height: "100%",
+  borderRadius: 29,
+},
   avatarText: {
     color: WHITE_TEXT_COLOR,
     fontSize: 28,
@@ -517,4 +597,4 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 14,
   },
-});
+})

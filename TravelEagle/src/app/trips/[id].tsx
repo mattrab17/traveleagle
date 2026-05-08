@@ -1,5 +1,5 @@
 import { tripController } from "@/controllers/tripController";
-import { router, useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Text, View, TouchableOpacity} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -41,7 +41,7 @@ export default function TripScreen(){
             <View style={{marginTop: 20, borderRadius: 15, backgroundColor: 'white', flex: 1}}>
                 <TouchableOpacity
                 onPress={() => router.push(`/trips/${id}/itinerary`)}>
-                 <Text style={{fontSize:16, fontWeight: 15}}> Itinerary </Text>   
+                 <Text style={{fontSize:16, fontWeight: "500"}}> Itinerary </Text>   
                 </TouchableOpacity>
                 
             </View>

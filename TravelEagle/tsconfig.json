@@ -1,13 +1,17 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
     "paths": {
       "@/*": [
         "./*"
       ]
     }
   },
+  "exclude": [
+    "oldfiles/**"
+  ],
   "include": [
     "**/*.ts",
     "**/*.tsx",

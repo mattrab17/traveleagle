@@ -32,7 +32,7 @@ type EventItem = {
 export default function CommunityPage() {
   const router = useRouter();
   // Top-level source filters: show all content, only TravelEagle events, or only user posts.
-  const sourceFilters: Array<"All" | "TravelEagle" | "Users"> = ["All", "TravelEagle", "Users"];
+  const sourceFilters: ("All" | "TravelEagle" | "Users")[] = ["All", "TravelEagle", "Users"];
   const [selectedSource, setSelectedSource] = useState<"All" | "TravelEagle" | "Users">("All");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);

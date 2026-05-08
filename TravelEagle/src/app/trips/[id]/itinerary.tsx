@@ -1,23 +1,16 @@
 import { itineraryController } from "@/controllers/itineraryController";
 import { tripController } from "@/controllers/tripController";
-import {GooglePlacesInput, GooglePlacesInputTrip } from "@/src/app/(google_maps_info)/GooglePlacesAutocomplete";
+import { GooglePlacesInputTrip } from "@/src/app/(google_maps_info)/GooglePlacesAutocomplete";
 import { Ionicons, Feather, AntDesign} from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { View, Text, FlatList, Image, TouchableOpacity, ScrollView, Alert, TextInput, StyleSheet, Platform } from "react-native";
 import { Picker } from '@react-native-picker/picker'
-import {
-  BACKGROUND_COLOR,
-  WHITE_TEXT_COLOR,
-  ORANGE_COLOR,
-  SECONDARY_BACKGROUND_COLOR,
-  SEARCH_BACKGROUND_COLOR,
-} from "../../constants/colors"
+import { WHITE_TEXT_COLOR, ORANGE_COLOR, SECONDARY_BACKGROUND_COLOR, SEARCH_BACKGROUND_COLOR } from "../../constants/colors"
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useAuth } from "../../(authentication)/Auth";
-import MapView, { PROVIDER_GOOGLE, Marker } from "react-native-maps";
 
 
 export default function ItineraryScreen(){
@@ -44,18 +37,17 @@ export default function ItineraryScreen(){
     const [isGenerating, setisGenerating] = useState<boolean>(false);
     const [status, setStatus] = useState<string>('');
 
-    async function loadItinerary(){
+    const loadItinerary = useCallback(async () => {
             const {data} = await itineraryController.loadAllItems(Number(id));
             setItinerary(data)
             const {data: tripData } = await tripController.loadTrip(Number(id));
             setTrip(tripData);
             /* console.log(tripData)
             console.log(tripController.getTotalDays(tripData)) */
-        }
+        }, [id]);
 
     useFocusEffect(useCallback(() => {
-        
-    loadItinerary();}, [id]));
+    loadItinerary();}, [loadItinerary]));
 
     // Converts "HH:MM:SS" into total minutes so we can sort times reliably.
     function timeSlotToMinutes(timeSlot?: string | null){
@@ -87,7 +79,7 @@ export default function ItineraryScreen(){
             hour12: false,
         });
 
-        const {data, error} = await itineraryController.addPlaceFromGoogle(
+        const {error} = await itineraryController.addPlaceFromGoogle(
             Number(id),
             selectedPlace,
             selectedDay,
@@ -144,6 +136,10 @@ export default function ItineraryScreen(){
     }
     async function handleSaveEdits(){
         if (!editItem) return;
+        if (!editTime) {
+            Alert.alert("Error", "Please select a valid time.");
+            return;
+        }
 
         const formattedTime = editTime.toLocaleTimeString('en-US', { 
       hour: '2-digit', 
@@ -207,7 +203,7 @@ async function handleGenerateItinerary(){
             {text: 'Generate', onPress: async () => {
                 setisGenerating(true);
                 setStatus('Starting...');
-                const {data, error} = await itineraryController.generateAIItinerary(trip, totalDays, user?.interests || [], user?.pace, (s) => setStatus(s));
+                const {error} = await itineraryController.generateAIItinerary(trip, totalDays, user?.interests || [], user?.pace, (s) => setStatus(s));
 
                 setisGenerating(false);
                 setStatus('');

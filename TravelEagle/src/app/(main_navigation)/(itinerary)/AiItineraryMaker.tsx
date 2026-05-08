@@ -1,9 +1,7 @@
 import {
   Text,
-  Image,
   View,
   TouchableOpacity,
-  StyleSheet,
   TextInput,
   ScrollView,
 } from "react-native";
@@ -13,7 +11,6 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   BACKGROUND_COLOR,
   WHITE_TEXT_COLOR,
-  ORANGE_COLOR,
   SECONDARY_BACKGROUND_COLOR,
   SEARCH_BACKGROUND_COLOR,
 } from "../../constants/colors";
@@ -83,9 +80,7 @@ export default function HomeScreen()
                 zIndexInverse={1000}
                 dropDownDirection="AUTO"
                 showTickIcon={true}
-                tickIconStyle={{ tintColor: WHITE_TEXT_COLOR }}
                 showArrowIcon={true}
-                arrowIconStyle={{ tintColor: WHITE_TEXT_COLOR }}
             />
         </View>
 

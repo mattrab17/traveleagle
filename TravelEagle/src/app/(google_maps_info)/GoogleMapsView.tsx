@@ -1,20 +1,19 @@
 import MapView, { PROVIDER_GOOGLE, Marker } from "react-native-maps";
 import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { animateToRegion, enrichPlaceFromMapPin } from "../../../controllers/mapController";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import useLocation from "../../../LocationServices/liveLocation";
 import Feather from '@expo/vector-icons/Feather';
 import MapViewDirections from 'react-native-maps-directions';
 
 import { PlacesAPI } from "../../../LocationServices/PointOfInterest"
-import { useRouter } from "expo-router";
+import { userPostController } from "../../../controllers/userPostController";
 
 type SelectedPlace = {
-  name: string;
-  lng: number;
-  lat: number;
+  name?: string;
+  lng?: number;
+  lat?: number;
   description?: string;
   rating?: number;
   address?: string;
@@ -40,7 +39,7 @@ type Place = {
 type GoogleMapsViewProps = {
   mapRef?: React.RefObject<MapView | null>;
   selectedPlace?: SelectedPlace;
-  setSelectedPlace?: React.Dispatch<React.SetStateAction<SelectedPlace>>;
+  setSelectedPlace?: (place: SelectedPlace) => void;
   showSearchInput?: boolean;
   showDirections?: boolean;
   activeFilterCategories?: string[];
@@ -66,21 +65,19 @@ export default function GoogleMapsView({
     pushes them to the places array, then array is mapped and rendered into MapView logic
   */
 
-  const router = useRouter();
-  
   const internalMapRef = useRef<MapView | null>(null);
   const [internalSelectedPlace, internalSetSelectedPlace] = useState<SelectedPlace>(null);
   const activeMapRef = mapRef ?? internalMapRef;
   const activeSelectedPlace = selectedPlace ?? internalSelectedPlace;
   const activeSetSelectedPlace = setSelectedPlace ?? internalSetSelectedPlace;
 
-  const bottomSheetRef = useRef<BottomSheet>(null); //constant that aids in controlling the rendering for the bottom sheet
-  const snapPoints = ["12%", "25%", "4%"];
-
-  const places: Place[] = [
-    { id: 1, name: "Times Square", lat: 40.758, lng: -73.9855, emoji: "🏙️", description: "Busy city lights and entertainment." },
-    { id: 2, name: "Central Park", lat: 40.7826, lng: -73.9656, emoji: "🌳", description: "A peaceful green space in the city." },
-  ];
+  const places = useMemo<Place[]>(
+    () => [
+      { id: 1, name: "Times Square", lat: 40.758, lng: -73.9855, emoji: "🏙️", description: "Busy city lights and entertainment." },
+      { id: 2, name: "Central Park", lat: 40.7826, lng: -73.9656, emoji: "🌳", description: "A peaceful green space in the city." },
+    ],
+    []
+  );
 
   const { latitude, longitude } = useLocation();
   
@@ -117,13 +114,13 @@ const [poiMarkers, setPoiMarkers] = useState<any[]>([]); //THIS CONTROLS THE STA
   //useRef is the memory hook that will store search engine objects
   //      -> useRef is needed here to create a search engine object once so that this object will just rerender. Otherwise, it would create a new search engine object each time causing the app to lag and waste time on rendering
 
-// Load nearby places whenever location or selected filters change.
+// Load nearby places from the user's live location and selected filters.
 useEffect(() => { //useEffect -> a hook that helps render components (THE POINT OF THE CODE IS TO AUTOMATICALLY UPDATE LOCATIONS WHEN DIFFERENT FILTERS ARE ACTIVATED)
   
   const run = async () => { //run function
    
     try { //A try-catch block is used to prevent the code from crashing when a filter is not activated
-      if (latitude == null || longitude == null) return; //if the app doesn't know the user's location yet, return nothing (do nothing)
+      if (latitude == null || longitude == null) return;
       if (!Array.isArray(activeFilterCategories) || activeFilterCategories.length === 0) { //if no filters are selected, clear the map (setPOIMARKERS to an array filled with null)
         setPoiMarkers([]);
         return;
@@ -133,8 +130,9 @@ useEffect(() => { //useEffect -> a hook that helps render components (THE POINT 
                                                 //poiResults calls findPlaces and searches for your location, your filters, a radius (25 miles), and a limit of 60 results
                                                 //Await -> the code runs in the background and waits for results to come back before executing the code below
         userLocation: { latitude, longitude },
+        searchedPlace: null,
         selectedFilters: activeFilterCategories,
-        radius: 40234,
+        radius: 40234, // fixed ~25mi radius, independent of zoom level
         initialRadius: 2500,
         radiusStep: 5000,
         limit: 20,
@@ -145,8 +143,21 @@ useEffect(() => { //useEffect -> a hook that helps render components (THE POINT 
     }
   };
   run(); //run method is called to constantly wait for search engine info
-}, [latitude, longitude, activeFilterCategories, geo]); //this code only runs when a variable changes. 
+}, [latitude, longitude, activeFilterCategories, geo]);
                                                         //Ex: if your location changes, then it will render different locations based on your latitude and longitude
+
+useEffect(() => {
+  const run = async () => {
+    if (latitude == null || longitude == null) return;
+    const { data, error } = await userPostController.loadPosts(latitude, longitude, activePostCategories);
+    if (error) {
+      console.error("Failed to load nearby user posts", error);
+      return;
+    }
+    setUserPosts(data || []);
+  };
+  run();
+}, [latitude, longitude, activePostCategories]);
 
 // If a place was selected by another screen (like Community -> View Location),
 // animate the map to that location so the marker is visible immediately.
@@ -166,7 +177,6 @@ useEffect(() => {
             const action = (event?.nativeEvent as { action?: string })?.action;
             if (action === "marker-press") return;
             activeSetSelectedPlace(null);
-            bottomSheetRef.current?.snapToIndex(2);
           }}
 
           //Code to display user's location on map with an animated circle
@@ -190,10 +200,17 @@ useEffect(() => {
               onPress={async () =>
               {
                 animateToRegion(activeMapRef, place.lat, place.lng);
-                const enrichedPlace = await enrichPlaceFromMapPin(place);
+                const enrichedPlace = await enrichPlaceFromMapPin({
+                  name: place.name,
+                  lat: place.lat,
+                  lng: place.lng,
+                  description: place.description,
+                  address: place.address,
+                  placeId: place.placeId,
+                  popularity: place.popularity,
+                });
                 onMarkerPress(enrichedPlace);
                 activeSetSelectedPlace(enrichedPlace);
-                bottomSheetRef.current?.snapToIndex(1);
               }}
             >
               <View style={styles.customMarker}>
@@ -202,12 +219,16 @@ useEffect(() => {
             </Marker>
           ))}
 
-          {userPosts.map((post) => (
+          {userPosts.map((post) => {
+            const lat = Number(post.post_lat);
+            const lng = Number(post.post_long);
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+            return (
           <Marker
-            key={`user-post-${post.post_id}`}
+            key={`user-post-${post.id ?? post.post_id ?? Math.random()}`}
             coordinate={{
-              latitude: post.post_lat,
-              longitude: post.post_long,
+              latitude: lat,
+              longitude: lng,
             }}
             title={post.place_name}
             description={post.description}
@@ -215,8 +236,8 @@ useEffect(() => {
             onPress={() => {
               const userPostPlace = {
                 name: post.place_name,
-                lat: post.post_lat,
-                lng: post.post_long,
+                lat,
+                lng,
                 description: post.description,
                 address: post.address,
                 image_url: post.image_url,
@@ -224,10 +245,9 @@ useEffect(() => {
 
               onMarkerPress(userPostPlace);
               activeSetSelectedPlace(userPostPlace);
-              bottomSheetRef.current?.snapToIndex(1);
             }}
           />
-        ))}
+        )})}
           
           {/* Draws Markers to the screen*/}
           {poiMarkers.map((p) => ( //.map function loops through the poiMarkers list. For every place, it renames the place 'p' and runs the code inside
@@ -250,13 +270,16 @@ useEffect(() => {
                 animateToRegion(activeMapRef, p.latitude, p.longitude); //populates the map with markers
                 const enrichedPoi = await enrichPlaceFromMapPin({ //holds information such as: photos, reviews, open hours
                   //NOTE: The application does not need to receive location information unless a user presses on a specific marker
-                  poiPlace,
+                  name: poiPlace.name,
+                  lat: poiPlace.lat,
+                  lng: poiPlace.lng,
                   address: p.address,
+                  description: p.address,
+                  placeId: p.place_id,
                   popularity: p.original?.properties?.rank?.popularity,
                 });
                 onMarkerPress(enrichedPoi);
                 activeSetSelectedPlace(enrichedPoi);
-                bottomSheetRef.current?.snapToIndex(1); //Pop out the bottomSheet with location info so that it takes up 25% of the screen
               }}
             />
           ))}
@@ -303,24 +326,6 @@ useEffect(() => {
           </TouchableOpacity>
         </View>
 
-        <BottomSheet ref={bottomSheetRef} snapPoints={snapPoints} index={2}>
-          <BottomSheetView style={styles.contentContainer}>
-            {activeSelectedPlace ? (
-              <View style={styles.bottomSheetInner}>
-                <Text style={styles.bottomSheetTitle}>{activeSelectedPlace.name}</Text>
-                <Text style={styles.bottomSheetDescription}>
-                  {activeSelectedPlace.description ? activeSelectedPlace.description : "No description yet."}
-                </Text>
-              </View>
-            ) : (
-               <TouchableOpacity onPress={() => router.push("/(community)/CreatePostPage")}>
-                <Text style={styles.bottomSheetDescription}>
-                  Create a post
-                </Text>
-              </TouchableOpacity>
-            )}
-          </BottomSheetView>
-        </BottomSheet>
       </View>
     </GestureHandlerRootView>
   );
@@ -330,26 +335,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "grey",
-  },
-  contentContainer: {
-    flex: 1,
-    padding: 20,
-    alignItems: "center",
-  },
-  bottomSheetInner: {
-    width: "100%",
-    alignItems: "center",
-  },
-  bottomSheetTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 8,
-    color: "#0A1931",
-  },
-  bottomSheetDescription: {
-    fontSize: 14,
-    color: "#444",
-    textAlign: "center",
   },
   bottomSheetName: {
     flex: 1,
@@ -364,8 +349,8 @@ const styles = StyleSheet.create({
   },
   locationButtonContainer: {
     position: "absolute",
-    top: 180,
     right: 16,
+    bottom: 32,
   },
   locationButton: {
     backgroundColor: "white",
@@ -377,3 +362,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
+

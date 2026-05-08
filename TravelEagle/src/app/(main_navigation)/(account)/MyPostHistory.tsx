@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -25,6 +25,8 @@ import { supabase } from "@/lib/supabase";
 
 type UserPost = {
   id: string;
+  dbColumn: "id" | "post_id";
+  dbValue: string | number;
   place_name: string | null;
   address: string | null;
   description: string | null;
@@ -46,7 +48,7 @@ export default function MyPostHistory() {
   const [editCategory, setEditCategory] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
 
-  async function loadPreviousPosts() {
+  const loadPreviousPosts = useCallback(async () => {
     if (!user?.id) {
       setUserPosts([]);
       return;
@@ -68,12 +70,22 @@ export default function MyPostHistory() {
       return;
     }
 
-    setUserPosts((data || []) as UserPost[]);
-  }
+    const normalizedPosts: UserPost[] = (data || []).map((post: any) => {
+      const hasId = post?.id != null;
+      return {
+        ...post,
+        id: String(post?.id ?? post?.post_id ?? Math.random()),
+        dbColumn: hasId ? "id" : "post_id",
+        dbValue: hasId ? post.id : post.post_id,
+      };
+    });
+
+    setUserPosts(normalizedPosts);
+  }, [user?.id]);
 
   useEffect(() => {
     loadPreviousPosts();
-  }, [user?.id]);
+  }, [loadPreviousPosts]);
 
   function openEditPostModal(post: UserPost) {
     setEditingPostId(post.id);
@@ -131,7 +143,7 @@ export default function MyPostHistory() {
     Alert.alert("Success", "Post updated.");
   }
 
-  async function deletePost(postId: string) {
+  async function deletePost(post: UserPost) {
     if (!user?.id) return;
 
     Alert.alert("Delete Post", "Are you sure you want to delete this post?", [
@@ -143,7 +155,7 @@ export default function MyPostHistory() {
           const { error } = await supabase
             .from("user_posts")
             .delete()
-            .eq("id", postId)
+            .eq(post.dbColumn, post.dbValue)
             .eq("created_by", user.id);
 
           if (error) {
@@ -152,7 +164,7 @@ export default function MyPostHistory() {
             return;
           }
 
-          setUserPosts((prev) => prev.filter((post) => post.id !== postId));
+          setUserPosts((prev) => prev.filter((existingPost) => existingPost.id !== post.id));
         },
       },
     ]);
@@ -162,7 +174,7 @@ export default function MyPostHistory() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.page} contentContainerStyle={styles.content}>
         <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => router.push("/(main_navigation)/(account)/AccountSettings")} style={styles.backButton}>
             <Feather name="arrow-left" size={18} color={WHITE_TEXT_COLOR} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>My Post History</Text>
@@ -185,7 +197,7 @@ export default function MyPostHistory() {
                   <TouchableOpacity style={styles.editPostButton} onPress={() => openEditPostModal(post)}>
                     <Text style={styles.editPostText}>Edit Post</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.deletePostButton} onPress={() => deletePost(post.id)}>
+                  <TouchableOpacity style={styles.deletePostButton} onPress={() => deletePost(post)}>
                     <Text style={styles.deletePostText}>Delete Post</Text>
                   </TouchableOpacity>
                 </View>

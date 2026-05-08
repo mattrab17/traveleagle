@@ -1,14 +1,20 @@
 // --- IMPORTS ---
 import { useRouter } from "expo-router"; // Navigation hook to move between screens
-import { Image, Text, TextInput, TouchableOpacity, View, Alert } from "react-native"; // Core UI components
-import { BACKGROUND_COLOR, WHITE_TEXT_COLOR, ORANGE_COLOR, SECONDARY_BACKGROUND_COLOR } from "../constants/colors"; // Custom theme constants
-import { Keyboard, TouchableWithoutFeedback } from "react-native"; // Utils to handle keyboard behavior
+import { Image, Text, TextInput, TouchableOpacity, View, Alert, Keyboard, TouchableWithoutFeedback } from "react-native"; // Core UI components
+import { WHITE_TEXT_COLOR, ORANGE_COLOR, SECONDARY_BACKGROUND_COLOR } from "../constants/colors"; // Custom theme constants
 import React, { useState } from "react"; // React hooks for state management
 import { supabase } from "../../../lib/supabase"; // Your Supabase client instance
 import Feather from "@expo/vector-icons/Feather";
 
 export default function Register() {
   const router = useRouter(); // Initialize the router for navigation (back/push)
+  const canGoBack = () => {
+    try {
+      return router.canGoBack();
+    } catch {
+      return false;
+    }
+  };
 
   // --- STATE VARIABLES ---
   const [username, setUsername] = useState(""); // Stores user's chosen display name
@@ -72,7 +78,7 @@ export default function Register() {
             >
                 {/* Back Arrow: Always returns directly to WelcomePage (no stacked back loop) */}
                 <TouchableOpacity
-                  onPress={() => router.replace("/WelcomePage")}
+                  onPress={() => (canGoBack() ? router.back() : router.replace("/WelcomePage"))}
                   style={{ position: "absolute", top: 70, left: 20, zIndex: 20 }}
                 >
                     <Feather name="arrow-left" size={28} color="white" />

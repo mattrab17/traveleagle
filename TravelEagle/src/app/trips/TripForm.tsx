@@ -1,18 +1,19 @@
-import {Calendar, toDateId, useDateRange, CalendarTheme} from "@marceloterreiro/flash-calendar"
+import {Calendar, toDateId, useDateRange} from "@marceloterreiro/flash-calendar"
 
 import { View, Text, TouchableOpacity } from "react-native";
 import {GooglePlacesInputTrip} from "../(google_maps_info)/GooglePlacesAutocomplete";
-import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
+import { ScrollView } from "react-native-gesture-handler";
 import { useState } from "react";
 import { tripQueries } from "@/models/trips";
-import { tripController, goToPreviousMonth, goToNextMonth } from "@/controllers/tripController";
+import { goToPreviousMonth, goToNextMonth } from "@/controllers/tripController";
 import {
   BACKGROUND_COLOR,
   ORANGE_COLOR,
-  SECONDARY_BACKGROUND_COLOR,
   WHITE_TEXT_COLOR,
 } from "../constants/colors";
 import { validateTripForm } from "../utils/validation";
+
+const ADD_TRIP_SHEET_BG = "#123766";
 
 export default function TripForm({onClose, userId}) {
 
@@ -52,8 +53,8 @@ export default function TripForm({onClose, userId}) {
 }
     return(
         <ScrollView
-          style={{ flex: 1, backgroundColor: SECONDARY_BACKGROUND_COLOR }}
-          contentContainerStyle={{ padding: 10, paddingBottom: 80 }}
+          style={{ flex: 1, backgroundColor: ADD_TRIP_SHEET_BG }}
+          contentContainerStyle={{ padding: 10, paddingBottom: 120 }}
           keyboardShouldPersistTaps="always"
         >
             <Text style={{ fontSize: 22, color: ORANGE_COLOR, fontWeight:'800',}}>Add a Trip</Text>
@@ -61,7 +62,7 @@ export default function TripForm({onClose, userId}) {
              }}>Plan out your new trip by building an Itinerary</Text>
             {/* Destination Box/Input */}
             <Text style={{fontSize: 16, marginBottom: 10, fontWeight: '500', color: ORANGE_COLOR}}>Destination</Text>
-            <View style={{flex:1, width:'100%', marginBottom: 20, zIndex: 2000, elevation: 2000 }}>
+            <View style={{width:'100%', marginBottom: 20, zIndex: 2000, elevation: 2000 }}>
                 <GooglePlacesInputTrip 
                 onSelect={(data, details) => {
                   setDestination(data.description)
@@ -75,7 +76,7 @@ export default function TripForm({onClose, userId}) {
             </View>
 
             <Text style={{ fontSize: 16, paddingBottom: 20, fontWeight: '500', color: ORANGE_COLOR}}>Select Dates</Text>
-            <View style={{flex:1, zIndex: 1}}>
+            <View style={{zIndex: 1}}>
                 {/* Add borders or a symbol to make the buttons better for user experience*/}
                 {/* Also might need to add a drop down menu, to navigate to further months easier*/}
              <View style={{
@@ -172,12 +173,10 @@ export default function TripForm({onClose, userId}) {
                 </View>
 
             
-            <View style={{marginTop: 50}}>
+            <View style={{marginTop: 24}}>
                 <TouchableOpacity
              style={{
-                position:'absolute',
-                top:0,
-                right:0,
+                alignSelf: "flex-end",
                 padding:10,
                 backgroundColor: "#2c4eb5",
                 borderRadius:10,

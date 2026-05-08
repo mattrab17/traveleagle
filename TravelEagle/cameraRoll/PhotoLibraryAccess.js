@@ -20,56 +20,47 @@ export default function CameraRoll({ onImageSelected }) {
         return;
       }
 
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
-        });
+    });
 
+    if (result.canceled) return;
 
-    if (!result.canceled) {
-  const imageUri = result.assets[0].uri;
+    const imageUri = result.assets[0].uri;
+    setImage(imageUri);
 
-  setImage(imageUri);
-    //blob is needed because it allows
-    // it converts the image into a format that can be uploaded
+    // Blob is needed because it converts the image into uploadable binary data.
     const response = await fetch(imageUri);
     const blob = await response.blob();
-    // Extract the file extension from the image URI
+
+    // Extract extension and generate a unique filename.
     const fileExt = imageUri.split('.').pop();
-    // Generate a unique file name using the current timestamp and the file extension
-    const fileName = `${Date.now()}.${fileExt}`
-     const { error } = await supabase.storage
-          //the bucket we will upload to 
-          .from('traveleagle-images')
+    const fileName = `${Date.now()}.${fileExt}`;
 
-          .upload(`posts/${fileName}`, blob, {
+    const { error } = await supabase.storage
+      .from('traveleagle-images')
+      .upload(`posts/${fileName}`, blob, {
+        contentType: 'image/jpeg',
+        upsert: true,
+      });
 
-            contentType: 'image/jpeg',
+    if (error) {
+      console.log(error);
+      Alert.alert('Upload failed', error.message);
+      return;
+    }
 
-            upsert: true,
-          });
+    const { data } = supabase.storage
+      .from('traveleagle-images')
+      .getPublicUrl(`posts/${fileName}`);
 
-
-        if (error) {
-
-          console.log(error);
-          Alert.alert(
-            'Upload failed',
-            error.message
-          );
-          return
-        }
-         const { data } = supabase.storage
-  .from('traveleagle-images')
-  .getPublicUrl(`posts/${fileName}`);
-
-        }
-  if (onImageSelected) {
-    onImageSelected(data.publicUrl)
-  }
-}
+    if (onImageSelected) {
+      onImageSelected(data.publicUrl);
+    }
+  };
 
 
   return (
@@ -78,8 +69,7 @@ export default function CameraRoll({ onImageSelected }) {
       {image && <Image source={{ uri: image }} style={styles.image} />}
     </View>
   );
-
-
+}
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -90,5 +80,4 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
   },
-})
-}
+});

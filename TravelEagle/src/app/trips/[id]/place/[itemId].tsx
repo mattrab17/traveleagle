@@ -47,7 +47,7 @@ export default function ItineraryPlaceDetailsScreen() {
     loadItem();
   }, [id, itemId]);
 
-  const placeData = item?.place?.place_data || {};
+  const placeData = useMemo(() => item?.place?.place_data || {}, [item]);
 
   const photoUri = useMemo(() => {
     const photoReference = placeData?.photos?.[0]?.photo_reference;

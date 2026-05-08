@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -21,12 +21,13 @@ import {
   SECONDARY_BACKGROUND_COLOR,
   SEARCH_BACKGROUND_COLOR,
 } from "../constants/colors";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
+
+const ADD_TRIP_SHEET_BG = "#123766";
 
 export default function TripsScreen() {
   const { user } = useAuth();
-  const insets = useSafeAreaInsets();
   const { openCreate } = useLocalSearchParams<{ openCreate?: string }>();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [sections, setSections] = useState<any[]>([]);
@@ -45,11 +46,17 @@ export default function TripsScreen() {
     loadTrips();
   }
 
+  const loadTrips = useCallback(async () => {
+    if (!user?.id) return;
+    const { data } = await tripController.loadAllTrips(user.id);
+    setSections(tripController.getSortedTripList(data));
+  }, [user?.id]);
+
   useEffect(() => {
     if (user?.id) {
       loadTrips();
     }
-  }, [user]);
+  }, [user?.id, loadTrips]);
 
   useEffect(() => {
     if (openCreate === "1") {
@@ -60,13 +67,7 @@ export default function TripsScreen() {
     }
   }, [openCreate]);
 
-  async function loadTrips() {
-    if (!user?.id) return;
-    const { data } = await tripController.loadAllTrips(user.id);
-    setSections(tripController.getSortedTripList(data));
-  }
-
-  async function handleDeleteTrip(tripId, destination){
+  async function handleDeleteTrip(tripId: number, destination: string){
     Alert.alert(
       "Delete Trip",
       `Delete your trip to ${destination}? This will also delete all itinerary items within the trip.`,
@@ -92,8 +93,8 @@ export default function TripsScreen() {
             flexDirection: "row",
             alignItems: "center",
             paddingHorizontal: 20,
-            paddingBottom: 20,
-            justifyContent: "space-between",
+            paddingBottom: 12,
+            justifyContent: "flex-start",
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -115,18 +116,6 @@ export default function TripsScreen() {
               My Trips
             </Text>
           </View>
-
-          <TouchableOpacity
-            onPress={() => bottomSheetRef.current?.snapToIndex(3)}
-            style={{
-              backgroundColor: SECONDARY_BACKGROUND_COLOR,
-              padding: 10,
-              borderRadius: 4,
-              alignItems: "center",
-            }}
-          >
-            <AntDesign name="plus" size={36} color="white" />
-          </TouchableOpacity>
         </View>
 
         <View
@@ -138,6 +127,15 @@ export default function TripsScreen() {
             backgroundColor: SECONDARY_BACKGROUND_COLOR,
           }}
         >
+          <View style={styles.createTripInlineContainer}>
+            <TouchableOpacity
+              onPress={() => bottomSheetRef.current?.snapToIndex(3)}
+              style={styles.createTripButton}
+            >
+              <Text style={styles.createTripButtonText}>Create A Trip</Text>
+            </TouchableOpacity>
+          </View>
+
           {sections.length === 0 ? (
             <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
               <AntDesign name="calendar" size={74} color={SEARCH_BACKGROUND_COLOR} />
@@ -209,15 +207,13 @@ export default function TripsScreen() {
           )}
         </View>
 
-        
-
         <BottomSheet
           ref={bottomSheetRef}
           snapPoints={["2%", "25%", "50%", "89%"]}
           index={-1}
           style={{ flex: 1 }}
           enablePanDownToClose={true}
-          backgroundStyle={{ backgroundColor: SECONDARY_BACKGROUND_COLOR }}
+          backgroundStyle={{ backgroundColor: ADD_TRIP_SHEET_BG }}
         >
           <BottomSheetView style={styles.contentContainer}>
             <TripForm onClose={closeSheet} userId={user?.id} />
@@ -233,5 +229,22 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 36,
     alignItems: "center",
+  },
+  createTripInlineContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+  },
+  createTripButton: {
+    backgroundColor: "#2f57d0",
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    
+  },
+  createTripButtonText: {
+    color: WHITE_TEXT_COLOR,
+    fontWeight: "700",
+    fontSize: 15,
   },
 });
