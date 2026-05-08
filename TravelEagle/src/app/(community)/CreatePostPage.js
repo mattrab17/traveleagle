@@ -8,26 +8,19 @@ import {
   StyleSheet,
   ScrollView,
   Image,
-<<<<<<< HEAD
   Platform,
 } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import Feather from "@expo/vector-icons/Feather";
 import { useNavigation, useRouter } from "expo-router";
-=======
-} from "react-native";
->>>>>>> 5cf4487e89fc5418136554a2075619aad571f202
 
 import { supabase } from "@/lib/supabase";
 import useLocation from "@/LocationServices/liveLocation";
 import CameraRoll from "@/cameraRoll/PhotoLibraryAccess";
 
 export default function UserPostsPage() {
-<<<<<<< HEAD
   const router = useRouter();
   const navigation = useNavigation();
-=======
->>>>>>> 5cf4487e89fc5418136554a2075619aad571f202
   const [userId, setUserId] = useState("");
   const [placeName, setPlaceName] = useState("");
   const [address, setAddress] = useState("");
@@ -110,7 +103,6 @@ export default function UserPostsPage() {
     }
 
     const { error } = await supabase.from("user_posts").insert([
-<<<<<<< HEAD
       {
         place_name: placeName,
         address: address,
@@ -123,20 +115,6 @@ export default function UserPostsPage() {
       },
     ]);
 
-=======
-        {
-          place_name: placeName,
-          address: address,
-          description: description || null,
-        post_lat: parseFloat(finalLat) || null,
-          post_long: parseFloat(finalLong) || null,
-          created_by: userId,
-          image_url: imageUrl || null,
-        category: category.length > 0 ? category : null,
-        },
-    ]);
-    
->>>>>>> 5cf4487e89fc5418136554a2075619aad571f202
     if (error) {
       console.log(error);
       Alert.alert("Failed to create post", "Please reassess the post details.");
@@ -145,7 +123,6 @@ export default function UserPostsPage() {
 
     Alert.alert("Success", "Post created.");
 
-<<<<<<< HEAD
     setPlaceName("");
     setAddress("");
     setDescription("");
@@ -293,96 +270,6 @@ export default function UserPostsPage() {
           </Pressable>
         </View>
       </ScrollView>
-=======
-      setPlaceName("");
-      setAddress("");
-      setDescription("");
-      setPostLat("");
-      setPostLong("");
-      setImageUrl("");
-    setCategory([]);
-    setUseCurrentLocation(true);
-    }
-
- return (
-    <View style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.page}>
-        <Text style={styles.headerTitle}>Create a Post</Text>
-
-      <View style={styles.card}>
-          <Text style={styles.label}>Place Name</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Place name"
-            placeholderTextColor="#9DB4D8"
-          value={placeName}
-          onChangeText={setPlaceName}
-        />
-
-          <Text style={styles.label}>Address</Text>
-
-          <TextInput
-            style={styles.input}
-            placeholder="279 Bedford Ave, Brooklyn, NY"
-            placeholderTextColor="#9DB4D8"
-            value={address}
-            onChangeText={setAddress}
-          />
-
-          <Text style={styles.label}>Description</Text>
-
-        <TextInput
-            style={[styles.input, styles.descriptionInput]}
-            placeholder="Description"
-            placeholderTextColor="#9DB4D8"
-          value={description}
-          onChangeText={setDescription}
-          multiline
-        />
-
-          <Text style={styles.label}>Add Image</Text>
-
-          <CameraRoll onImageSelected={setImageUrl} />
-
-          {imageUrl ? (
-            <Image source={{ uri: imageUrl }} style={styles.postImage} />
-          ) : null}
-
-          <Text style={styles.label}>Categories</Text>
-
-          <View style={styles.filtersWrap}>
-            {postFilterOptions.map((option) => {
-              const selected = category.includes(option);
-
-              return (
-                <Pressable
-                  key={option}
-                  style={[
-                    styles.filterOptionBtn,
-                    selected && styles.filterOptionBtnSelected,
-                  ]}
-                  onPress={() => toggleCategory(option)}
-                >
-                  <Text
-                    style={[
-                      styles.filterOptionText,
-                      selected && styles.filterOptionTextSelected,
-                    ]}
-                  >
-                    {option}
-            </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <Pressable style={styles.createButton} onPress={createPost}>
-            <Text style={styles.createButtonText}>Create Post</Text>
-        </Pressable>
-      </View>
-    </ScrollView>
->>>>>>> 5cf4487e89fc5418136554a2075619aad571f202
     </View>
   );
 }
@@ -405,7 +292,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 29,
     fontWeight: "700",
-<<<<<<< HEAD
   },
   headerRow: {
     flexDirection: "row",
@@ -422,9 +308,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#1f3f6b",
     borderWidth: 1,
     borderColor: "#2a4d7e",
-=======
-    marginBottom: 14,
->>>>>>> 5cf4487e89fc5418136554a2075619aad571f202
   },
 
   card: {
@@ -447,7 +330,6 @@ const styles = StyleSheet.create({
     borderColor: "#355782",
     backgroundColor: "#18365d",
     color: "#FFFFFF",
-<<<<<<< HEAD
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -502,14 +384,6 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "#E8E8E8",
   },
-=======
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 14,
-    fontSize: 15,
-  },
->>>>>>> 5cf4487e89fc5418136554a2075619aad571f202
 
   descriptionInput: {
     minHeight: 90,

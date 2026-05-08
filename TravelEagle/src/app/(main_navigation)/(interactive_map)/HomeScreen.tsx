@@ -102,11 +102,13 @@ export default function HomeScreen()
   const [time, setTime] = useState(new Date()); 
 
   // State to store the selected trip name from the dropdown in "Add Trip"
-  const [selectedTrip, setSelectedTrip] = useState(null);
+  const [selectedTrip, setSelectedTrip] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
 
   // State to store selected filters
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [selectedPostFilters, setSelectedPostFilters] = useState<string[]>([]);
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
 
   // defines filterOptions
     // defines filterOptions
