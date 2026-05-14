@@ -74,6 +74,7 @@ export default function HomeScreen()
     lng?: string;
     description?: string;
     address?: string;
+    imageUrl?: string;
     rating?: string;
     reviewCount?: string;
   }>();
@@ -291,10 +292,11 @@ useFocusEffect(useCallback(() => {
       lng,
       description: params.description || "No description provided.",
       address: params.address || "No address provided",
+      image_url: params.imageUrl || undefined,
       rating: Number.isFinite(rating) ? rating : undefined,
       reviewCount: Number.isFinite(reviewCount) ? reviewCount : undefined,
     });
-  }, [params.lat, params.lng, params.name, params.description, params.address, params.rating, params.reviewCount]);
+  }, [params.lat, params.lng, params.name, params.description, params.address, params.imageUrl, params.rating, params.reviewCount]);
 
    /*  const  userID = 'bde439b9-f312-45af-81b2-f07e1ee74648';
     async function loadTrips(){

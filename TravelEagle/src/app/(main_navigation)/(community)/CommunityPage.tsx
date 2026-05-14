@@ -226,6 +226,7 @@ export default function CommunityPage() {
         lng: String(event.lng),
         description: event.description,
         address: event.location,
+        imageUrl: event.imageUri || "",
         rating: String(stats.average),
         reviewCount: String(stats.count),
       },
