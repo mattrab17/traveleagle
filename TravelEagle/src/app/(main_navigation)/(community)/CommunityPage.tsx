@@ -273,7 +273,6 @@ export default function CommunityPage() {
               await loadPostRating(event.id);
             }}
             >
-            </TouchableOpacity>
               {event.imageUri ? <Image source={{ uri: event.imageUri }} style={styles.cardImage} /> : null}
 
               <View style={styles.cardBody}>
