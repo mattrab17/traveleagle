@@ -110,7 +110,7 @@ export default function UserPostsPage() {
         post_long: parseFloat(finalLong) || null,
         created_by: userId,
         image_url: imageUrl || null,
-        category: category.length > 0 ? category : null,
+        category: category.length > 0 ? category.join(", ") : null,
       },
     ]);
 
