@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Feather from "@expo/vector-icons/Feather";
 import { useRouter } from "expo-router";
@@ -38,13 +38,16 @@ export default function CommunityPage() {
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [posts, setPosts] = useState<EventItem[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
-
+  const [averageRating, setAverageRating] = useState(0);
+  const [ratingCount, setRatingCount] = useState(0);
+  const [selectedUserRating, setSelectedUserRating] = useState(0);
+  
   // Convert a user_posts row into the UI shape used by this screen.
   const mapUserPostToEventItem = (post: any): EventItem => ({
     id: String(post.id ?? post.post_id ?? Math.random()),
     title: post.place_name || "Untitled Post",
     category: post.category || "Uncategorized",
-    date: post.created_at ? new Date(post.created_at).toLocaleDateString() : "Unknown date",
+    date: post.created_at? new Date(post.created_at).toLocaleDateString(): "Unknown date",
     location: post.address || "No address provided",
     description: post.description || "No description provided.",
     lat: typeof post.post_lat === "number" ? post.post_lat : null,
@@ -59,7 +62,7 @@ export default function CommunityPage() {
     id: `event-${String(event.id ?? Math.random())}`,
     title: event.event_name || "Untitled Event",
     category: event.event_category || "Uncategorized",
-    date: event.event_date ? new Date(event.event_date).toLocaleDateString() : "Unknown date",
+    date: event.event_date ? new Date(event.event_date).toLocaleDateString(): "Unknown date",
     location: event.event_address || "No address provided",
     description: event.event_description || "No description provided.",
     lat: typeof event.event_lat === "number" ? event.event_lat : null,
@@ -71,11 +74,20 @@ export default function CommunityPage() {
 
   // Load both data sources from Supabase and combine them into one list for rendering.
   // We keep a shared shape to simplify filtering and card rendering.
-  const loadPosts = useCallback(async () => {
+   const loadPosts = useCallback(async () => {
     setIsLoadingPosts(true);
+
+    // Load user posts and community events
     const [userPostsResult, communityEventsResult] = await Promise.all([
-      supabase.from("user_posts").select("*").order("created_at", { ascending: false }),
-      supabase.from("CommunityEvents").select("*").order("event_date", { ascending: false }),
+      supabase
+        .from("user_posts")
+        .select("*")
+        .order("created_at", { ascending: false }),
+
+      supabase
+        .from("CommunityEvents")
+        .select("*")
+        .order("event_date", { ascending: false }),
     ]);
     setIsLoadingPosts(false);
     if (userPostsResult.error || communityEventsResult.error) {
@@ -87,7 +99,7 @@ export default function CommunityPage() {
 
     const normalizedUserPosts: EventItem[] = (userPostsResult.data || []).map(mapUserPostToEventItem);
     const normalizedEvents: EventItem[] = (communityEventsResult.data || []).map(mapCommunityEventToEventItem);
-
+  
     setPosts([...normalizedEvents, ...normalizedUserPosts]);
   }, []);
 
@@ -103,6 +115,66 @@ export default function CommunityPage() {
     return posts.filter((post) => post.source === selectedSource);
   }, [posts, selectedSource]);
 
+  // Load the average rating and user's rating for the selected post
+  const loadPostRating = async (postId: string) => {
+    const { data, error } = await supabase
+      .from("ratings")
+      .select("rating")
+      .eq("post_id", postId);
+
+    if (error) {
+      console.error("Error loading ratings:", error);
+      return;
+    }
+    // If no ratings, set to 0
+    if (!data || data.length === 0) {
+      setAverageRating(0);
+      setRatingCount(0);
+      return;
+    }
+    // Calculate average rating
+    const total = data.reduce((sum, row) => sum + Number(row.rating), 0);
+    const average = total / data.length;
+
+    setAverageRating(average);
+    setRatingCount(data.length);
+  };
+
+  const submitRating = async (rating: number) => {
+    if (!selectedEvent) return;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const userId = user?.id
+
+     if (selectedEvent.createdBy === user?.id) {
+  Alert.alert("You cannot rate your own post.");
+  return;
+}
+
+    const {error} = await supabase.from("ratings").upsert(
+  [
+    {
+      post_id: selectedEvent.id,
+      user_id: userId,
+      rating: rating,
+    },
+  ],
+  {
+    onConflict: "user_id,post_id",
+  }
+);
+    if (error) {
+      console.error("Error submitting rating:", error);
+      return;
+    }
+
+    setSelectedUserRating(rating);
+    loadPostRating(selectedEvent.id);
+  };
+  
   // Step 2: Build category pills from the currently visible source data.
   const categories = useMemo(() => {
     const dynamicCategories = Array.from(new Set(sourceScopedPosts.map((post) => post.category).filter(Boolean)));
@@ -194,7 +266,14 @@ export default function CommunityPage() {
           ) : null}
 
           {displayedPosts.map((event) => (
-            <TouchableOpacity key={event.id} style={styles.card} onPress={() => setSelectedEvent(event)}>
+            <TouchableOpacity key={event.id} style={styles.card} 
+              onPress={async () => {
+              setSelectedEvent(event);
+              setSelectedUserRating(0);
+              await loadPostRating(event.id);
+            }}
+            >
+            </TouchableOpacity>
               {event.imageUri ? <Image source={{ uri: event.imageUri }} style={styles.cardImage} /> : null}
 
               <View style={styles.cardBody}>
@@ -256,6 +335,29 @@ export default function CommunityPage() {
                 <Text style={styles.aboutTitle}>About this Post</Text>
                 <Text style={styles.aboutText}>{selectedEvent.description}</Text>
 
+                <View style={styles.ratingContainer}>
+                  <Text style={styles.ratingTitle}>
+                    Rating: {averageRating.toFixed(1)} ⭐ ({ratingCount})
+                  </Text>
+
+                  <View style={styles.starRow}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <TouchableOpacity
+                        key={star}
+                        onPress={() => submitRating(star)}
+                      >
+                        <Text
+                          style={[
+                            styles.starText,
+                            selectedUserRating >= star && styles.selectedStar,
+                          ]}
+                        >
+                          ★
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
                 {selectedEvent.lat != null && selectedEvent.lng != null ? (
                   <TouchableOpacity style={styles.primaryButton} onPress={() => openEventOnMap(selectedEvent)}>
                     <Text style={styles.primaryButtonText}>View Location</Text>
@@ -463,6 +565,28 @@ const styles = StyleSheet.create({
     color: "#B9CAE4",
     fontSize: 16,
     lineHeight: 22,
+  },
+    ratingContainer: {
+    marginTop: 14,
+    marginBottom: 6,
+  },
+  ratingTitle: {
+    color: WHITE_TEXT_COLOR,
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  starRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  starText: {
+    fontSize: 32,
+    color: "#6B7280",
+    marginRight: 6,
+  },
+  selectedStar: {
+    color: "#FFD700",
   },
   primaryButton: {
     marginTop: 14,
