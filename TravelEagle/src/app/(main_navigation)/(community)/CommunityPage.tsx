@@ -374,7 +374,7 @@ export default function CommunityPage() {
 
                 <View style={styles.ratingContainer}>
                   <Text style={styles.ratingTitle}>
-                    Rating: {averageRating.toFixed(1)} * ({ratingCount})
+                    Rating: {averageRating.toFixed(1)},   {ratingCount} total rating(s)
                   </Text>
 
                   <View style={styles.starRow}>
