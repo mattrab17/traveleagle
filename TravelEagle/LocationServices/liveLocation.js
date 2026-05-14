@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import * as Location from 'expo-location'//library provides access to geolocation information
 
 const useLocation = () => {
@@ -27,7 +27,7 @@ const useLocation = () => {
             
 
             //this will return the location in a proper address, not coordinate points
-            let address = await Location.reverseGeocodeAsync({
+            const result = await Location.reverseGeocodeAsync({
                  latitude: latitude,
                 longitude:longitude
             })
@@ -35,18 +35,20 @@ const useLocation = () => {
             /*the expo reverse geolocation works by sending an array of the closest matching adresses
           to the coordinate points this will choose the first candidate*/
             if (result && result.length > 0) {
-            const place = result[0];
-        }
-            //this will return the address in a format acceptable by the google maps platform
-             const formattedAddress =  [
+              const place = result[0];
+              //this will return the address in a format acceptable by the google maps platform
+              const formattedAddress = [
                 //prevents comma after the number from appearing
-                place.streetNumber + " " + place.street,
+                [place.streetNumber, place.street].filter(Boolean).join(" "),
                 place.city,
                 place.region,
                 place.postalCode,
                 place.country,
-            ].filter(Boolean).join(", ")
-            setAddress(formattedAddress)
+              ]
+                .filter(Boolean)
+                .join(", ");
+              setAddress(formattedAddress);
+            }
         }
     }
         useEffect(() => {
