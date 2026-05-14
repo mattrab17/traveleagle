@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +14,7 @@ import Feather from "@expo/vector-icons/Feather";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import useLocation from "@/LocationServices/liveLocation";
+import CameraRoll from "@/cameraRoll/PhotoLibraryAccess";
 
 import {
   BACKGROUND_COLOR,
@@ -88,23 +90,19 @@ export default function CreateCommunityEventPage() {
           <Text style={styles.headerTitle}>Create Event</Text>
         </View>
 
-        <View style={styles.locationBox}>
-          <Text style={styles.locationTitle}>Using your current location</Text>
+       <View style={styles.locationBox}>
+        <Text style={styles.locationTitle}>Event Location</Text>
 
-          <Text style={styles.locationText}>
-            Address: {eventAddress || "Loading address..."}
-          </Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter event address"
+          placeholderTextColor="#9DB4D8"
+          value={eventAddress}
+          onChangeText={setEventAddress}
+        />
 
-          <Text style={styles.locationText}>
-            Latitude: {latitude != null ? latitude : "Loading..."}
-          </Text>
-
-          <Text style={styles.locationText}>
-            Longitude: {longitude != null ? longitude : "Loading..."}
-          </Text>
-
-          {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
-        </View>
+        {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
+      </View>
 
         <TextInput
           style={[styles.input, styles.bigInput]}
@@ -115,13 +113,11 @@ export default function CreateCommunityEventPage() {
           multiline
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Image URL optional"
-          placeholderTextColor="#9DB4D8"
-          value={eventImageUrl}
-          onChangeText={setEventImageUrl}
-        />
+        <Text style={styles.label}>Add Image</Text>
+        <CameraRoll onImageSelected={setEventImageUrl} />
+        {eventImageUrl ? (
+          <Image source={{ uri: eventImageUrl }} style={styles.eventImage} />
+        ) : null}
 
         <TextInput
           style={styles.input}
@@ -268,4 +264,15 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     fontSize: 16,
   },
+  eventImage: {
+  width: "100%",
+  height: 220,
+  borderRadius: 12,
+  marginTop: 12,
+  marginBottom: 14,
+},
+imagePickerWrapper: {
+  alignSelf: "flex-start",
+  marginBottom: 14,
+},
 });
