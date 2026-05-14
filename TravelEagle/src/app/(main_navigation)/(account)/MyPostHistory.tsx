@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Feather from "@expo/vector-icons/Feather";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   BACKGROUND_COLOR,
   ORANGE_COLOR,
@@ -83,9 +84,11 @@ export default function MyPostHistory() {
     setUserPosts(normalizedPosts);
   }, [user?.id]);
 
-  useEffect(() => {
-    loadPreviousPosts();
-  }, [loadPreviousPosts]);
+  useFocusEffect(
+    useCallback(() => {
+      loadPreviousPosts();
+    }, [loadPreviousPosts])
+  );
 
   function openEditPostModal(post: UserPost) {
     setEditingPostId(post.id);

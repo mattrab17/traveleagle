@@ -217,10 +217,23 @@ export default function CommunityPage() {
           <Text style={styles.headerTitle}>Community Posts</Text>
         </View>
 
-        <TouchableOpacity style={styles.createPostButton} onPress={() => router.push("/(community)/CreatePostPage")}>
-          <Feather name="plus-circle" size={16} color={WHITE_TEXT_COLOR} />
-          <Text style={styles.createPostButtonText}>Create Post</Text>
-        </TouchableOpacity>
+        <View style={styles.actionsRow}>
+          <TouchableOpacity
+            style={styles.createActionButton}
+            onPress={() => router.push("/(main_navigation)/(community)/CreatePostPage")}
+          >
+            <Feather name="plus-circle" size={16} color={WHITE_TEXT_COLOR} />
+            <Text style={styles.createActionButtonText}>Create Post</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.createActionButton}
+            onPress={() => router.push("/(main_navigation)/(community)/CreateEvent")}
+          >
+            <Feather name="calendar" size={16} color={WHITE_TEXT_COLOR} />
+            <Text style={styles.createActionButtonText}>Create Event</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.categoryBar}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
@@ -266,14 +279,15 @@ export default function CommunityPage() {
           ) : null}
 
           {displayedPosts.map((event) => (
-            <TouchableOpacity key={event.id} style={styles.card} 
+            <TouchableOpacity
+              key={event.id}
+              style={styles.card}
               onPress={async () => {
-              setSelectedEvent(event);
-              setSelectedUserRating(0);
-              await loadPostRating(event.id);
-            }}
+                setSelectedEvent(event);
+                setSelectedUserRating(0);
+                await loadPostRating(event.id);
+              }}
             >
-            </TouchableOpacity>
               {event.imageUri ? <Image source={{ uri: event.imageUri }} style={styles.cardImage} /> : null}
 
               <View style={styles.cardBody}>
@@ -337,7 +351,7 @@ export default function CommunityPage() {
 
                 <View style={styles.ratingContainer}>
                   <Text style={styles.ratingTitle}>
-                    Rating: {averageRating.toFixed(1)} ⭐ ({ratingCount})
+                    Rating: {averageRating.toFixed(1)} * ({ratingCount})
                   </Text>
 
                   <View style={styles.starRow}>
@@ -352,7 +366,7 @@ export default function CommunityPage() {
                             selectedUserRating >= star && styles.selectedStar,
                           ]}
                         >
-                          ★
+                          *
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -394,18 +408,23 @@ const styles = StyleSheet.create({
     fontSize: 29,
     fontWeight: "700",
   },
-  createPostButton: {
-    backgroundColor: "#2f57d0",
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+  actionsRow: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
     gap: 8,
     marginBottom: 10,
   },
-  createPostButtonText: {
+  createActionButton: {
+    backgroundColor: "#2f57d0",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+    gap: 8,
+  },
+  createActionButtonText: {
     color: WHITE_TEXT_COLOR,
     fontSize: 15,
     fontWeight: "700",
@@ -600,3 +619,4 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 });
+

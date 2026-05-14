@@ -90,6 +90,14 @@ export default function RootLayout() {
           name="(account)/MyPostHistory"
           options={{ href: null }}
         />
+        <Tabs.Screen
+          name="(community)/CreatePostPage"
+          options={{ href: null }}
+        />
+        <Tabs.Screen
+          name="(community)/CreateEvent"
+          options={{ href: null }}
+        />
       </Tabs>
     </>
   );

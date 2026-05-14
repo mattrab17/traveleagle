@@ -122,15 +122,7 @@ export default function UserPostsPage() {
     }
 
     Alert.alert("Success", "Post created.");
-
-    setPlaceName("");
-    setAddress("");
-    setDescription("");
-    setPostLat("");
-    setPostLong("");
-    setImageUrl("");
-    setCategory([]);
-    setUseCurrentLocation(true);
+    router.replace("/(main_navigation)/(community)/CommunityPage");
   }
 
   function handleBack() {

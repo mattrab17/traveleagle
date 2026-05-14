@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Feather from "@expo/vector-icons/Feather";
+import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import useLocation from "@/LocationServices/liveLocation";
 
@@ -18,11 +19,12 @@ import {
   ORANGE_COLOR,
   SECONDARY_BACKGROUND_COLOR,
   WHITE_TEXT_COLOR,
-} from "../constants/colors";
+} from "../../constants/colors";
 
 const categories = ["Festival", "Carnival", "Sports", "Holiday"];
 
 export default function CreateCommunityEventPage() {
+  const router = useRouter();
   const [eventAddress, setEventAddress] = useState("");
   const [eventDescription, setEventDescription] = useState("");
   const [eventImageUrl, setEventImageUrl] = useState("");
@@ -75,12 +77,7 @@ export default function CreateCommunityEventPage() {
     }
 
     Alert.alert("Success", "Community event created!");
-
-    setEventAddress("");
-    setEventDescription("");
-    setEventImageUrl("");
-    setEventCategory("Festival");
-    setNumAttending("");
+    router.replace("/(main_navigation)/(community)/CommunityPage");
   };
 
   return (
