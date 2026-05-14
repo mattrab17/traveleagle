@@ -6,7 +6,6 @@ import {
   Pressable,
   Alert,
   StyleSheet,
-  ScrollView,
   Image,
   Platform,
 } from "react-native";
@@ -135,7 +134,7 @@ export default function UserPostsPage() {
 
   return (
     <View style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+      <View style={styles.page}>
         <View style={styles.headerRow}>
           <Pressable
             style={styles.backButton}
@@ -261,7 +260,7 @@ export default function UserPostsPage() {
             <Text style={styles.createButtonText}>Create Post</Text>
           </Pressable>
         </View>
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -273,7 +272,7 @@ const styles = StyleSheet.create({
   },
   
   page: {
-    flexGrow: 1,
+    flex: 1,
     backgroundColor: "#0B2344",
     paddingHorizontal: 12,
     paddingTop: 72,

@@ -33,6 +33,7 @@ type SelectedPlaceType = { //describes the structure of a Place object
   lng?: number;
   description?: string;
   rating?: number; //stores the rating
+  reviewCount?: number;
   address?: string; //stores the address
   website?: string; //stores the website
   openHours?: string; //stores the openhours
@@ -73,6 +74,8 @@ export default function HomeScreen()
     lng?: string;
     description?: string;
     address?: string;
+    rating?: string;
+    reviewCount?: string;
   }>();
   
   const mapRef = useRef<any>(null);
@@ -201,10 +204,9 @@ const selectedPlaceImage = selectedPlace?.photoUrl
 /* 2. RATING FORMATTER - ensures the star rating are always rounded to the tenth place
 */
 const selectedPlaceRating = typeof selectedPlace?.rating === "number"
-    // If the rating is a valid number, add a Star Emoji and round it to 10th place
-    // 
-    ? `${"\u2B50"} ${selectedPlace.rating.toFixed(1)}`
-    // if no rating exists, show n
+    ? `${"\u2B50"} ${selectedPlace.rating.toFixed(1)}${
+        typeof selectedPlace?.reviewCount === "number" ? ` (${selectedPlace.reviewCount})` : ""
+      }`
     : `${"\u2B50"} N/A`;
 
 
@@ -279,6 +281,8 @@ useFocusEffect(useCallback(() => {
     // This creates a selected place so the map marker and info card show instantly.
     const lat = params.lat ? Number(params.lat) : NaN;
     const lng = params.lng ? Number(params.lng) : NaN;
+    const rating = params.rating ? Number(params.rating) : NaN;
+    const reviewCount = params.reviewCount ? Number(params.reviewCount) : NaN;
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
     handleSetSelectedPlace({
@@ -287,8 +291,10 @@ useFocusEffect(useCallback(() => {
       lng,
       description: params.description || "No description provided.",
       address: params.address || "No address provided",
+      rating: Number.isFinite(rating) ? rating : undefined,
+      reviewCount: Number.isFinite(reviewCount) ? reviewCount : undefined,
     });
-  }, [params.lat, params.lng, params.name, params.description, params.address]);
+  }, [params.lat, params.lng, params.name, params.description, params.address, params.rating, params.reviewCount]);
 
    /*  const  userID = 'bde439b9-f312-45af-81b2-f07e1ee74648';
     async function loadTrips(){

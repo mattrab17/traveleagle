@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
-  ScrollView,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import useLocation from "@/LocationServices/liveLocation";
 import CameraRoll from "@/cameraRoll/PhotoLibraryAccess";
+import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 
 import {
   BACKGROUND_COLOR,
@@ -28,19 +29,24 @@ const categories = ["Festival", "Carnival", "Sports", "Holiday"];
 export default function CreateCommunityEventPage() {
   const router = useRouter();
   const [eventAddress, setEventAddress] = useState("");
+  const [eventLat, setEventLat] = useState("");
+  const [eventLng, setEventLng] = useState("");
   const [eventDescription, setEventDescription] = useState("");
   const [eventImageUrl, setEventImageUrl] = useState("");
   const [eventCategory, setEventCategory] = useState("Festival");
   const [numAttending, setNumAttending] = useState("");
   const [loading, setLoading] = useState(false);
+  const [useCurrentLocation, setUseCurrentLocation] = useState(false);
 
   const { latitude, longitude, errorMsg, address: currentAddress } = useLocation();
 
   useEffect(() => {
-    if (currentAddress) {
+    if (useCurrentLocation && currentAddress) {
       setEventAddress(currentAddress);
+      if (latitude != null) setEventLat(String(latitude));
+      if (longitude != null) setEventLng(String(longitude));
     }
-  }, [currentAddress]);
+  }, [useCurrentLocation, currentAddress, latitude, longitude]);
 
   const createCommunityEvent = async () => {
     if (!eventAddress || !eventDescription || !eventCategory) {
@@ -48,8 +54,18 @@ export default function CreateCommunityEventPage() {
       return;
     }
 
-    if (latitude == null || longitude == null) {
-      Alert.alert("Location missing", "Could not fetch your current location yet.");
+    let finalLat = eventLat;
+    let finalLng = eventLng;
+
+    if (useCurrentLocation) {
+      if (latitude == null || longitude == null) {
+        Alert.alert("Location missing", "Could not fetch your current location yet.");
+        return;
+      }
+      finalLat = String(latitude);
+      finalLng = String(longitude);
+    } else if (!finalLat || !finalLng) {
+      Alert.alert("Location missing", "Please choose an address from autocomplete or use current location.");
       return;
     }
 
@@ -61,8 +77,8 @@ export default function CreateCommunityEventPage() {
 
     const { error } = await supabase.from("CommunityEvents").insert({
       event_address: eventAddress,
-      event_lat: latitude,
-      event_lng: longitude,
+      event_lat: parseFloat(finalLat),
+      event_lng: parseFloat(finalLng),
       event_description: eventDescription,
       event_image_url: eventImageUrl || null,
       event_category: eventCategory,
@@ -84,25 +100,99 @@ export default function CreateCommunityEventPage() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.page}>
+      <View style={styles.page}>
         <View style={styles.headerRow}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.replace("/(main_navigation)/(community)/CommunityPage")}
+          >
+            <Feather name="arrow-left" size={18} color={WHITE_TEXT_COLOR} />
+          </TouchableOpacity>
           <Feather name="plus-circle" size={22} color={WHITE_TEXT_COLOR} />
           <Text style={styles.headerTitle}>Create Event</Text>
         </View>
 
-       <View style={styles.locationBox}>
-        <Text style={styles.locationTitle}>Event Location</Text>
+        <TouchableOpacity
+          style={styles.locationToggleRow}
+          onPress={() => setUseCurrentLocation((prev) => !prev)}
+        >
+          <Feather
+            name={useCurrentLocation ? "check-square" : "square"}
+            size={18}
+            color={ORANGE_COLOR}
+          />
+          <Text style={styles.locationToggleText}>Use my current location</Text>
+        </TouchableOpacity>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Enter event address"
-          placeholderTextColor="#9DB4D8"
-          value={eventAddress}
-          onChangeText={setEventAddress}
-        />
+        <View style={styles.locationBox}>
+          <Text style={styles.locationTitle}>Event Location</Text>
 
-        {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
-      </View>
+          {useCurrentLocation ? (
+            <>
+              <Text style={styles.locationText}>
+                Address: {eventAddress || "Loading address..."}
+              </Text>
+              <Text style={styles.locationText}>
+                Latitude: {latitude != null ? latitude : "Loading..."}
+              </Text>
+              <Text style={styles.locationText}>
+                Longitude: {longitude != null ? longitude : "Loading..."}
+              </Text>
+            </>
+          ) : (
+            <View style={styles.autocompleteWrapper}>
+              <GooglePlacesAutocomplete
+                placeholder="Search for an address"
+                minLength={2}
+                fetchDetails={true}
+                listViewDisplayed="auto"
+                keyboardShouldPersistTaps="handled"
+                keepResultsAfterBlur={true}
+                enablePoweredByContainer={false}
+                debounce={200}
+                query={{
+                  key: (process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "").trim(),
+                  language: "en",
+                }}
+                requestUrl={
+                  Platform.OS === "web"
+                    ? {
+                        useOnPlatform: "web",
+                        url: "https://maps.googleapis.com/maps/api",
+                      }
+                    : undefined
+                }
+                onFail={(error) => {
+                  console.warn("Google autocomplete failed:", error);
+                }}
+                onPress={(data, details = null) => {
+                  const selectedAddress = data?.description || details?.formatted_address || "";
+                  const selectedLat = details?.geometry?.location?.lat;
+                  const selectedLng = details?.geometry?.location?.lng;
+
+                  setEventAddress(selectedAddress);
+                  if (selectedLat != null) setEventLat(String(selectedLat));
+                  if (selectedLng != null) setEventLng(String(selectedLng));
+                }}
+                textInputProps={{
+                  value: eventAddress,
+                  onChangeText: setEventAddress,
+                  placeholderTextColor: "#9DB4D8",
+                }}
+                styles={{
+                  container: styles.autocompleteContainer,
+                  textInputContainer: styles.autocompleteTextInputContainer,
+                  textInput: styles.autocompleteInput,
+                  listView: styles.autocompleteList,
+                  row: styles.autocompleteRow,
+                  separator: styles.autocompleteSeparator,
+                }}
+              />
+            </View>
+          )}
+
+          {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
+        </View>
 
         <TextInput
           style={[styles.input, styles.bigInput]}
@@ -157,7 +247,7 @@ export default function CreateCommunityEventPage() {
             {loading ? "Creating..." : "Create Community Event"}
           </Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -168,7 +258,7 @@ const styles = StyleSheet.create({
     backgroundColor: BACKGROUND_COLOR,
   },
   page: {
-    flexGrow: 1,
+    flex: 1,
     backgroundColor: SECONDARY_BACKGROUND_COLOR,
     padding: 14,
   },
@@ -181,6 +271,27 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: WHITE_TEXT_COLOR,
     fontSize: 29,
+    fontWeight: "700",
+  },
+  backButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#1f3f6b",
+    borderWidth: 1,
+    borderColor: "#2a4d7e",
+  },
+  locationToggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 10,
+  },
+  locationToggleText: {
+    color: WHITE_TEXT_COLOR,
+    fontSize: 15,
     fontWeight: "700",
   },
   locationBox: {
@@ -205,6 +316,53 @@ const styles = StyleSheet.create({
   errorText: {
     color: "red",
     marginTop: 6,
+  },
+  autocompleteWrapper: {
+    position: "relative",
+    zIndex: 5000,
+    elevation: 5000,
+  },
+  autocompleteContainer: {
+    flex: 0,
+    position: "relative",
+    zIndex: 5000,
+  },
+  autocompleteTextInputContainer: {
+    backgroundColor: "transparent",
+    borderTopWidth: 0,
+    borderBottomWidth: 0,
+    paddingHorizontal: 0,
+  },
+  autocompleteInput: {
+    borderWidth: 1,
+    borderColor: "#1d4174",
+    backgroundColor: "#0f2c58",
+    color: WHITE_TEXT_COLOR,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    marginTop: 0,
+    marginBottom: 0,
+  },
+  autocompleteList: {
+    position: "absolute",
+    top: 52,
+    left: 0,
+    right: 0,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    maxHeight: 240,
+    zIndex: 6000,
+    elevation: 6000,
+  },
+  autocompleteRow: {
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+  },
+  autocompleteSeparator: {
+    height: 1,
+    backgroundColor: "#E8E8E8",
   },
   input: {
     backgroundColor: "#0f2c58",

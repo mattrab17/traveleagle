@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import * as Location from 'expo-location'//library provides access to geolocation information
 
+let lastReverseGeocodeAt = 0;
+const REVERSE_GEOCODE_COOLDOWN_MS = 3000;
+
 const useLocation = () => {
     //use state will allow values to change with human movement
     const [errorMsg, setErrorMsg] = useState(null);
@@ -10,45 +13,53 @@ const useLocation = () => {
 
 
     const getUserLocation = async () => {//will ask user for permission to retrieve their location
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status != 'granted') {
-            setErrorMsg('Permission to use your location was not granted')
-            return;
-        }
-
-        let { coords } = await Location.getCurrentPositionAsync();//gets location of user and set
-        if (coords) {
-            const { latitude, longitude } = coords
-            
-
-            setLatitude(latitude)
-            setLongitude(longitude)
-
-            
-
-            //this will return the location in a proper address, not coordinate points
-            const result = await Location.reverseGeocodeAsync({
-                 latitude: latitude,
-                longitude:longitude
-            })
-
-            /*the expo reverse geolocation works by sending an array of the closest matching adresses
-          to the coordinate points this will choose the first candidate*/
-            if (result && result.length > 0) {
-              const place = result[0];
-              //this will return the address in a format acceptable by the google maps platform
-              const formattedAddress = [
-                //prevents comma after the number from appearing
-                [place.streetNumber, place.street].filter(Boolean).join(" "),
-                place.city,
-                place.region,
-                place.postalCode,
-                place.country,
-              ]
-                .filter(Boolean)
-                .join(", ");
-              setAddress(formattedAddress);
+        try {
+            let { status } = await Location.requestForegroundPermissionsAsync();
+            if (status != 'granted') {
+                setErrorMsg('Permission to use your location was not granted')
+                return;
             }
+
+            let { coords } = await Location.getCurrentPositionAsync();//gets location of user and set
+            if (coords) {
+                const { latitude, longitude } = coords
+
+                setLatitude(latitude)
+                setLongitude(longitude)
+
+                const now = Date.now();
+                if (now - lastReverseGeocodeAt < REVERSE_GEOCODE_COOLDOWN_MS) {
+                    return;
+                }
+                lastReverseGeocodeAt = now;
+
+                //this will return the location in a proper address, not coordinate points
+                const result = await Location.reverseGeocodeAsync({
+                     latitude: latitude,
+                    longitude:longitude
+                })
+
+                /*the expo reverse geolocation works by sending an array of the closest matching adresses
+              to the coordinate points this will choose the first candidate*/
+                if (result && result.length > 0) {
+                  const place = result[0];
+                  //this will return the address in a format acceptable by the google maps platform
+                  const formattedAddress = [
+                    //prevents comma after the number from appearing
+                    [place.streetNumber, place.street].filter(Boolean).join(" "),
+                    place.city,
+                    place.region,
+                    place.postalCode,
+                    place.country,
+                  ]
+                    .filter(Boolean)
+                    .join(", ");
+                  setAddress(formattedAddress);
+                }
+            }
+        } catch (error) {
+            console.error("getUserLocation failed:", error);
+            setErrorMsg("Could not load location details right now.");
         }
     }
         useEffect(() => {

@@ -30,6 +30,14 @@ type EventItem = {
   source: "TravelEagle" | "Users";
 };
 
+type RatingStats = {
+  average: number;
+  count: number;
+};
+
+const isUuid = (value: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
 export default function CommunityPage() {
   const router = useRouter();
   // Top-level source filters: show all content, only TravelEagle events, or only user posts.
@@ -60,7 +68,7 @@ export default function CommunityPage() {
 
   // Convert a CommunityEvents row into the same UI shape.
   const mapCommunityEventToEventItem = (event: any): EventItem => ({
-    id: `event-${String(event.id ?? Math.random())}`,
+    id: String(event.id ?? event.event_id ?? Math.random()),
     title: event.event_name || "Untitled Event",
     category: event.event_category || "Uncategorized",
     date: event.event_date ? new Date(event.event_date).toLocaleDateString(): "Unknown date",
@@ -116,8 +124,11 @@ export default function CommunityPage() {
     return posts.filter((post) => post.source === selectedSource);
   }, [posts, selectedSource]);
 
-  // Load the average rating and user's rating for the selected post
-  const loadPostRating = async (postId: string) => {
+  const getPostRatingStats = async (postId: string): Promise<RatingStats> => {
+    if (!isUuid(postId)) {
+      return { average: 0, count: 0 };
+    }
+
     const { data, error } = await supabase
       .from("ratings")
       .select("rating")
@@ -125,24 +136,32 @@ export default function CommunityPage() {
 
     if (error) {
       console.error("Error loading ratings:", error);
-      return;
+      return { average: 0, count: 0 };
     }
-    // If no ratings, set to 0
+
     if (!data || data.length === 0) {
-      setAverageRating(0);
-      setRatingCount(0);
-      return;
+      return { average: 0, count: 0 };
     }
-    // Calculate average rating
+
     const total = data.reduce((sum, row) => sum + Number(row.rating), 0);
     const average = total / data.length;
 
-    setAverageRating(average);
-    setRatingCount(data.length);
+    return { average, count: data.length };
+  };
+
+  // Load the average rating and user's rating for the selected post
+  const loadPostRating = async (postId: string) => {
+    const stats = await getPostRatingStats(postId);
+    setAverageRating(stats.average);
+    setRatingCount(stats.count);
   };
 
   const submitRating = async (rating: number) => {
     if (!selectedEvent) return;
+    if (!isUuid(selectedEvent.id)) {
+      Alert.alert("Rating unavailable", "This item cannot be rated yet.");
+      return;
+    }
 
     const {
       data: { user },
@@ -195,8 +214,9 @@ export default function CommunityPage() {
 
   // Send selected event coordinates to the interactive map screen.
   // HomeScreen reads these params and centers a marker on that location.
-  const openEventOnMap = (event: EventItem) => {
+  const openEventOnMap = async (event: EventItem) => {
     if (event.lat == null || event.lng == null) return;
+    const stats = await getPostRatingStats(event.id);
     setSelectedEvent(null);
     router.push({
       pathname: "/(main_navigation)/(interactive_map)/HomeScreen",
@@ -206,6 +226,8 @@ export default function CommunityPage() {
         lng: String(event.lng),
         description: event.description,
         address: event.location,
+        rating: String(stats.average),
+        reviewCount: String(stats.count),
       },
     });
   };
@@ -281,7 +303,7 @@ export default function CommunityPage() {
 
           {displayedPosts.map((event) => (
             <TouchableOpacity
-              key={event.id}
+              key={`${event.source}-${event.id}`}
               style={styles.card}
               onPress={async () => {
                 setSelectedEvent(event);
