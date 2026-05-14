@@ -5,6 +5,7 @@ import Feather from "@expo/vector-icons/Feather";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { supabase } from "@/lib/supabase";
+import { FontAwesome } from '@expo/vector-icons';
 import {
   BACKGROUND_COLOR,
   ORANGE_COLOR,
@@ -360,14 +361,12 @@ export default function CommunityPage() {
                         key={star}
                         onPress={() => submitRating(star)}
                       >
-                        <Text
-                          style={[
-                            styles.starText,
-                            selectedUserRating >= star && styles.selectedStar,
-                          ]}
-                        >
-                          *
-                        </Text>
+                        <FontAwesome
+                        name={selectedUserRating >= star ? "star" : "star-o"}
+                        size={32}
+                        color={selectedUserRating >= star ? "#FFD700" : "#6B7280"}
+                        style={{ marginRight: 6 }}
+                      />
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -598,14 +597,6 @@ const styles = StyleSheet.create({
   starRow: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  starText: {
-    fontSize: 32,
-    color: "#6B7280",
-    marginRight: 6,
-  },
-  selectedStar: {
-    color: "#FFD700",
   },
   primaryButton: {
     marginTop: 14,
