@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
+  Keyboard,
   Platform,
   StyleSheet,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -100,7 +102,8 @@ export default function CreateCommunityEventPage() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.page}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View style={styles.page}>
         <View style={styles.headerRow}>
           <TouchableOpacity
             style={styles.backButton}
@@ -178,6 +181,9 @@ export default function CreateCommunityEventPage() {
                   value: eventAddress,
                   onChangeText: setEventAddress,
                   placeholderTextColor: "#9DB4D8",
+                  returnKeyType: "done",
+                  blurOnSubmit: true,
+                  onSubmitEditing: Keyboard.dismiss,
                 }}
                 styles={{
                   container: styles.autocompleteContainer,
@@ -201,6 +207,9 @@ export default function CreateCommunityEventPage() {
           value={eventDescription}
           onChangeText={setEventDescription}
           multiline
+          returnKeyType="done"
+          blurOnSubmit
+          onSubmitEditing={Keyboard.dismiss}
         />
 
         <Text style={styles.label}>Add Image</Text>
@@ -216,6 +225,9 @@ export default function CreateCommunityEventPage() {
           value={numAttending}
           onChangeText={setNumAttending}
           keyboardType="numeric"
+          returnKeyType="done"
+          blurOnSubmit
+          onSubmitEditing={Keyboard.dismiss}
         />
 
         <Text style={styles.label}>Category</Text>
@@ -247,7 +259,8 @@ export default function CreateCommunityEventPage() {
             {loading ? "Creating..." : "Create Community Event"}
           </Text>
         </TouchableOpacity>
-      </View>
+        </View>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }

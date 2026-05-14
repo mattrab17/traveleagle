@@ -5,9 +5,11 @@ import {
   TextInput,
   Pressable,
   Alert,
+  Keyboard,
   StyleSheet,
   Image,
   Platform,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import Feather from "@expo/vector-icons/Feather";
@@ -133,8 +135,9 @@ export default function UserPostsPage() {
   }
 
   return (
-    <View style={styles.safeArea}>
-      <View style={styles.page}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.safeArea}>
+        <View style={styles.page}>
         <View style={styles.headerRow}>
           <Pressable
             style={styles.backButton}
@@ -154,6 +157,9 @@ export default function UserPostsPage() {
             placeholderTextColor="#9DB4D8"
             value={placeName}
             onChangeText={setPlaceName}
+            returnKeyType="done"
+            blurOnSubmit
+            onSubmitEditing={Keyboard.dismiss}
           />
 
           <Text style={styles.label}>Address</Text>
@@ -197,6 +203,9 @@ export default function UserPostsPage() {
                 value: address,
                 onChangeText: setAddress,
                 placeholderTextColor: "#9DB4D8",
+                returnKeyType: "done",
+                blurOnSubmit: true,
+                onSubmitEditing: Keyboard.dismiss,
               }}
               styles={{
                 container: styles.autocompleteContainer,
@@ -218,6 +227,9 @@ export default function UserPostsPage() {
             value={description}
             onChangeText={setDescription}
             multiline
+            returnKeyType="done"
+            blurOnSubmit
+            onSubmitEditing={Keyboard.dismiss}
           />
 
           <Text style={styles.label}>Add Image</Text>
@@ -261,7 +273,8 @@ export default function UserPostsPage() {
           </Pressable>
         </View>
       </View>
-    </View>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 
