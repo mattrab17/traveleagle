@@ -174,6 +174,16 @@ export default function CommunityPage() {
   return;
 }
 
+        // Check if user is within appropriate radius of the post location before allowing rating
+    const withinRadius =
+  Math.abs(latitude - selectedEvent.lat) <= 0.015 &&
+  Math.abs(longitude - selectedEvent.lng) <= 0.015;
+
+if (!withinRadius) {
+  Alert.alert("Too far away", "You must be close to the post in order to rate it.");
+  return;
+}
+    
     const {error} = await supabase.from("ratings").upsert(
   [
     {
