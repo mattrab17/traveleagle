@@ -744,7 +744,7 @@ useFocusEffect(useCallback(() => {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#000C33", // MAIN BACKGROUND COLOR
+    backgroundColor: BACKGROUND_COLOR, // MAIN BACKGROUND COLOR
   },
   container: {
     flex: 1,
@@ -752,8 +752,8 @@ const styles = StyleSheet.create({
   topBox: {
     backgroundColor: BACKGROUND_COLOR,
     paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 15,
+    paddingTop: 6,
+    paddingBottom: 8,
     overflow: "visible",
     zIndex: 20,
     elevation: 20,
@@ -761,7 +761,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   logo: {
     width: 26,

@@ -50,6 +50,7 @@ export default function CommunityPage() {
   const [averageRating, setAverageRating] = useState(0);
   const [ratingCount, setRatingCount] = useState(0);
   const [selectedUserRating, setSelectedUserRating] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
   // Convert a user_posts row into the UI shape used by this screen.
   const mapUserPostToEventItem = (post: any): EventItem => ({
@@ -83,7 +84,7 @@ export default function CommunityPage() {
 
   // Load both data sources from Supabase and combine them into one list for rendering.
   // We keep a shared shape to simplify filtering and card rendering.
-   const loadPosts = useCallback(async () => {
+  const loadPosts = useCallback(async () => {
     setIsLoadingPosts(true);
 
     // Load user posts and community events
@@ -112,11 +113,36 @@ export default function CommunityPage() {
     setPosts([...normalizedEvents, ...normalizedUserPosts]);
   }, []);
 
+  const loadCurrentUser = useCallback(async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    setCurrentUserId(user?.id ?? null);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
+      loadCurrentUser();
       loadPosts();
-    }, [loadPosts])
+    }, [loadCurrentUser, loadPosts])
   );
+
+  const deleteEvent = async (eventId: string) => {
+    const { error } = await supabase
+      .from("CommunityEvents")
+      .delete()
+      .or(`id.eq.${eventId},event_id.eq.${eventId}`);
+
+    if (error) {
+      console.error("Failed to delete event:", error);
+      Alert.alert("Error", "Could not delete this event.");
+      return;
+    }
+
+    Alert.alert("Deleted", "Your event has been deleted.");
+    setSelectedEvent(null);
+    loadPosts();
+  };
 
   // Step 1: Filter content by source (All / TravelEagle / Users).
   const sourceScopedPosts = useMemo(() => {
@@ -269,38 +295,44 @@ if (!withinRadius) {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.categoryBar}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
-            {sourceFilters.map((source) => {
-              const active = source === selectedSource;
-              return (
-                <TouchableOpacity
-                  key={source}
-                  style={[styles.categoryPill, active && styles.categoryPillActive]}
-                  onPress={() => onSourceChange(source)}
-                >
-                  <Text style={[styles.categoryText, active && styles.categoryTextActive]}>{source}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+        <View style={styles.filterRow}>
+          <Text style={styles.filterLabel}>Post Filters:</Text>
+          <View style={styles.categoryBar}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
+              {sourceFilters.map((source) => {
+                const active = source === selectedSource;
+                return (
+                  <TouchableOpacity
+                    key={source}
+                    style={[styles.categoryPill, active && styles.categoryPillActive]}
+                    onPress={() => onSourceChange(source)}
+                  >
+                    <Text style={[styles.categoryText, active && styles.categoryTextActive]}>{source}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
         </View>
 
-        <View style={styles.categoryBar}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
-            {categories.map((category) => {
-              const active = category === selectedCategory;
-              return (
-                <TouchableOpacity
-                  key={category}
-                  style={[styles.categoryPill, active && styles.categoryPillActive]}
-                  onPress={() => setSelectedCategory(category)}
-                >
-                  <Text style={[styles.categoryText, active && styles.categoryTextActive]}>{category}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+        <View style={styles.filterRow}>
+          <Text style={styles.filterLabel}>Event Filters:</Text>
+          <View style={styles.categoryBar}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
+              {categories.map((category) => {
+                const active = category === selectedCategory;
+                return (
+                  <TouchableOpacity
+                    key={category}
+                    style={[styles.categoryPill, active && styles.categoryPillActive]}
+                    onPress={() => setSelectedCategory(category)}
+                  >
+                    <Text style={[styles.categoryText, active && styles.categoryTextActive]}>{category}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
@@ -325,6 +357,12 @@ if (!withinRadius) {
               {event.imageUri ? <Image source={{ uri: event.imageUri }} style={styles.cardImage} /> : null}
 
               <View style={styles.cardBody}>
+                <View style={styles.itemTypeTag}>
+                  <Text style={styles.itemTypeTagText}>
+                    {event.source === "Users" ? "Post" : "Event"}
+                  </Text>
+                </View>
+
                 <Text style={styles.cardTitle}>{event.title}</Text>
 
                 <View style={styles.metaRow}>
@@ -409,6 +447,20 @@ if (!withinRadius) {
                     <Text style={styles.primaryButtonText}>View Location</Text>
                   </TouchableOpacity>
                 ) : null}
+
+                {selectedEvent.source === "TravelEagle" && selectedEvent.createdBy === currentUserId ? (
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() =>
+                      Alert.alert("Delete Event", "Delete this event permanently?", [
+                        { text: "Cancel", style: "cancel" },
+                        { text: "Delete", style: "destructive", onPress: () => deleteEvent(selectedEvent.id) },
+                      ])
+                    }
+                  >
+                    <Text style={styles.deleteButtonText}>Delete My Event</Text>
+                  </TouchableOpacity>
+                ) : null}
               </View>
             </View>
           )}
@@ -467,9 +519,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   categoryBar: {
+    flex: 1,
     minHeight: 44,
     justifyContent: "center",
+  },
+  filterRow: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
+    gap: 8,
+  },
+  filterLabel: {
+    color: "#B9CAE4",
+    fontSize: 12,
+    fontWeight: "700",
+    minWidth: 86,
   },
   categoryPill: {
     minHeight: 30,
@@ -548,6 +612,21 @@ const styles = StyleSheet.create({
     color: "#B9CAE4",
     fontSize: 11,
     fontWeight: "700",
+  },
+  itemTypeTag: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(255, 184, 69, 0.15)",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: ORANGE_COLOR,
+    marginBottom: 8,
+  },
+  itemTypeTagText: {
+    color: ORANGE_COLOR,
+    fontSize: 11,
+    fontWeight: "800",
   },
   infoRow: {
     flexDirection: "row",
@@ -640,6 +719,19 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: WHITE_TEXT_COLOR,
+    fontWeight: "700",
+  },
+  deleteButton: {
+    marginTop: 10,
+    backgroundColor: "#7D1D25",
+    borderWidth: 1,
+    borderColor: "#C83A48",
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  deleteButtonText: {
+    color: "#FFD8DD",
     fontWeight: "700",
   },
 });

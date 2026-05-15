@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Alert,
+  FlatList,
   Image,
   Keyboard,
   Platform,
@@ -30,6 +31,7 @@ const categories = ["Festival", "Carnival", "Sports", "Holiday"];
 
 export default function CreateCommunityEventPage() {
   const router = useRouter();
+  const [eventName, setEventName] = useState("");
   const [eventAddress, setEventAddress] = useState("");
   const [eventLat, setEventLat] = useState("");
   const [eventLng, setEventLng] = useState("");
@@ -51,7 +53,7 @@ export default function CreateCommunityEventPage() {
   }, [useCurrentLocation, currentAddress, latitude, longitude]);
 
   const createCommunityEvent = async () => {
-    if (!eventAddress || !eventDescription || !eventCategory) {
+    if (!eventName.trim() || !eventAddress || !eventDescription || !eventCategory) {
       Alert.alert("Missing info", "Please fill out the required fields.");
       return;
     }
@@ -78,6 +80,7 @@ export default function CreateCommunityEventPage() {
     } = await supabase.auth.getUser();
 
     const { error } = await supabase.from("CommunityEvents").insert({
+      event_name: eventName.trim(),
       event_address: eventAddress,
       event_lat: parseFloat(finalLat),
       event_lng: parseFloat(finalLng),
@@ -103,163 +106,184 @@ export default function CreateCommunityEventPage() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={styles.page}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.replace("/(main_navigation)/(community)/CommunityPage")}
-          >
-            <Feather name="arrow-left" size={18} color={WHITE_TEXT_COLOR} />
-          </TouchableOpacity>
-          <Feather name="plus-circle" size={22} color={WHITE_TEXT_COLOR} />
-          <Text style={styles.headerTitle}>Create Event</Text>
-        </View>
+        <FlatList
+          style={styles.page}
+          contentContainerStyle={styles.pageContent}
+          data={[]}
+          renderItem={() => null}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <View>
+              <View style={styles.headerRow}>
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => router.replace("/(main_navigation)/(community)/CommunityPage")}
+                >
+                  <Feather name="arrow-left" size={18} color={WHITE_TEXT_COLOR} />
+                </TouchableOpacity>
+                <Feather name="plus-circle" size={22} color={WHITE_TEXT_COLOR} />
+                <Text style={styles.headerTitle}>Create Event</Text>
+              </View>
 
-        <TouchableOpacity
-          style={styles.locationToggleRow}
-          onPress={() => setUseCurrentLocation((prev) => !prev)}
-        >
-          <Feather
-            name={useCurrentLocation ? "check-square" : "square"}
-            size={18}
-            color={ORANGE_COLOR}
-          />
-          <Text style={styles.locationToggleText}>Use my current location</Text>
-        </TouchableOpacity>
-
-        <View style={styles.locationBox}>
-          <Text style={styles.locationTitle}>Event Location</Text>
-
-          {useCurrentLocation ? (
-            <>
-              <Text style={styles.locationText}>
-                Address: {eventAddress || "Loading address..."}
-              </Text>
-              <Text style={styles.locationText}>
-                Latitude: {latitude != null ? latitude : "Loading..."}
-              </Text>
-              <Text style={styles.locationText}>
-                Longitude: {longitude != null ? longitude : "Loading..."}
-              </Text>
-            </>
-          ) : (
-            <View style={styles.autocompleteWrapper}>
-              <GooglePlacesAutocomplete
-                placeholder="Search for an address"
-                minLength={2}
-                fetchDetails={true}
-                listViewDisplayed="auto"
-                keyboardShouldPersistTaps="handled"
-                keepResultsAfterBlur={true}
-                enablePoweredByContainer={false}
-                debounce={200}
-                query={{
-                  key: (process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "").trim(),
-                  language: "en",
-                }}
-                requestUrl={
-                  Platform.OS === "web"
-                    ? {
-                        useOnPlatform: "web",
-                        url: "https://maps.googleapis.com/maps/api",
-                      }
-                    : undefined
-                }
-                onFail={(error) => {
-                  console.warn("Google autocomplete failed:", error);
-                }}
-                onPress={(data, details = null) => {
-                  const selectedAddress = data?.description || details?.formatted_address || "";
-                  const selectedLat = details?.geometry?.location?.lat;
-                  const selectedLng = details?.geometry?.location?.lng;
-
-                  setEventAddress(selectedAddress);
-                  if (selectedLat != null) setEventLat(String(selectedLat));
-                  if (selectedLng != null) setEventLng(String(selectedLng));
-                }}
-                textInputProps={{
-                  value: eventAddress,
-                  onChangeText: setEventAddress,
-                  placeholderTextColor: "#9DB4D8",
-                  returnKeyType: "done",
-                  blurOnSubmit: true,
-                  onSubmitEditing: Keyboard.dismiss,
-                }}
-                styles={{
-                  container: styles.autocompleteContainer,
-                  textInputContainer: styles.autocompleteTextInputContainer,
-                  textInput: styles.autocompleteInput,
-                  listView: styles.autocompleteList,
-                  row: styles.autocompleteRow,
-                  separator: styles.autocompleteSeparator,
-                }}
+              <TextInput
+                style={styles.input}
+                placeholder="Event name"
+                placeholderTextColor="#9DB4D8"
+                value={eventName}
+                onChangeText={setEventName}
+                returnKeyType="done"
+                blurOnSubmit
+                onSubmitEditing={Keyboard.dismiss}
               />
-            </View>
-          )}
 
-          {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
-        </View>
-
-        <TextInput
-          style={[styles.input, styles.bigInput]}
-          placeholder="Event description"
-          placeholderTextColor="#9DB4D8"
-          value={eventDescription}
-          onChangeText={setEventDescription}
-          multiline
-          returnKeyType="done"
-          blurOnSubmit
-          onSubmitEditing={Keyboard.dismiss}
-        />
-
-        <Text style={styles.label}>Add Image</Text>
-        <CameraRoll onImageSelected={setEventImageUrl} />
-        {eventImageUrl ? (
-          <Image source={{ uri: eventImageUrl }} style={styles.eventImage} />
-        ) : null}
-
-        <TextInput
-          style={styles.input}
-          placeholder="Number attending"
-          placeholderTextColor="#9DB4D8"
-          value={numAttending}
-          onChangeText={setNumAttending}
-          keyboardType="numeric"
-          returnKeyType="done"
-          blurOnSubmit
-          onSubmitEditing={Keyboard.dismiss}
-        />
-
-        <Text style={styles.label}>Category</Text>
-
-        <View style={styles.categoryRow}>
-          {categories.map((category) => {
-            const active = category === eventCategory;
-
-            return (
               <TouchableOpacity
-                key={category}
-                style={[styles.categoryPill, active && styles.categoryPillActive]}
-                onPress={() => setEventCategory(category)}
+                style={styles.locationToggleRow}
+                onPress={() => setUseCurrentLocation((prev) => !prev)}
               >
-                <Text style={[styles.categoryText, active && styles.categoryTextActive]}>
-                  {category}
+                <Feather
+                  name={useCurrentLocation ? "check-square" : "square"}
+                  size={18}
+                  color={ORANGE_COLOR}
+                />
+                <Text style={styles.locationToggleText}>Use my current location</Text>
+              </TouchableOpacity>
+
+              <View style={styles.locationBox}>
+                <Text style={styles.locationTitle}>Event Location</Text>
+
+                {useCurrentLocation ? (
+                  <>
+                    <Text style={styles.locationText}>
+                      Address: {eventAddress || "Loading address..."}
+                    </Text>
+                    <Text style={styles.locationText}>
+                      Latitude: {latitude != null ? latitude : "Loading..."}
+                    </Text>
+                    <Text style={styles.locationText}>
+                      Longitude: {longitude != null ? longitude : "Loading..."}
+                    </Text>
+                  </>
+                ) : (
+                  <View style={styles.autocompleteWrapper}>
+                    <GooglePlacesAutocomplete
+                      placeholder="Search for an address"
+                      minLength={2}
+                      fetchDetails={true}
+                      listViewDisplayed="auto"
+                      keyboardShouldPersistTaps="handled"
+                      keepResultsAfterBlur={true}
+                      enablePoweredByContainer={false}
+                      debounce={200}
+                      query={{
+                        key: (process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "").trim(),
+                        language: "en",
+                      }}
+                      requestUrl={
+                        Platform.OS === "web"
+                          ? {
+                              useOnPlatform: "web",
+                              url: "https://maps.googleapis.com/maps/api",
+                            }
+                          : undefined
+                      }
+                      onFail={(error) => {
+                        console.warn("Google autocomplete failed:", error);
+                      }}
+                      onPress={(data, details = null) => {
+                        const selectedAddress = data?.description || details?.formatted_address || "";
+                        const selectedLat = details?.geometry?.location?.lat;
+                        const selectedLng = details?.geometry?.location?.lng;
+
+                        setEventAddress(selectedAddress);
+                        if (selectedLat != null) setEventLat(String(selectedLat));
+                        if (selectedLng != null) setEventLng(String(selectedLng));
+                      }}
+                      textInputProps={{
+                        value: eventAddress,
+                        onChangeText: setEventAddress,
+                        placeholderTextColor: "#9DB4D8",
+                        returnKeyType: "done",
+                        blurOnSubmit: true,
+                        onSubmitEditing: Keyboard.dismiss,
+                      }}
+                      styles={{
+                        container: styles.autocompleteContainer,
+                        textInputContainer: styles.autocompleteTextInputContainer,
+                        textInput: styles.autocompleteInput,
+                        listView: styles.autocompleteList,
+                        row: styles.autocompleteRow,
+                        separator: styles.autocompleteSeparator,
+                      }}
+                    />
+                  </View>
+                )}
+
+                {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
+              </View>
+
+              <TextInput
+                style={[styles.input, styles.bigInput]}
+                placeholder="Event description"
+                placeholderTextColor="#9DB4D8"
+                value={eventDescription}
+                onChangeText={setEventDescription}
+                multiline
+                returnKeyType="done"
+                blurOnSubmit
+                onSubmitEditing={Keyboard.dismiss}
+              />
+
+              <Text style={styles.label}>Add Image</Text>
+              <CameraRoll onImageSelected={setEventImageUrl} />
+              {eventImageUrl ? (
+                <Image source={{ uri: eventImageUrl }} style={styles.eventImage} />
+              ) : null}
+
+              <TextInput
+                style={styles.input}
+                placeholder="Number attending"
+                placeholderTextColor="#9DB4D8"
+                value={numAttending}
+                onChangeText={setNumAttending}
+                keyboardType="numeric"
+                returnKeyType="done"
+                blurOnSubmit
+                onSubmitEditing={Keyboard.dismiss}
+              />
+
+              <Text style={styles.label}>Category</Text>
+
+              <View style={styles.categoryRow}>
+                {categories.map((category) => {
+                  const active = category === eventCategory;
+
+                  return (
+                    <TouchableOpacity
+                      key={category}
+                      style={[styles.categoryPill, active && styles.categoryPillActive]}
+                      onPress={() => setEventCategory(category)}
+                    >
+                      <Text style={[styles.categoryText, active && styles.categoryTextActive]}>
+                        {category}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={createCommunityEvent}
+                disabled={loading}
+              >
+                <Text style={styles.buttonText}>
+                  {loading ? "Creating..." : "Create Community Event"}
                 </Text>
               </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={createCommunityEvent}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>
-            {loading ? "Creating..." : "Create Community Event"}
-          </Text>
-        </TouchableOpacity>
-        </View>
+            </View>
+          }
+        />
       </TouchableWithoutFeedback>
     </SafeAreaView>
   );
@@ -273,7 +297,10 @@ const styles = StyleSheet.create({
   page: {
     flex: 1,
     backgroundColor: SECONDARY_BACKGROUND_COLOR,
+  },
+  pageContent: {
     padding: 14,
+    paddingBottom: 28,
   },
   headerRow: {
     flexDirection: "row",
