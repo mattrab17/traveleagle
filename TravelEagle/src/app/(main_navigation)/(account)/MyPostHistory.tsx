@@ -141,6 +141,7 @@ export default function MyPostHistory() {
           : post
       )
     );
+
     setIsEditModalVisible(false);
     setEditingPostId(null);
     Alert.alert("Success", "Post updated.");

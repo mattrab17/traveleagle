@@ -31,8 +31,6 @@ export default function AccountSettings() {
   const router = useRouter();
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editUsername, setEditUsername] = useState("");
-  const [editPassword, setEditPassword] = useState("");
-  const [editConfirmPassword, setEditConfirmPassword] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [usernameOverride, setUsernameOverride] = useState<string | null>(null);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -91,8 +89,6 @@ export default function AccountSettings() {
 
   function openEditModal() {
     setEditUsername(displayUsername);
-    setEditPassword("");
-    setEditConfirmPassword("");
     setIsEditModalVisible(true);
   }
 
@@ -111,22 +107,10 @@ export default function AccountSettings() {
       return;
     }
 
-    if (editPassword) {
-      if (editPassword.length < 6) {
-        Alert.alert("Weak password", "Password must be at least 6 characters.");
-        return;
-      }
-      if (editPassword !== editConfirmPassword) {
-        Alert.alert("Mismatch", "Password and confirmation do not match.");
-        return;
-      }
-    }
-
     setIsSavingEdit(true);
-    const updatePayload: { data: { username: string }; password?: string } = {
+    const updatePayload: { data: { username: string } } = {
       data: { username: trimmedUsername },
     };
-    if (editPassword) updatePayload.password = editPassword;
 
     const { error } = await supabase.auth.updateUser(updatePayload);
     setIsSavingEdit(false);
@@ -344,26 +328,6 @@ export default function AccountSettings() {
               placeholder="Enter username"
               placeholderTextColor="#7D97BC"
               autoCapitalize="none"
-            />
-            
-            <Text style={[styles.fieldLabel, { marginTop: 12 }]}>New Password</Text>
-            <TextInput
-              value={editPassword}
-              onChangeText={setEditPassword}
-              style={styles.editableInput}
-              placeholder="Leave blank to keep current password"
-              placeholderTextColor="#7D97BC"
-              secureTextEntry
-            />
-
-            <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Confirm New Password</Text>
-            <TextInput
-              value={editConfirmPassword}
-              onChangeText={setEditConfirmPassword}
-              style={styles.editableInput}
-              placeholder="Re-enter new password"
-              placeholderTextColor="#7D97BC"
-              secureTextEntry
             />
 
             <View style={styles.modalActions}>

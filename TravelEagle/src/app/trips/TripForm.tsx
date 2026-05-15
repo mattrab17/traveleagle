@@ -1,8 +1,7 @@
 import {Calendar, toDateId, useDateRange} from "@marceloterreiro/flash-calendar"
 
-import { View, Text, TouchableOpacity } from "react-native";
+import { FlatList, View, Text, TouchableOpacity } from "react-native";
 import {GooglePlacesInputTrip} from "../(google_maps_info)/GooglePlacesAutocomplete";
-import { ScrollView } from "react-native-gesture-handler";
 import { useState } from "react";
 import { tripQueries } from "@/models/trips";
 import { goToPreviousMonth, goToNextMonth } from "@/controllers/tripController";
@@ -52,11 +51,15 @@ export default function TripForm({onClose, userId}) {
   }
 }
     return(
-        <ScrollView
+        <FlatList
           style={{ flex: 1, backgroundColor: ADD_TRIP_SHEET_BG }}
           contentContainerStyle={{ padding: 10, paddingBottom: 120 }}
           keyboardShouldPersistTaps="always"
-        >
+          showsVerticalScrollIndicator={false}
+          data={[]}
+          renderItem={() => null}
+          ListHeaderComponent={
+            <View>
             <Text style={{ fontSize: 22, color: ORANGE_COLOR, fontWeight:'800',}}>Add a Trip</Text>
             <Text style={{ fontSize:14, color: WHITE_TEXT_COLOR, paddingVertical: 20, fontWeight:'400'
              }}>Plan out your new trip by building an Itinerary</Text>
@@ -191,8 +194,9 @@ export default function TripForm({onClose, userId}) {
             </TouchableOpacity>
             </View>
              
-            
-        </ScrollView>   
+            </View>
+          }
+        />   
     )
 
 }

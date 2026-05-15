@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Alert, Button, View, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
@@ -6,56 +5,63 @@ import { supabase } from '@/lib/supabase';
 // Expo ImagePicker: A library that provides access to the system UI for
 // selecting images and videos from the phone's library or taking a photo with the camera.
 export default function CameraRoll({ onImageSelected }) {
-  const [image, setImage] = useState(null);
-
   const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (!permissionResult.granted) {
-      Alert.alert('Permission required', 'Permission to access the media library is required.');
-      return;
-    }
+      if (!permissionResult.granted) {
+        Alert.alert('Permission required', 'Permission to access the media library is required.');
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (result.canceled) return;
-
-    const imageUri = result.assets[0].uri;
-    setImage(imageUri);
-
-    // Convert local URI to uploadable binary.
-    const response = await fetch(imageUri);
-    const arrayBuffer = await response.arrayBuffer();
-
-    // Keep extension clean if query params exist.
-    const fileExt = imageUri.split('.').pop()?.split('?')[0] || 'jpg';
-    const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `posts/${fileName}`;
-
-    const { error } = await supabase.storage
-      .from('traveleagle-images')
-      .upload(filePath, arrayBuffer, {
-        contentType: 'image/jpeg',
-        upsert: true,
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
       });
 
-    if (error) {
+      if (result.canceled) return;
+
+      const imageUri = result.assets?.[0]?.uri;
+      if (!imageUri) {
+        Alert.alert('Image error', 'No image was selected.');
+        return;
+      }
+
+      // Convert local URI to uploadable binary.
+      const response = await fetch(imageUri);
+      const arrayBuffer = await response.arrayBuffer();
+
+      // Keep extension clean if query params exist.
+      const fileExt = imageUri.split('.').pop()?.split('?')[0] || 'jpg';
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `posts/${fileName}`;
+      const mimeType = `image/${fileExt.toLowerCase() === 'jpg' ? 'jpeg' : fileExt.toLowerCase()}`;
+
+      const { error } = await supabase.storage
+        .from('traveleagle-images')
+        .upload(filePath, arrayBuffer, {
+          contentType: mimeType,
+          upsert: true,
+        });
+
+      if (error) {
+        console.log(error);
+        Alert.alert('Upload failed', error.message);
+        return;
+      }
+
+      const { data } = supabase.storage
+        .from('traveleagle-images')
+        .getPublicUrl(filePath);
+
+      if (onImageSelected) {
+        onImageSelected(data.publicUrl);
+      }
+    } catch (error) {
       console.log(error);
-      Alert.alert('Upload failed', error.message);
-      return;
-    }
-
-    const { data } = supabase.storage
-      .from('traveleagle-images')
-      .getPublicUrl(filePath);
-
-    if (onImageSelected) {
-      onImageSelected(data.publicUrl);
+      Alert.alert('Image error', 'Could not pick or upload image.');
     }
   };
 
@@ -68,7 +74,7 @@ export default function CameraRoll({ onImageSelected }) {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },

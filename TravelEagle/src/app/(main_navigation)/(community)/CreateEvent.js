@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Feather from "@expo/vector-icons/Feather";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { supabase } from "@/lib/supabase";
 import useLocation from "@/LocationServices/liveLocation";
 import CameraRoll from "@/cameraRoll/PhotoLibraryAccess";
@@ -36,6 +37,7 @@ export default function CreateCommunityEventPage() {
   const [eventLat, setEventLat] = useState("");
   const [eventLng, setEventLng] = useState("");
   const [eventDescription, setEventDescription] = useState("");
+  const [eventDate, setEventDate] = useState("");
   const [eventImageUrl, setEventImageUrl] = useState("");
   const [eventCategory, setEventCategory] = useState("Festival");
   const [numAttending, setNumAttending] = useState("");
@@ -52,9 +54,34 @@ export default function CreateCommunityEventPage() {
     }
   }, [useCurrentLocation, currentAddress, latitude, longitude]);
 
+  const resetForm = () => {
+    setEventName("");
+    setEventAddress("");
+    setEventLat("");
+    setEventLng("");
+    setEventDescription("");
+    setEventDate("");
+    setEventImageUrl("");
+    setEventCategory("Festival");
+    setNumAttending("");
+    setUseCurrentLocation(false);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      resetForm();
+    }, [])
+  );
+
   const createCommunityEvent = async () => {
-    if (!eventName.trim() || !eventAddress || !eventDescription || !eventCategory) {
+    if (!eventName.trim() || !eventAddress || !eventDescription || !eventCategory || !eventDate.trim()) {
       Alert.alert("Missing info", "Please fill out the required fields.");
+      return;
+    }
+
+    const trimmedDate = eventDate.trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmedDate)) {
+      Alert.alert("Invalid date", "Use YYYY-MM-DD format (example: 2026-05-14).");
       return;
     }
 
@@ -85,6 +112,7 @@ export default function CreateCommunityEventPage() {
       event_lat: parseFloat(finalLat),
       event_lng: parseFloat(finalLng),
       event_description: eventDescription,
+      event_date: trimmedDate,
       event_image_url: eventImageUrl || null,
       event_category: eventCategory,
       num_attending: numAttending ? Number(numAttending) : 0,
@@ -99,6 +127,7 @@ export default function CreateCommunityEventPage() {
       return;
     }
 
+    resetForm();
     Alert.alert("Success", "Community event created!");
     router.replace("/(main_navigation)/(community)/CommunityPage");
   };
@@ -229,6 +258,17 @@ export default function CreateCommunityEventPage() {
                 value={eventDescription}
                 onChangeText={setEventDescription}
                 multiline
+                returnKeyType="done"
+                blurOnSubmit
+                onSubmitEditing={Keyboard.dismiss}
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder="Event date (YYYY-MM-DD)"
+                placeholderTextColor="#9DB4D8"
+                value={eventDate}
+                onChangeText={setEventDate}
                 returnKeyType="done"
                 blurOnSubmit
                 onSubmitEditing={Keyboard.dismiss}

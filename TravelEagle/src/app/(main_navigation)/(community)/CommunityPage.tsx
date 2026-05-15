@@ -37,6 +37,7 @@ type RatingStats = {
 
 const isUuid = (value: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+const isNumericId = (value: string) => /^\d+$/.test(value);
 
 export default function CommunityPage() {
   const router = useRouter();
@@ -69,7 +70,7 @@ export default function CommunityPage() {
 
   // Convert a CommunityEvents row into the same UI shape.
   const mapCommunityEventToEventItem = (event: any): EventItem => ({
-    id: String(event.id ?? event.event_id ?? Math.random()),
+    id: String(event.event_id ?? event.id ?? Math.random()),
     title: event.event_name || "Untitled Event",
     category: event.event_category || "Uncategorized",
     date: event.event_date ? new Date(event.event_date).toLocaleDateString(): "Unknown date",
@@ -128,10 +129,18 @@ export default function CommunityPage() {
   );
 
   const deleteEvent = async (eventId: string) => {
+    if (!currentUserId) {
+      Alert.alert("Error", "You must be signed in to delete events.");
+      return;
+    }
+
+    const normalizedEventId: string | number = isNumericId(eventId) ? Number(eventId) : eventId;
+
     const { error } = await supabase
       .from("CommunityEvents")
       .delete()
-      .or(`id.eq.${eventId},event_id.eq.${eventId}`);
+      .eq("event_id", normalizedEventId)
+      .eq("created_by", currentUserId);
 
     if (error) {
       console.error("Failed to delete event:", error);
@@ -143,6 +152,7 @@ export default function CommunityPage() {
     setSelectedEvent(null);
     loadPosts();
   };
+
 
   // Step 1: Filter content by source (All / TravelEagle / Users).
   const sourceScopedPosts = useMemo(() => {
@@ -466,6 +476,7 @@ if (!withinRadius) {
           )}
         </View>
       </Modal>
+
     </SafeAreaView>
   );
 }

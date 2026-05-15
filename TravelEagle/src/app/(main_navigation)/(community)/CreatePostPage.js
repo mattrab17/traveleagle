@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  FlatList,
   View,
   Text,
   TextInput,
@@ -14,6 +15,7 @@ import {
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import Feather from "@expo/vector-icons/Feather";
 import { useNavigation, useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 
 import { supabase } from "@/lib/supabase";
 import useLocation from "@/LocationServices/liveLocation";
@@ -63,6 +65,23 @@ export default function UserPostsPage() {
       setAddress(currentAddress);
     }
   }, [useCurrentLocation, currentAddress]);
+
+  const resetForm = useCallback(() => {
+    setPlaceName("");
+    setAddress("");
+    setDescription("");
+    setPostLat("");
+    setPostLong("");
+    setCategory([]);
+    setImageUrl("");
+    setUseCurrentLocation(true);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      resetForm();
+    }, [resetForm])
+  );
 
   function toggleCategory(selectedCategory) {
     if (category.includes(selectedCategory)) {
@@ -122,6 +141,7 @@ export default function UserPostsPage() {
       return;
     }
 
+    resetForm();
     Alert.alert("Success", "Post created.");
     router.replace("/(main_navigation)/(community)/CommunityPage");
   }
@@ -137,142 +157,152 @@ export default function UserPostsPage() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.safeArea}>
-        <View style={styles.page}>
-        <View style={styles.headerRow}>
-          <Pressable
-            style={styles.backButton}
-            onPress={handleBack}
-          >
-            <Feather name="arrow-left" size={18} color="#FFFFFF" />
-          </Pressable>
-          <Text style={styles.headerTitle}>Create a Post</Text>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.label}>Place Name</Text>
-
-          <TextInput
-            style={styles.input}
-            placeholder="Place name"
-            placeholderTextColor="#9DB4D8"
-            value={placeName}
-            onChangeText={setPlaceName}
-            returnKeyType="done"
-            blurOnSubmit
-            onSubmitEditing={Keyboard.dismiss}
-          />
-
-          <Text style={styles.label}>Address</Text>
-
-          <View style={styles.autocompleteWrapper}>
-            <GooglePlacesAutocomplete
-              placeholder="Search for an address"
-              minLength={2}
-              fetchDetails={true}
-              listViewDisplayed="auto"
-              keyboardShouldPersistTaps="handled"
-              keepResultsAfterBlur={true}
-              enablePoweredByContainer={false}
-              debounce={200}
-              query={{
-                key: (process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "").trim(),
-                language: "en",
-              }}
-              requestUrl={
-                Platform.OS === "web"
-                  ? {
-                      useOnPlatform: "web",
-                      url: "https://maps.googleapis.com/maps/api",
-                    }
-                  : undefined
-              }
-              onFail={(error) => {
-                console.warn("Google autocomplete failed:", error);
-              }}
-              onPress={(data, details = null) => {
-                const selectedAddress = data?.description || details?.formatted_address || "";
-                const selectedLat = details?.geometry?.location?.lat;
-                const selectedLng = details?.geometry?.location?.lng;
-
-                setAddress(selectedAddress);
-                if (selectedLat != null) setPostLat(String(selectedLat));
-                if (selectedLng != null) setPostLong(String(selectedLng));
-                setUseCurrentLocation(false);
-              }}
-              textInputProps={{
-                value: address,
-                onChangeText: setAddress,
-                placeholderTextColor: "#9DB4D8",
-                returnKeyType: "done",
-                blurOnSubmit: true,
-                onSubmitEditing: Keyboard.dismiss,
-              }}
-              styles={{
-                container: styles.autocompleteContainer,
-                textInputContainer: styles.autocompleteTextInputContainer,
-                textInput: styles.autocompleteInput,
-                listView: styles.autocompleteList,
-                row: styles.autocompleteRow,
-                separator: styles.autocompleteSeparator,
-              }}
-            />
-          </View>
-
-          <Text style={styles.label}>Description</Text>
-
-          <TextInput
-            style={[styles.input, styles.descriptionInput]}
-            placeholder="Description"
-            placeholderTextColor="#9DB4D8"
-            value={description}
-            onChangeText={setDescription}
-            multiline
-            returnKeyType="done"
-            blurOnSubmit
-            onSubmitEditing={Keyboard.dismiss}
-          />
-
-          <Text style={styles.label}>Add Image</Text>
-
-          <CameraRoll onImageSelected={setImageUrl} />
-
-          {imageUrl ? (
-            <Image source={{ uri: imageUrl }} style={styles.postImage} />
-          ) : null}
-
-          <Text style={styles.label}>Categories</Text>
-
-          <View style={styles.filtersWrap}>
-            {postFilterOptions.map((option) => {
-              const selected = category.includes(option);
-
-              return (
+        <FlatList
+          style={styles.page}
+          contentContainerStyle={styles.pageContent}
+          data={[]}
+          renderItem={() => null}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <View>
+              <View style={styles.headerRow}>
                 <Pressable
-                  key={option}
-                  style={[
-                    styles.filterOptionBtn,
-                    selected && styles.filterOptionBtnSelected,
-                  ]}
-                  onPress={() => toggleCategory(option)}
+                  style={styles.backButton}
+                  onPress={handleBack}
                 >
-                  <Text
-                    style={[
-                      styles.filterOptionText,
-                      selected && styles.filterOptionTextSelected,
-                    ]}
-                  >
-                    {option}
-                  </Text>
+                  <Feather name="arrow-left" size={18} color="#FFFFFF" />
                 </Pressable>
-              );
-            })}
-          </View>
+                <Text style={styles.headerTitle}>Create a Post</Text>
+              </View>
 
-          <Pressable style={styles.createButton} onPress={createPost}>
-            <Text style={styles.createButtonText}>Create Post</Text>
-          </Pressable>
-        </View>
-      </View>
+              <View style={styles.card}>
+                <Text style={styles.label}>Place Name</Text>
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Place name"
+                  placeholderTextColor="#9DB4D8"
+                  value={placeName}
+                  onChangeText={setPlaceName}
+                  returnKeyType="done"
+                  blurOnSubmit
+                  onSubmitEditing={Keyboard.dismiss}
+                />
+
+                <Text style={styles.label}>Address</Text>
+
+                <View style={styles.autocompleteWrapper}>
+                  <GooglePlacesAutocomplete
+                    placeholder="Search for an address"
+                    minLength={2}
+                    fetchDetails={true}
+                    listViewDisplayed="auto"
+                    keyboardShouldPersistTaps="handled"
+                    keepResultsAfterBlur={true}
+                    enablePoweredByContainer={false}
+                    debounce={200}
+                    query={{
+                      key: (process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "").trim(),
+                      language: "en",
+                    }}
+                    requestUrl={
+                      Platform.OS === "web"
+                        ? {
+                            useOnPlatform: "web",
+                            url: "https://maps.googleapis.com/maps/api",
+                          }
+                        : undefined
+                    }
+                    onFail={(error) => {
+                      console.warn("Google autocomplete failed:", error);
+                    }}
+                    onPress={(data, details = null) => {
+                      const selectedAddress = data?.description || details?.formatted_address || "";
+                      const selectedLat = details?.geometry?.location?.lat;
+                      const selectedLng = details?.geometry?.location?.lng;
+
+                      setAddress(selectedAddress);
+                      if (selectedLat != null) setPostLat(String(selectedLat));
+                      if (selectedLng != null) setPostLong(String(selectedLng));
+                      setUseCurrentLocation(false);
+                    }}
+                    textInputProps={{
+                      value: address,
+                      onChangeText: setAddress,
+                      placeholderTextColor: "#9DB4D8",
+                      returnKeyType: "done",
+                      blurOnSubmit: true,
+                      onSubmitEditing: Keyboard.dismiss,
+                    }}
+                    styles={{
+                      container: styles.autocompleteContainer,
+                      textInputContainer: styles.autocompleteTextInputContainer,
+                      textInput: styles.autocompleteInput,
+                      listView: styles.autocompleteList,
+                      row: styles.autocompleteRow,
+                      separator: styles.autocompleteSeparator,
+                    }}
+                  />
+                </View>
+
+                <Text style={styles.label}>Description</Text>
+
+                <TextInput
+                  style={[styles.input, styles.descriptionInput]}
+                  placeholder="Description"
+                  placeholderTextColor="#9DB4D8"
+                  value={description}
+                  onChangeText={setDescription}
+                  multiline
+                  returnKeyType="done"
+                  blurOnSubmit
+                  onSubmitEditing={Keyboard.dismiss}
+                />
+
+                <Text style={styles.label}>Add Image</Text>
+
+                <CameraRoll onImageSelected={setImageUrl} />
+
+                {imageUrl ? (
+                  <Image source={{ uri: imageUrl }} style={styles.postImage} />
+                ) : null}
+
+                <Text style={styles.label}>Categories</Text>
+
+                <View style={styles.filtersWrap}>
+                  {postFilterOptions.map((option) => {
+                    const selected = category.includes(option);
+
+                    return (
+                      <Pressable
+                        key={option}
+                        style={[
+                          styles.filterOptionBtn,
+                          selected && styles.filterOptionBtnSelected,
+                        ]}
+                        onPress={() => toggleCategory(option)}
+                      >
+                        <Text
+                          style={[
+                            styles.filterOptionText,
+                            selected && styles.filterOptionTextSelected,
+                          ]}
+                        >
+                          {option}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                <Pressable style={styles.createButton} onPress={createPost}>
+                  <Text style={styles.createButtonText}>Create Post</Text>
+                </Pressable>
+              </View>
+            </View>
+          }
+        />
       </View>
     </TouchableWithoutFeedback>
   );
@@ -287,6 +317,8 @@ const styles = StyleSheet.create({
   page: {
     flex: 1,
     backgroundColor: "#0B2344",
+  },
+  pageContent: {
     paddingHorizontal: 12,
     paddingTop: 72,
     paddingBottom: 30,
