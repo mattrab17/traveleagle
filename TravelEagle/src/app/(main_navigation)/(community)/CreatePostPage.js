@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   View,
@@ -10,7 +10,6 @@ import {
   StyleSheet,
   Image,
   Platform,
-  TouchableWithoutFeedback,
 } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import Feather from "@expo/vector-icons/Feather";
@@ -155,17 +154,17 @@ export default function UserPostsPage() {
   }
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.safeArea}>
-        <FlatList
-          style={styles.page}
-          contentContainerStyle={styles.pageContent}
-          data={[]}
-          renderItem={() => null}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          ListHeaderComponent={
-            <View>
+    <View style={styles.safeArea}>
+      <FlatList
+        style={styles.page}
+        contentContainerStyle={styles.pageContent}
+        data={[]}
+        renderItem={() => null}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View>
               <View style={styles.headerRow}>
                 <Pressable
                   style={styles.backButton}
@@ -199,7 +198,7 @@ export default function UserPostsPage() {
                     fetchDetails={true}
                     listViewDisplayed="auto"
                     keyboardShouldPersistTaps="handled"
-                    keepResultsAfterBlur={true}
+                    keepResultsAfterBlur={false}
                     enablePoweredByContainer={false}
                     debounce={200}
                     query={{
@@ -300,11 +299,10 @@ export default function UserPostsPage() {
                   <Text style={styles.createButtonText}>Create Post</Text>
                 </Pressable>
               </View>
-            </View>
-          }
-        />
-      </View>
-    </TouchableWithoutFeedback>
+          </View>
+        }
+      />
+    </View>
   );
 }
 
